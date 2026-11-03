@@ -59,3 +59,11 @@ for (const [rota, id] of [['/agenda-lojista/disponibilidade', 40], ['/agenda-loj
         assert.equal((await chamar(null)).status, 401);
     });
 }
+
+test('DELETE /agenda-lojista/disponibilidade/:id — lojista com token sem loja_id recebe 403', async (t) => {
+    const apagados = bancoComDono(t);
+    const r = await comServidor('/agenda-lojista', agendaLojistaRoutes, (b) =>
+        pedir(b, 'DELETE', '/agenda-lojista/disponibilidade/40', { id: 20, tipo: 'lojista' }));
+    assert.equal(r.status, 403);
+    assert.deepEqual(apagados, []);
+});
