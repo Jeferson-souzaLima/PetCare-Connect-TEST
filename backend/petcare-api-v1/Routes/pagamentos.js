@@ -38,12 +38,6 @@ router.get(
 );
 
 router.post(
-    '/pedido/:pedido_id',
-    authMiddleware,
-    pagamentosController.iniciarPagamentoPedido
-);
-
-router.post(
     '/agendamento/:agendamento_id',
     authMiddleware,
     pagamentosController.iniciarPagamentoAgendamento
