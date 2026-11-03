@@ -20,7 +20,7 @@ router.get("/:cep", async (req, res) => {
 
         if (err.message === "CEP inválido.") {
             return res.status(400).json({
-                mensagem: err.message
+                mensagem: "CEP inválido."
             });
         }
 

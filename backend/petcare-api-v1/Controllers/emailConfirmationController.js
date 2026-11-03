@@ -35,11 +35,11 @@ exports.register = (req, res) => {
     }
 
     db.query('SELECT id FROM usuarios WHERE email = ?', [emailNormalizado], (selectErr, users) => {
-        if (selectErr) return res.status(500).send(selectErr);
+        if (selectErr) return responderErroInterno(res, selectErr, "emailConfirmationController - consulta de usuário");
         if (users.length > 0) return res.status(409).json({ mensagem: 'E-mail já cadastrado.' });
 
         bcrypt.hash(senha, 10, (hashErr, senhaHash) => {
-            if (hashErr) return res.status(500).send(hashErr);
+            if (hashErr) return responderErroInterno(res, hashErr, "emailConfirmationController.register - hash da senha");
 
             const { token, tokenHash } = gerarTokenConfirmacao();
             const sql = `INSERT INTO usuarios
@@ -47,7 +47,7 @@ exports.register = (req, res) => {
                 VALUES (?, ?, ?, 'cliente', 0, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))`;
 
             db.query(sql, [nomeNormalizado, emailNormalizado, senhaHash, tokenHash], (insertErr) => {
-                if (insertErr) return res.status(500).send(insertErr);
+                if (insertErr) return responderErroInterno(res, insertErr, "emailConfirmationController.register - inserção do usuário");
 
                 enviarEmailConfirmacao(emailNormalizado, token)
                     .then(() => res.status(201).json({
@@ -101,7 +101,7 @@ exports.reenviarConfirmacao = (req, res) => {
         'SELECT id, email_verificado FROM usuarios WHERE email = ? AND tipo = ?',
         [email, 'cliente'],
         (selectErr, users) => {
-            if (selectErr) return res.status(500).send(selectErr);
+            if (selectErr) return responderErroInterno(res, selectErr, "emailConfirmationController - consulta de usuário");
             if (users.length === 0) {
                 return res.json({ mensagem: 'Se houver uma conta pendente para este e-mail, enviaremos um novo link.' });
             }
@@ -117,7 +117,7 @@ exports.reenviarConfirmacao = (req, res) => {
                  WHERE id = ?`,
                 [tokenHash, users[0].id],
                 (updateErr) => {
-                    if (updateErr) return res.status(500).send(updateErr);
+                    if (updateErr) return responderErroInterno(res, updateErr, "emailConfirmationController.reenviarConfirmacao - atualização do token");
 
                     enviarEmailConfirmacao(email, token)
                         .then(() => res.json({ mensagem: 'Enviamos um novo link de confirmação para seu e-mail.' }))

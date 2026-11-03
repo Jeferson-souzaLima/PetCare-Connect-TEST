@@ -77,18 +77,29 @@ test('apagar disponibilidade: erro de banco não vaza (antes: error + code)', as
     assertSemVazamento(t, resposta, logs);
 });
 
-test('nenhum controller/rota devolve o objeto de erro em respostas 500', () => {
+test('nenhum controller/rota devolve o objeto ou a mensagem de erro em respostas de erro', () => {
     const raiz = path.join(__dirname, '..');
     const pastas = ['Controllers', 'Routes', 'middlewares', 'Services'];
-    const padrao = /\.(send|json)\(\s*(err|error|erro|e)\s*\)|(error|erro|err)\s*:\s*(err|error|erro|e)(\.message|\.code|\.stack)?\s*[,}]|stack\s*:\s*(err|error|erro|e)\.stack/;
+    // Qualquer identificador que contenha err/erro/error (err, selectErr, hashErr, erro...).
+    const idErro = String.raw`\w*(?:[Ee]rr|[Ee]rro|[Ee]rror)\w*`;
+    const padroes = [
+        new RegExp(String.raw`\.(?:send|json)\(\s*` + idErro + String.raw`\s*\)`),
+        new RegExp(String.raw`\b(?:error|erro|err|code|stack)\s*:\s*` + idErro + String.raw`(?:\.\w+)?\s*(?:[,}]|$)`)
+    ];
     const ocorrencias = [];
     for (const pasta of pastas) {
         for (const arquivo of fs.readdirSync(path.join(raiz, pasta))) {
             if (!arquivo.endsWith('.js')) continue;
-            fs.readFileSync(path.join(raiz, pasta, arquivo), 'utf8').split('\n').forEach((linha, i) => {
+            const conteudo = fs.readFileSync(path.join(raiz, pasta, arquivo), 'utf8');
+            // Mensagem do erro devolvida ao cliente, mesmo quebrada em várias linhas.
+            for (const m of conteudo.matchAll(/(?:mensagem|message)\s*:\s*\w*(?:[Ee]rr|[Ee]rro|[Ee]rror)\w*\.message\b/g)) {
+                const linha = conteudo.slice(0, m.index).split('\n').length;
+                ocorrencias.push(`${pasta}/${arquivo}:${linha}: ${m[0].replace(/\s+/g, ' ')}`);
+            }
+            conteudo.split('\n').forEach((linha, i) => {
                 const codigo = linha.trim();
-                if (codigo.startsWith('//') || codigo.startsWith('*')) return;
-                if (padrao.test(linha) && !/console\.(error|warn|log)/.test(linha)) ocorrencias.push(`${pasta}/${arquivo}:${i + 1}: ${codigo}`);
+                if (codigo.startsWith('//') || codigo.startsWith('*') || /console\.(error|warn|log)/.test(codigo)) return;
+                if (padroes.some((p) => p.test(codigo))) ocorrencias.push(`${pasta}/${arquivo}:${i + 1}: ${codigo}`);
             });
         }
     }
@@ -110,4 +121,14 @@ test('erro interno do checkout/frete vira 500 com mensagem padrão, sem detalhes
     const resposta = await chamar((_req, res) => responderErroDoServico(res, erroMysql(), 'teste', 'Não foi possível iniciar o checkout.'), {});
     assert.deepEqual(resposta, { status: 500, body: { mensagem: 'Não foi possível iniciar o checkout.' } });
     assert.equal(JSON.stringify(logs).includes('fulano@exemplo.com'), false);
+});
+
+test('cadastro (POST /auth/register): erro de banco não vaza (antes: send(selectErr))', async (t) => {
+    const logs = capturarLogs(t);
+    const emailConfirmationController = require('../Controllers/emailConfirmationController');
+    t.mock.method(db, 'query', (_sql, _v, cb) => cb(erroMysql()));
+    const resposta = await chamar(emailConfirmationController.register, {
+        body: { nome: 'Fulano', email: 'fulano@exemplo.com', senha: 'senha12345', confirmarSenha: 'senha12345', confirmacaoSenha: 'senha12345' }
+    });
+    assertSemVazamento(t, resposta, logs);
 });

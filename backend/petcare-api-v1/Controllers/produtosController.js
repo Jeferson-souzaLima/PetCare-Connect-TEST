@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const produtosModel = require('../Models/produtosModel');
 const r2Storage = require('../Services/r2Storage');
-const { responderErroInterno } = require('../utils/erroInterno');
+const { responderErroInterno, responderErroDoServico } = require('../utils/erroInterno');
 
 const saveImagens = (imagens) => new Promise((resolve, reject) => {
     produtosModel.saveImagens(imagens, (err, result) => err ? reject(err) : resolve(result));
@@ -44,11 +44,7 @@ exports.listarProdutos = (req, res) => {
         (err, resultado) => {
 
             if (err) {
-                console.error(err);
-
-                return res.status(500).json({
-                    erro: err
-                });
+                return responderErroInterno(res, err, "produtosController.listarProdutos");
             }
 
             res.json(resultado);
@@ -282,11 +278,7 @@ exports.definirImagemPrincipal = (req, res) => {
                     (err) => {
 
                         if (err) {
-                            return res.status(err.status || 500).json({
-                                mensagem:
-                                    err.message ||
-                                    'Erro ao definir imagem principal.'
-                            });
+                            return responderErroDoServico(res, err, 'produtosController.definirImagemPrincipal', 'Erro ao definir imagem principal.');
                         }
 
                         return res.status(200).json({
