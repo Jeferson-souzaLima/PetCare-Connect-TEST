@@ -65,6 +65,32 @@ exports.uploadImagem = (req, res) => {
     });
 };
 
+/**
+ * Só o administrador ou o lojista dono da loja podem alterar/apagar uma loja
+ * pelo id. Responde 404 se a loja não existe e 403 se pertence a outro usuário.
+ */
+exports.exigirDonoDaLojaOuAdmin = (req, res, next) => {
+    const { usuario } = req;
+
+    if (!usuario || !['admin', 'lojista'].includes(usuario.tipo)) {
+        return res.status(403).json({ mensagem: 'Acesso negado.' });
+    }
+
+    db.query('SELECT usuario_id FROM lojas WHERE id = ? LIMIT 1', [req.params.id], (err, results) => {
+        if (err) return responderErroInterno(res, err, 'lojasController.exigirDonoDaLojaOuAdmin');
+
+        if (results.length === 0) {
+            return res.status(404).json({ mensagem: 'Loja não encontrada.' });
+        }
+
+        if (usuario.tipo !== 'admin' && Number(results[0].usuario_id) !== Number(usuario.id)) {
+            return res.status(403).json({ mensagem: 'Acesso negado.' });
+        }
+
+        next();
+    });
+};
+
 // Atualizar dados da loja
 exports.atualizarLoja = (req, res) => {
     const { id } = req.params;
