@@ -1,4 +1,6 @@
 const PagamentosModel = require('../Models/pagamentosModel');
+const { responderErroInterno } = require('../utils/erroInterno');
+const { podeAcessarReferencia } = require('../utils/acessoRegistro');
 const PedidosModel = require('../Models/pedidosModel');
 const AgendamentosModel = require('../Models/agendamentosModel');
 const MercadoPagoService = require('../Services/mercadoPagoService');
@@ -17,24 +19,19 @@ const {
 exports.getById = (req, res) => {
 
     const { id } = req.params;
+    const naoEncontrado = () => res.status(404).json({ mensagem: 'Pagamento não encontrado.' });
 
     PagamentosModel.getById(id, (err, pagamento) => {
 
-        if (err) {
-            console.error('Erro ao buscar pagamento:', err);
+        if (err) return responderErroInterno(res, err, 'pagamentosController.getById');
 
-            return res.status(500).json({
-                mensagem: 'Erro ao buscar pagamento.'
-            });
-        }
+        if (!pagamento) return naoEncontrado();
 
-        if (!pagamento) {
-            return res.status(404).json({
-                mensagem: 'Pagamento não encontrado.'
-            });
-        }
-
-        res.json(pagamento);
+        podeAcessarReferencia(req.usuario, pagamento.tipo_referencia, pagamento.referencia_id, (erroAcesso, pode) => {
+            if (erroAcesso) return responderErroInterno(res, erroAcesso, 'pagamentosController.getById');
+            if (!pode) return naoEncontrado();
+            res.json(pagamento);
+        });
     });
 };
 
@@ -54,25 +51,18 @@ exports.getByReferencia = (req, res) => {
         });
     }
 
-    PagamentosModel.getByReferencia(
-        tipo,
-        referencia_id,
-        (err, pagamentos) => {
+    podeAcessarReferencia(req.usuario, tipo, referencia_id, (erroAcesso, pode) => {
+        if (erroAcesso) return responderErroInterno(res, erroAcesso, 'pagamentosController.getByReferencia');
 
-            if (err) {
-                console.error(
-                    'Erro ao buscar pagamentos:',
-                    err
-                );
-
-                return res.status(500).json({
-                    mensagem: 'Erro ao buscar pagamentos.'
-                });
-            }
-
-            res.json(pagamentos);
+        if (!pode) {
+            return res.status(404).json({ mensagem: 'Referência não encontrada.' });
         }
-    );
+
+        PagamentosModel.getByReferencia(tipo, referencia_id, (err, pagamentos) => {
+            if (err) return responderErroInterno(res, err, 'pagamentosController.getByReferencia');
+            res.json(pagamentos);
+        });
+    });
 };
 
 exports.iniciarPagamentoAgendamento = (req, res) => {
