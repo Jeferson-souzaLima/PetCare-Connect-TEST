@@ -17,7 +17,7 @@ export async function adicionarItem(item, token) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: Bearer `${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(item),
   });
