@@ -118,9 +118,15 @@ exports.createDisponibilidade = (req, res) => {
 
 exports.deleteDisponibilidade = (req, res) => {
     const { id } = req.params;
+    const loja_id = req.usuario.loja_id;
 
-    AgendaDisponibilidade.delete(id, (err) => {
+    if (req.usuario.tipo !== 'lojista' || !loja_id) {
+        return res.status(403).json({ message: 'Apenas o lojista da loja pode remover.' });
+    }
+
+    AgendaDisponibilidade.delete(id, loja_id, (err, result) => {
         if (err) return responderErroInterno(res, err, "agendaLojistaController.deleteDisponibilidade");
+        if (!result.affectedRows) return res.status(404).json({ message: 'Disponibilidade não encontrada.' });
         res.json({ message: 'Disponibilidade removida com sucesso.' });
     });
 };
@@ -162,9 +168,15 @@ exports.createBloqueio = (req, res) => {
 
 exports.deleteBloqueio = (req, res) => {
     const { id } = req.params;
+    const loja_id = req.usuario.loja_id;
 
-    AgendaBloqueios.delete(id, (err) => {
+    if (req.usuario.tipo !== 'lojista' || !loja_id) {
+        return res.status(403).json({ message: 'Apenas o lojista da loja pode remover.' });
+    }
+
+    AgendaBloqueios.delete(id, loja_id, (err, result) => {
         if (err) return responderErroInterno(res, err, "agendaLojistaController.deleteBloqueio");
+        if (!result.affectedRows) return res.status(404).json({ message: 'Bloqueio não encontrado.' });
         res.json({ message: 'Bloqueio removido com sucesso.' });
     });
 };

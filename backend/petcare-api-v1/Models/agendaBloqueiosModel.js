@@ -77,13 +77,14 @@ const AgendaBloqueios = {
         ], callback);
     },
 
-    delete: (id, callback) => {
+    // Sempre filtra pela loja: um lojista só apaga registros da própria loja.
+    delete: (id, loja_id, callback) => {
         const sql = `
             DELETE FROM agenda_bloqueios
-            WHERE id = ?
+            WHERE id = ? AND loja_id = ?
         `;
 
-        db.query(sql, [id], callback);
+        db.query(sql, [id, loja_id], callback);
     }
 
 };
