@@ -41,7 +41,7 @@ export default function ProdutosLojistaPage() {
 
       setProdutos(res.data);
     } catch (err) {
-      console.error("Erro ao carregar produtos", err);
+      console.error("Erro ao carregar produtos", err?.response?.status ?? err?.message);
     } finally {
       setLoading(false);
     }

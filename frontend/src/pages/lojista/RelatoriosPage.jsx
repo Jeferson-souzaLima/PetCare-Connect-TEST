@@ -27,7 +27,7 @@ export default function RelatoriosPage() {
 
       setRelatorio(resposta.data);
     } catch (error) {
-      console.error("Erro ao carregar relatório:", error);
+      console.error("Erro ao carregar relatório:", error?.response?.status ?? error?.message);
 
       setErro(
         error.response?.data?.mensagem ||

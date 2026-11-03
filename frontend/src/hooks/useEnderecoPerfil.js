@@ -67,7 +67,7 @@ export function useEnderecoPerfil({ usuario, token, atualizarUsuario }) {
         texto: "CEP encontrado. Confira os dados e informe o número."
       });
     } catch (err) {
-      console.error("Erro ao consultar CEP:", err);
+      console.error("Erro ao consultar CEP:", err?.response?.status ?? err?.message);
 
       setMensagemEndereco({
         tipo: "erro",
@@ -115,7 +115,7 @@ export function useEnderecoPerfil({ usuario, token, atualizarUsuario }) {
 
       setEditandoEndereco(false);
     } catch (err) {
-      console.error("Erro ao atualizar endereço:", err);
+      console.error("Erro ao atualizar endereço:", err?.response?.status ?? err?.message);
 
       const mensagemBackend =
         err.response?.data?.mensagem || "";

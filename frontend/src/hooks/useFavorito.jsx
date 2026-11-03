@@ -29,7 +29,7 @@ export function useFavorito(
 
             } catch (error) {
 
-                console.error(error);
+                console.error(error?.response?.status ?? error?.message);
 
             } finally {
 
