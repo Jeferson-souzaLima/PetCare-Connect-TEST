@@ -21,7 +21,4 @@ router.delete('/:id', authMiddleware, lojasController.exigirDonoDaLojaOuAdmin, l
 // Rota para buscar loja por ID (pública)
 router.get(`/:id`, lojasController.getLojaPorId);
 
-// Upload de imagem da loja (protegido)
-router.post('/:id/imagem', authMiddleware, upload.single('imagem'), lojasController.uploadImagem);
-
 module.exports = router;

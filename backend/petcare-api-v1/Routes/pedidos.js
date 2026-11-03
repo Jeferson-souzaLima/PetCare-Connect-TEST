@@ -9,7 +9,6 @@ const authorizeRoles = require('../middlewares/authorizeRoles');
 // ===============================
 
 // Criar pedido
-router.post('/', authMiddleware, authorizeRoles('cliente'), pedidosController.create);
 router.post('/calcular-frete', authMiddleware, authorizeRoles('cliente'), pedidosController.calcularFrete);
 router.post('/checkout', authMiddleware, authorizeRoles('cliente'), pedidosController.checkout);
 

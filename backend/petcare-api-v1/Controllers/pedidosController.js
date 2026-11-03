@@ -25,25 +25,6 @@ exports.getAll = (req, res) => {
 };
 
 // ===============================
-// CLIENTE — criar pedido
-// ===============================
-exports.create = (req, res) => {
-    const usuario = req.usuario;
-
-    if (usuario.tipo !== 'cliente') {
-        return res.status(403).json({ mensagem: 'Somente clientes podem criar pedidos.' });
-    }
-
-    const novoPedido = req.body;
-    novoPedido.usuario_id = usuario.id;
-
-    pedidosModel.createPedidoComItens(novoPedido, (err, pedidoId) => {
-        if (err) return responderErroInterno(res, err, "pedidosController.create");
-        res.status(201).json({ mensagem: 'Pedido criado com sucesso!', pedidoId });
-    });
-};
-
-// ===============================
 // CLIENTE — ver apenas seus pedidos
 // ===============================
 exports.getMeusPedidos = (req, res) => {

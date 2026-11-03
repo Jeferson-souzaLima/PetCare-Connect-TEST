@@ -39,32 +39,6 @@ exports.listarLojas = (req, res) => {
     );
 };
 
-// Criar uma nova loja (sem imagem ainda)
-// Upload/atualiza��o da imagem da loja
-exports.uploadImagem = (req, res) => {
-    const { id } = req.params;
-
-    if (!req.file) {
-        return res.status(400).json({ mensagem: 'Nenhuma imagem foi enviada.' });
-    }
-
-    const imagemUrl = `/uploads/${ req.file.filename }`;
-    const query = 'UPDATE lojas SET imagem = ? WHERE id = ?';
-
-    db.query(query, [imagemUrl, id], (err, result) => {
-        if (err) return responderErroInterno(res, err, "lojasController.uploadImagem");
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ mensagem: 'Loja n�o encontrada.' });
-        }
-
-        res.json({
-            mensagem: 'Imagem da loja atualizada com sucesso!',
-            imagemUrl
-        });
-    });
-};
-
 /**
  * Só o administrador ou o lojista dono da loja podem alterar/apagar uma loja
  * pelo id. Responde 404 se a loja não existe e 403 se pertence a outro usuário.
