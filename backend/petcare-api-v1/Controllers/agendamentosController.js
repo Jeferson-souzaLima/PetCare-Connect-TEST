@@ -5,6 +5,7 @@ const AgendaConfig = require('../Models/agendaConfigModel');
 const AgendaDisponibilidade = require('../Models/agendaDisponibilidadeModel');
 const AgendaBloqueios = require('../Models/agendaBloqueiosModel');
 const { responderErroInterno } = require('../utils/erroInterno');
+const { podeAcessar, podeAcessarReferencia } = require('../utils/acessoRegistro');
 
 exports.criarAgendamento = (req, res) => {
 
@@ -259,11 +260,15 @@ exports.getAgendamentoPorId = (req, res) => {
         [id],
         (err, results) => {
             if (err) return responderErroInterno(res, err, "agendamentosController.getAgendamentoPorId");
-            if (!results.length) {
-                return res.status(404).json({ message: 'Agendamento não encontrado.' });
-            }
+            const naoEncontrado = () => res.status(404).json({ message: 'Agendamento não encontrado.' });
+            if (!results.length) return naoEncontrado();
 
-            res.json(results[0]);
+            const agendamento = results[0];
+            podeAcessar(req.usuario, { donoId: agendamento.cliente_id, lojaId: agendamento.loja_id }, (erroAcesso, pode) => {
+                if (erroAcesso) return responderErroInterno(res, erroAcesso, 'agendamentosController.getAgendamentoPorId');
+                if (!pode) return naoEncontrado();
+                res.json(agendamento);
+            });
         }
     );
 };
@@ -448,6 +453,15 @@ exports.deletarAgendamento = (req, res) => {
 exports.getAgendamentosPorPedido = (req, res) => {
     const { pedido_id } = req.params;
 
+    podeAcessarReferencia(req.usuario, 'pedido', pedido_id, (erroAcesso, pode) => {
+        if (erroAcesso) return responderErroInterno(res, erroAcesso, 'agendamentosController.getAgendamentosPorPedido');
+        if (!pode) return res.status(404).json({ message: 'Pedido não encontrado.' });
+
+        listarAgendamentosDoPedido(pedido_id, res);
+    });
+};
+
+function listarAgendamentosDoPedido(pedido_id, res) {
     db.query(
         'SELECT * FROM agendamentos WHERE pedido_id = ?',
         [pedido_id],
@@ -457,7 +471,7 @@ exports.getAgendamentosPorPedido = (req, res) => {
             res.json(results);
         }
     );
-};
+}
 
 exports.criarAgendamentoManual = (req, res) => {
     const usuario = req.usuario;
