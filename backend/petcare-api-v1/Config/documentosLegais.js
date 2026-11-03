@@ -2,7 +2,7 @@
  * Versões dos Termos de Uso e da Política de Privacidade exibidos no
  * frontend (frontend/src/pages/legal). O cadastro grava qual versão a pessoa
  * aceitou. Ao mudar o texto de um documento, atualize a versão aqui e no
- * frontend (frontend/src/config/documentosLegais.js).
+ * frontend (frontend/src/constants/documentosLegais.js).
  *
  * "rascunho": texto ainda pendente de revisão jurídica.
  */

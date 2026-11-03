@@ -1,6 +1,7 @@
 import { API_URL } from "@/services/apiUrl";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { CaixaAceiteTermos } from "@/components/legal/CaixaAceiteTermos";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -8,6 +9,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmacaoSenha, setConfirmacaoSenha] = useState("");
+  const [aceiteTermos, setAceiteTermos] = useState(false);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -22,12 +24,17 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!aceiteTermos) {
+      setErro("Para criar a conta, aceite os Termos de Uso e a Política de Privacidade.");
+      return;
+    }
+
     setEnviando(true);
     try {
       const response = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, email, senha, confirmacaoSenha }),
+        body: JSON.stringify({ nome, email, senha, confirmacaoSenha, aceiteTermos }),
       });
       const data = await response.json();
 
@@ -101,6 +108,7 @@ export default function RegisterPage() {
               minLength={8}
               required
             />
+            <CaixaAceiteTermos marcado={aceiteTermos} onChange={setAceiteTermos} />
             <button type="submit" disabled={enviando} className="w-full mt-2 bg-green-900 text-white py-3 rounded-xl font-semibold hover:bg-green-800 disabled:opacity-60 transition">
               {enviando ? "Criando conta..." : "Criar conta"}
             </button>

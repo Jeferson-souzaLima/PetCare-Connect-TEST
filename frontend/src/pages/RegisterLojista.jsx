@@ -1,6 +1,7 @@
 import { API_URL } from "@/services/apiUrl";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { CaixaAceiteTermos } from "@/components/legal/CaixaAceiteTermos";
 
 export default function RegisterLojista() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export default function RegisterLojista() {
   const [cidade, setCidade] = useState("");
   const [uf, setUf] = useState("");
   const [descricao, setDescricao] = useState("");
+  const [aceiteTermos, setAceiteTermos] = useState(false);
   const [erro, setErro] = useState("");
 
   const handleRegister = async (e) => {
@@ -21,6 +23,11 @@ export default function RegisterLojista() {
 
     if (!nomeFantasia || !cnpj || !email || !senha) {
       setErro("Preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    if (!aceiteTermos) {
+      setErro("Para cadastrar a loja, aceite os Termos de Uso e a Política de Privacidade.");
       return;
     }
 
@@ -38,6 +45,7 @@ export default function RegisterLojista() {
           cidade,
           uf,
           descricao,
+          aceiteTermos,
         }),
       });
 
@@ -141,6 +149,8 @@ export default function RegisterLojista() {
             placeholder="Descrição da loja (opcional)"
             rows={3}
           />
+
+          <CaixaAceiteTermos marcado={aceiteTermos} onChange={setAceiteTermos} />
 
           <button
             type="submit"
