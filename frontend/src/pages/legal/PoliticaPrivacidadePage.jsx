@@ -20,12 +20,13 @@ export default function PoliticaPrivacidadePage() {
       <ul>
         <li><strong>Conta:</strong> nome, e-mail, telefone e senha. A senha é guardada de forma cifrada (hash) e ninguém da equipe consegue lê-la.</li>
         <li><strong>Endereço:</strong> CEP, rua, número, complemento, bairro, cidade e UF, e as coordenadas geográficas calculadas a partir dele, usadas para entrega e cálculo de frete.</li>
-        <li><strong>Localização do aparelho:</strong> só quando você autoriza no navegador, para mostrar lojas e serviços próximos. Ela é usada na busca e não é gravada no seu cadastro.</li>
+        <li><strong>Localização do aparelho:</strong> só quando você autoriza no navegador. É usada para mostrar lojas e serviços próximos e para calcular a entrega. Se você escolher usar a localização atual para definir o endereço do seu perfil, as coordenadas ficam gravadas no seu cadastro.</li>
         <li><strong>Pets:</strong> nome, espécie, raça, idade e foto que você cadastrar.</li>
         <li><strong>Uso da plataforma:</strong> pedidos, agendamentos, favoritos e histórico de buscas (este último fica só no seu navegador).</li>
         <li><strong>Pagamentos:</strong> valor e situação do pagamento. Os dados do cartão ou do Pix são informados diretamente no Mercado Pago; o PetCare Connect não recebe nem guarda esses dados.</li>
         <li><strong>Lojistas:</strong> nome fantasia, razão social, CNPJ, telefone, endereço e descrição da loja, além das imagens publicadas.</li>
-        <li><strong>Dados técnicos:</strong> endereço IP e registros de acesso, usados para segurança (por exemplo, para limitar tentativas de login).</li>
+        <li><strong>Clientes atendidos fora da plataforma:</strong> quando a loja registra um agendamento manual, ela informa o nome e o telefone do cliente e o nome do pet. A loja é responsável por ter o direito de usar esses dados.</li>
+        <li><strong>Dados técnicos:</strong> endereço IP, usado temporariamente para segurança (por exemplo, para limitar tentativas de login).</li>
       </ul>
 
       <h2>3. Para que usamos e com base em quê</h2>
@@ -33,8 +34,8 @@ export default function PoliticaPrivacidadePage() {
         <li><strong>Criar e manter sua conta, processar pedidos, agendamentos, entregas e pagamentos:</strong> execução do contrato com você (art. 7º, V, da LGPD).</li>
         <li><strong>Enviar e-mails necessários ao serviço</strong>, como a confirmação de cadastro: execução do contrato.</li>
         <li><strong>Segurança e prevenção de fraudes e abusos:</strong> legítimo interesse (art. 7º, IX).</li>
-        <li><strong>Cumprir obrigações legais</strong>, como a guarda de registros de acesso exigida pelo Marco Civil da Internet: obrigação legal (art. 7º, II).</li>
-        <li><strong>Usar a localização do aparelho:</strong> sua autorização no navegador, que pode ser retirada a qualquer momento nas configurações dele.</li>
+        <li><strong>Cumprir obrigações legais e regulatórias:</strong> obrigação legal (art. 7º, II). [DEFINIR com o jurídico, incluindo a guarda de registros de acesso do Marco Civil da Internet, que ainda não está implementada.]</li>
+        <li><strong>Usar a localização do aparelho:</strong> sua autorização no navegador, que pode ser retirada a qualquer momento nas configurações dele. Ao alterar o endereço do perfil, as coordenadas gravadas são substituídas pelas do novo endereço; para excluí-las, use os direitos do item 7.</li>
       </ul>
       <p>Não vendemos seus dados pessoais.</p>
 
@@ -44,6 +45,7 @@ export default function PoliticaPrivacidadePage() {
         <li><strong>Mercado Pago:</strong> processa os pagamentos.</li>
         <li><strong>Provedores de infraestrutura</strong> que hospedam e operam a plataforma: Vercel (site), Render (servidor), Aiven (banco de dados), Cloudflare (rede e armazenamento de imagens) e o provedor de envio de e-mails [A DEFINIR].</li>
         <li><strong>OpenStreetMap (Nominatim) e ViaCEP:</strong> recebem o endereço ou o CEP informado para encontrar as coordenadas e completar o endereço.</li>
+        <li><strong>Google Fonts:</strong> fornece as fontes do site; ao carregar a página, seu navegador se conecta ao Google, que recebe seu endereço IP.</li>
         <li><strong>Autoridades públicas</strong>, quando houver obrigação legal ou ordem judicial.</li>
       </ul>
 
