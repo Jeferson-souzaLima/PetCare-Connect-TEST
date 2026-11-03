@@ -115,3 +115,20 @@ test('reenvio de confirmação: a 6ª tentativa na mesma hora recebe 429', async
         assert.match((await r.json()).mensagem, /reenvios/);
     });
 });
+
+test('login: CF-Connecting-IP inválido não cria contadores novos (usa o IP da conexão)', async () => {
+    loginDeveFalhar = true;
+    await comServidor(novoApp(), async (base) => {
+        for (let i = 0; i < 10; i++) await post(base, '/auth/login', { 'CF-Connecting-IP': `invalido-${i}` });
+        assert.equal((await post(base, '/auth/login', { 'CF-Connecting-IP': 'outro-invalido' })).status, 429);
+    });
+});
+
+test('login: endereços IPv6 da mesma sub-rede /56 compartilham o limite', async () => {
+    loginDeveFalhar = true;
+    await comServidor(novoApp(), async (base) => {
+        for (let i = 1; i <= 10; i++) await post(base, '/auth/login', { 'CF-Connecting-IP': `2001:db8:0:1::${i}` });
+        assert.equal((await post(base, '/auth/login', { 'CF-Connecting-IP': '2001:db8:0:1::ff' })).status, 429);
+        assert.equal((await post(base, '/auth/login', { 'CF-Connecting-IP': '2001:db8:1:100::1' })).status, 401);
+    });
+});
