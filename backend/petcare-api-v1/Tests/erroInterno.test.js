@@ -128,7 +128,7 @@ test('cadastro (POST /auth/register): erro de banco não vaza (antes: send(selec
     const emailConfirmationController = require('../Controllers/emailConfirmationController');
     t.mock.method(db, 'query', (_sql, _v, cb) => cb(erroMysql()));
     const resposta = await chamar(emailConfirmationController.register, {
-        body: { nome: 'Fulano', email: 'fulano@exemplo.com', senha: 'senha12345', confirmarSenha: 'senha12345', confirmacaoSenha: 'senha12345' }
+        body: { nome: 'Fulano', email: 'fulano@exemplo.com', senha: 'senha12345', confirmarSenha: 'senha12345', confirmacaoSenha: 'senha12345', aceiteTermos: true }
     });
     assertSemVazamento(t, resposta, logs);
 });
