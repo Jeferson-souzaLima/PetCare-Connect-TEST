@@ -36,9 +36,6 @@ export default function ProdutosLojistaPage() {
   // ===============================
   const carregarProdutos = async () => {
 
-    console.log("TOKEN:", token);
-    console.log("USUARIO", usuario);
-    
     try {
       const res = await api.get("/produtos/meus");
 

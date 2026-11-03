@@ -398,12 +398,6 @@ export default function HomePage() {
 
                     let dadosServicos = [];
 
-                    console.log("LOCALIZAÇÃO HOME:", {
-                        latitude,
-                        longitude,
-                        geoLoading
-                    });
-
                     if (latitude && longitude) {
 
                         const data =

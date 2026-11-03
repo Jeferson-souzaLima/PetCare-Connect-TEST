@@ -9,7 +9,6 @@ export default function MeusAgendamentosPage() {
 
   const location = useLocation();
   const novoAgendamento = location.state?.novoAgendamento;
-  console.log("novoAgendamento:", novoAgendamento);
 
   useEffect(() => {
     fetch(`${API_URL}/agendamentos/meus`, {
@@ -80,11 +79,6 @@ export default function MeusAgendamentosPage() {
           <div className="space-y-4">
 
             {agendamentos.map((agendamento) => {
-
-              console.log({
-                idCard: agendamento.id,
-                novoAgendamento,
-              });
 
               return (
                 <div

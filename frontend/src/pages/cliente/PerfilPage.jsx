@@ -185,9 +185,8 @@ export default function PerfilPage() {
       setPets((prev) =>
         prev.filter((p) => p.id !== id)
       );
-    } catch (err) {
+    } catch {
       alert("Erro ao remover pet.");
-      console.log(err);
     }
   }
 

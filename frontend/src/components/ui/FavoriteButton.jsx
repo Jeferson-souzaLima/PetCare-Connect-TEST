@@ -25,11 +25,7 @@ export function FavoriteButton({
                 e.preventDefault();
                 e.stopPropagation();
 
-                console.log("Clique");
-
                 await toggleFavorito();
-
-                console.log("Fim");
             }}
             className={`
                 w-10

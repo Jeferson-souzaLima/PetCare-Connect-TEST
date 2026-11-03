@@ -267,10 +267,6 @@ export default function AgendaLojistaPage() {
   }
 };
 
-  useEffect(() => {
-    console.log("SERVICOS:", servicos);
-  }, [servicos]);
-
   const statusFormatado = {
     aguardando_pagamento: {
       texto: "🟡 Aguardando pagamento",
