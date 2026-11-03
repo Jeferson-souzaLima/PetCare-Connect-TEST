@@ -3,26 +3,39 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   useCallback
 } from "react";
 
 const AuthContext = createContext();
 
-export function AuthProvider({ children }) {
-  const [usuario, setUsuario] = useState(null);
-  const [token, setToken] = useState(null);
-
-  useEffect(() => {
-    // Tenta carregar dados do localStorage ao iniciar
+/*
+ * Lê a sessão salva de forma síncrona, antes da primeira renderização.
+ * Assim o PrivateRoute já recebe o usuário em uma recarga (F5) ou link direto,
+ * em vez de redirecionar para /login enquanto a sessão ainda não foi lida.
+ * Dados corrompidos no localStorage são tratados como "sem sessão".
+ */
+function lerSessaoSalva() {
+  try {
     const storedUser = localStorage.getItem("usuario");
     const storedToken = localStorage.getItem("token");
 
     if (storedUser && storedToken) {
-      setUsuario(JSON.parse(storedUser));
-      setToken(storedToken);
+      const usuario = JSON.parse(storedUser);
+
+      if (usuario && typeof usuario === "object") {
+        return { usuario, token: storedToken };
+      }
     }
-  }, []);
+  } catch {
+    console.warn("Sessão salva inválida; é necessário entrar novamente.");
+  }
+
+  return { usuario: null, token: null };
+}
+
+export function AuthProvider({ children }) {
+  const [usuario, setUsuario] = useState(() => lerSessaoSalva().usuario);
+  const [token, setToken] = useState(() => lerSessaoSalva().token);
 
   const login = (userData, jwtToken) => {
     setUsuario(userData);
