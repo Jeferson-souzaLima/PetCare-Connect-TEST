@@ -2,6 +2,11 @@ const PagamentosModel = require('../Models/pagamentosModel');
 const PedidosModel = require('../Models/pedidosModel');
 const AgendamentosModel = require('../Models/agendamentosModel');
 const MercadoPagoService = require('../Services/mercadoPagoService');
+const {
+    mapearStatusMercadoPago,
+    valorConfere,
+    registrarResultadoPagamento
+} = require('../Services/pagamentoStatusService');
 
 const {
     getSignatureManifest,
@@ -847,11 +852,7 @@ exports.webhook = async (req, res) => {
                 const valorEsperado =
                     Number(pagamentoInterno.valor);
 
-                if (
-                    !Number.isFinite(valorPagoMercadoPago) ||
-                    !Number.isFinite(valorEsperado) ||
-                    Math.abs(valorPagoMercadoPago - valorEsperado) > 0.01
-                ) {
+                if (!valorConfere(valorPagoMercadoPago, valorEsperado)) {
                     console.error(
                         'Valor do pagamento divergente:',
                         {
@@ -866,195 +867,22 @@ exports.webhook = async (req, res) => {
                     return res.sendStatus(200);
                 }
 
-                /*
-                 * Converte os status do Mercado Pago
-                 * para os status aceitos pelo banco.
-                 */
-                let novoStatus = null;
+                const novoStatus = mapearStatusMercadoPago(statusMercadoPago);
 
-                switch (statusMercadoPago) {
+                if (!novoStatus) {
+                    console.warn(
+                        'Status Mercado Pago não mapeado:',
+                        statusMercadoPago
+                    );
 
-                    case 'approved':
-                        novoStatus = 'aprovado';
-                        break;
-
-                    case 'rejected':
-                        novoStatus = 'recusado';
-                        break;
-
-                    case 'cancelled':
-                        novoStatus = 'cancelado';
-                        break;
-
-                    case 'expired':
-                        novoStatus = 'expirado';
-                        break;
-
-                    case 'pending':
-                    case 'in_process':
-                    case 'in_mediation':
-                        novoStatus = 'pendente';
-                        break;
-
-                    default:
-                        console.warn(
-                            'Status Mercado Pago não mapeado:',
-                            statusMercadoPago
-                        );
-
-                        return res.sendStatus(200);
-                }
-
-                /*
-                 * Primeiro salvamos o ID real do pagamento
-                 * gerado pelo Mercado Pago.
-                 */
-                PagamentosModel.updateGatewayPaymentId(
-                    pagamentoInterno.id,
-                    String(pagamentoMercadoPago.id),
-                    (err) => {
-
-                        if (err) {
-
-                            console.error(
-                                'Erro ao salvar gateway_payment_id:',
-                                err
-                            );
-
-                            return res.sendStatus(200);
-                        }
-
-                        /*
-                         * Depois atualizamos o status.
-                         */
-                        PagamentosModel.updateStatus(
-                            pagamentoInterno.id,
-                            novoStatus,
-                            (err) => {
-
-                                if (err) {
-
-                                    console.error(
-                                        'Erro ao atualizar status do pagamento:',
-                                        err
-                                    );
-
-                                    return res.sendStatus(200);
-                                }
-
-                                console.log(
-                                    'Pagamento atualizado com sucesso:',
-                                    {
-                                        pagamento_id:
-                                            pagamentoInterno.id,
-
-                                        gateway_payment_id:
-                                            pagamentoMercadoPago.id,
-
-                                        status:
-                                            novoStatus
-                                    }
-                                );
-
-                if (pagamentoInterno.tipo_referencia === 'pedido') {
-                    if (novoStatus === 'aprovado') {
-                        return PedidosModel.confirmarPagamento(pagamentoInterno.referencia_id, (erro, resultado) => {
-                            if (erro) console.error('Erro ao confirmar pedido após pagamento:', erro);
-                            if (!erro && resultado.affectedRows === 0) console.warn('Pedido não confirmado: reserva expirada ou status incompatível.', pagamentoInterno.referencia_id);
-                            return res.sendStatus(200);
-                        });
-                    }
                     return res.sendStatus(200);
                 }
 
-                if (pagamentoInterno.tipo_referencia === 'agendamento') {
-
-                                    // Pagamento aprovado → confirma o agendamento
-                                    if (novoStatus === 'aprovado') {
-
-                                        AgendamentosModel.atualizarStatus(
-                                            pagamentoInterno.referencia_id,
-                                            'confirmado',
-                                            (err) => {
-
-                                                if (err) {
-                                                    console.error(
-                                                        'Erro ao confirmar agendamento após pagamento:',
-                                                        err
-                                                    );
-
-                                                    return res.sendStatus(200);
-                                                }
-
-                                                console.log(
-                                                    'Agendamento confirmado após pagamento:',
-                                                    pagamentoInterno.referencia_id
-                                                );
-
-                                                return res.sendStatus(200);
-                                            }
-                                        );
-
-                                        return;
-                                    }
-
-                                    // Pagamento cancelado ou expirado
-                                    // → cancela o agendamento e libera o horário
-                                    if (
-                                        novoStatus === 'cancelado' ||
-                                        novoStatus === 'expirado'
-                                    ) {
-
-                                        AgendamentosModel.atualizarStatus(
-                                            pagamentoInterno.referencia_id,
-                                            'cancelado',
-                                            (err) => {
-
-                                                if (err) {
-                                                    console.error(
-                                                        'Erro ao cancelar agendamento após pagamento:',
-                                                        err
-                                                    );
-
-                                                    return res.sendStatus(200);
-                                                }
-
-                                                console.log(
-                                                    'Agendamento cancelado após pagamento:',
-                                                    {
-                                                        agendamento_id:
-                                                            pagamentoInterno.referencia_id,
-
-                                                        motivo:
-                                                            novoStatus
-                                                    }
-                                                );
-
-                                                return res.sendStatus(200);
-                                            }
-                                        );
-
-                                        return;
-                                    }
-
-                                    /*
-                                    * rejected → pagamento recusado.
-                                    *
-                                    * O agendamento permanece
-                                    * aguardando_pagamento para permitir
-                                    * uma nova tentativa.
-                                    *
-                                    * pending / in_process / in_mediation
-                                    * também não alteram o agendamento.
-                                    */
-
-                                    return res.sendStatus(200);
-                                }
-
-                                return res.sendStatus(200);
-                            }
-                        );
-                    }
+                return registrarResultadoPagamento(
+                    pagamentoInterno,
+                    pagamentoMercadoPago.id,
+                    novoStatus,
+                    () => res.sendStatus(200)
                 );
             }
         );
