@@ -48,11 +48,6 @@ export function MobileBottomNav() {
   const [historicoBusca, setHistoricoBusca] = useState([]);
   const [toastVisivel, setToastVisivel] = useState(false);
 
-  // Esta navegação é exclusiva do cliente.
-  if (usuario?.tipo === "lojista") {
-    return null;
-  }
-
   const carrinhoTemItens = carrinho.itens.length > 0;
 
   function estaAtivo(area) {
@@ -245,6 +240,12 @@ export function MobileBottomNav() {
       }
     };
   }, []);
+
+  // Esta navegação é exclusiva do cliente. O retorno antecipado fica depois
+  // de todos os hooks para manter a mesma ordem de hooks entre renderizações.
+  if (usuario?.tipo === "lojista") {
+    return null;
+  }
 
   return (
     <>
