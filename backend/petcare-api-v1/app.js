@@ -26,6 +26,11 @@ const cepRoutes = require('./Routes/cep');
 
 const app = express();
 
+// Não confiar em X-Forwarded-For: o Render repassa valores enviados pelo cliente
+// e não documenta quantos proxies existem. O IP real para o rate limit vem do
+// CF-Connecting-IP (ver middlewares/rateLimitAuth.js).
+app.set('trust proxy', false);
+
 // Configurações
 const corsOrigins = [...new Set([
     ...(process.env.CORS_ORIGIN || 'http://localhost:5173')
