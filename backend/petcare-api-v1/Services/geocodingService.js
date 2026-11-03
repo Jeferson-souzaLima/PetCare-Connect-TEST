@@ -30,12 +30,6 @@ exports.buscarCoordenadas = async ({
     cep
 }) => {
 
-    console.log("Endereço recebido:", {
-        endereco,
-        cidade,
-        uf,
-        cep
-    });
 
     try {
 
@@ -55,10 +49,6 @@ exports.buscarCoordenadas = async ({
             .filter(Boolean)
             .join(", ");
 
-        console.log(
-            "Tentativa 1 - endereço completo:",
-            enderecoComNumero
-        );
 
         let resultado = await buscarNoNominatim(
             enderecoComNumero
@@ -84,10 +74,6 @@ exports.buscarCoordenadas = async ({
                 .filter(Boolean)
                 .join(", ");
 
-            console.log(
-                "Tentativa 2 - endereço sem número:",
-                enderecoSemNumero
-            );
 
             resultado = await buscarNoNominatim(
                 enderecoSemNumero
@@ -96,17 +82,10 @@ exports.buscarCoordenadas = async ({
 
         if (!resultado) {
 
-            console.log(
-                "Nenhuma coordenada encontrada para o endereço."
-            );
 
             return null;
         }
 
-        console.log(
-            "Coordenadas encontradas:",
-            resultado
-        );
 
         return {
             latitude: Number(resultado.lat),

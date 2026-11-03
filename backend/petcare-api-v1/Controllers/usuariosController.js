@@ -1,7 +1,7 @@
 const db = require('../db');
 const usuarioModel = require('../Models/usuariosModel');
 const geocodingService = require('../Services/geocodingService');
-const { responderErroInterno } = require('../utils/erroInterno');
+const { responderErroInterno, registrarErroInterno } = require('../utils/erroInterno');
 
 const CAMPOS_ENDERECO = ['cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf'];
 
@@ -161,7 +161,7 @@ exports.atualizarMeuPerfil = async (req, res) => {
             usuario: { ...usuarioAtual, ...dadosAtualizados }
         });
     } catch (err) {
-        console.error('Erro ao processar atualizacao do perfil:', err);
+        registrarErroInterno('usuariosController: Erro ao processar atualizacao do perfil', err);
         return res.status(500).json({ mensagem: 'Erro ao processar atualizacao do perfil.' });
     }
 };

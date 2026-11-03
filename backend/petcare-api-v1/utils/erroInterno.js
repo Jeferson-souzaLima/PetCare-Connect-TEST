@@ -16,6 +16,13 @@ function resumirErro(err) {
         return { codigo: err.code, errno: err.errno, sqlState: err.sqlState };
     }
 
+    // Erros do nodemailer trazem o e-mail do destinatário em message/response/rejected.
+    const ehErroDeSmtp = Boolean(err.responseCode || err.command || err.rejected);
+
+    if (ehErroDeSmtp) {
+        return { nome: err.name, codigo: err.code, comando: err.command, codigoResposta: err.responseCode };
+    }
+
     return { nome: err.name, codigo: err.code, mensagem: err.message, stack: err.stack };
 }
 

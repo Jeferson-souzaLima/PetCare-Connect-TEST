@@ -1,7 +1,7 @@
 // controllers/lojasController.js
 const lojaModel = require('../Models/lojasModel');
 const db = require('../db');
-const { responderErroInterno } = require('../utils/erroInterno');
+const { responderErroInterno, registrarErroInterno } = require('../utils/erroInterno');
 
 // Listar todas as lojas
 exports.listarLojas = (req, res) => {
@@ -27,7 +27,7 @@ exports.listarLojas = (req, res) => {
         (err, resultado) => {
 
             if (err) {
-                console.error(err);
+                registrarErroInterno('lojasController', err);
 
                 return res.status(500).json({
                     mensagem: "Erro ao listar lojas."

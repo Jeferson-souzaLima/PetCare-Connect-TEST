@@ -1,5 +1,5 @@
 const PagamentosModel = require('../Models/pagamentosModel');
-const { responderErroInterno } = require('../utils/erroInterno');
+const { responderErroInterno, registrarErroInterno } = require('../utils/erroInterno');
 const { podeAcessarReferencia } = require('../utils/acessoRegistro');
 const PedidosModel = require('../Models/pedidosModel');
 const AgendamentosModel = require('../Models/agendamentosModel');
@@ -81,10 +81,7 @@ exports.iniciarPagamentoAgendamento = (req, res) => {
         (err, agendamento) => {
 
             if (err) {
-                console.error(
-                    'Erro ao buscar agendamento:',
-                    err
-                );
+                registrarErroInterno('pagamentosController: Erro ao buscar agendamento', err);
 
                 return res.status(500).json({
                     mensagem: 'Erro ao buscar agendamento.'
@@ -124,10 +121,7 @@ exports.iniciarPagamentoAgendamento = (req, res) => {
                 (err, pagamentosExistentes) => {
 
                     if (err) {
-                        console.error(
-                            'Erro ao verificar pagamento existente:',
-                            err
-                        );
+                        registrarErroInterno('pagamentosController: Erro ao verificar pagamento existente', err);
 
                         return res.status(500).json({
                             mensagem: 'Erro ao verificar pagamento.'
@@ -169,10 +163,7 @@ exports.iniciarPagamentoAgendamento = (req, res) => {
                                 (err, result) => {
 
                                     if (err) {
-                                        console.error(
-                                            'Erro ao criar pagamento:',
-                                            err
-                                        );
+                                        registrarErroInterno('pagamentosController: Erro ao criar pagamento', err);
 
                                         return res.status(500).json({
                                             mensagem: 'Erro ao criar pagamento.'
@@ -193,10 +184,7 @@ exports.iniciarPagamentoAgendamento = (req, res) => {
                         })
                         .catch((error) => {
 
-                            console.error(
-                                'Erro ao criar preferência no Mercado Pago:',
-                                error
-                            );
+                            registrarErroInterno('pagamentosController: Erro ao criar preferência no Mercado Pago', error);
 
                             return res.status(502).json({
                                 mensagem: 'Não foi possível iniciar o pagamento.'
@@ -251,10 +239,7 @@ exports.webhook = async (req, res) => {
             });
         }
 
-        console.error(
-            'Erro ao validar assinatura do webhook:',
-            error
-        );
+        registrarErroInterno('pagamentosController: Erro ao validar assinatura do webhook', error);
 
         return res.sendStatus(500);
     }
@@ -281,11 +266,6 @@ exports.webhook = async (req, res) => {
         // Consulta o pagamento diretamente na API do Mercado Pago.
         const pagamentoMercadoPago =
             await MercadoPagoService.buscarPagamento(dataId);
-
-        console.log(
-            'Pagamento retornado pelo Mercado Pago:',
-            pagamentoMercadoPago
-        );
 
         if (!pagamentoMercadoPago) {
             console.error(
@@ -359,10 +339,7 @@ exports.webhook = async (req, res) => {
 
                 if (err) {
 
-                    console.error(
-                        'Erro ao localizar pagamento interno:',
-                        err
-                    );
+                    registrarErroInterno('pagamentosController: Erro ao localizar pagamento interno', err);
 
                     return res.sendStatus(200);
                 }
@@ -385,11 +362,6 @@ exports.webhook = async (req, res) => {
                         pagamento =>
                             pagamento.status === 'pendente'
                     ) || pagamentos[0];
-
-                console.log(
-                    'Pagamento interno encontrado:',
-                    pagamentoInterno
-                );
 
                 const valorEsperado =
                     Number(pagamentoInterno.valor);
@@ -431,10 +403,7 @@ exports.webhook = async (req, res) => {
 
     } catch (error) {
 
-        console.error(
-            'Erro ao processar pagamento do Mercado Pago:',
-            error
-        );
+        registrarErroInterno('pagamentosController: Erro ao processar pagamento do Mercado Pago', error);
 
         /*
          * O Webhook foi autenticado corretamente.

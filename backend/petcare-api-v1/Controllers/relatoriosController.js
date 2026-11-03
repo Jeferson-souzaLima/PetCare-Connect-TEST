@@ -1,4 +1,5 @@
 const relatoriosModel = require('../Models/relatoriosModel');
+const { registrarErroInterno } = require('../utils/erroInterno');
 
 const FORMATO_DATA = /^\d{4}-\d{2}-\d{2}$/;
 const LIMITE_DIAS_PERIODO = 366;
@@ -84,7 +85,7 @@ exports.obterRelatorio = async (req, res) => {
             agendamentos_servicos: relatorio.agendamentos
         });
     } catch (erro) {
-        console.error('Erro ao gerar relatório do lojista:', erro);
+        registrarErroInterno('relatoriosController: Erro ao gerar relatório do lojista', erro);
         return res.status(500).json({ mensagem: 'Não foi possível gerar o relatório.' });
     }
 };

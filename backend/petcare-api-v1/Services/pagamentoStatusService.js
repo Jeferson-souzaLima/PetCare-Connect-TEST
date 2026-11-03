@@ -1,6 +1,7 @@
 const PagamentosModel = require('../Models/pagamentosModel');
 const PedidosModel = require('../Models/pedidosModel');
 const AgendamentosModel = require('../Models/agendamentosModel');
+const { registrarErroInterno } = require('../utils/erroInterno');
 
 /*
  * Converte os status do Mercado Pago
@@ -42,7 +43,7 @@ function aplicarStatusNaReferencia(pagamentoInterno, novoStatus, concluir) {
 
         if (novoStatus === 'aprovado') {
             return PedidosModel.confirmarPagamento(pagamentoInterno.referencia_id, (erro, resultado) => {
-                if (erro) console.error('Erro ao confirmar pedido após pagamento:', erro);
+                if (erro) registrarErroInterno('pagamentoStatusService: confirmar pedido após pagamento', erro);
                 if (!erro && resultado.affectedRows === 0) console.warn('Pedido não confirmado: reserva expirada ou status incompatível.', pagamentoInterno.referencia_id);
                 return concluir();
             });
@@ -60,7 +61,7 @@ function aplicarStatusNaReferencia(pagamentoInterno, novoStatus, concluir) {
                 'confirmado',
                 (err) => {
                     if (err) {
-                        console.error('Erro ao confirmar agendamento após pagamento:', err);
+                        registrarErroInterno('pagamentoStatusService: confirmar agendamento após pagamento', err);
                         return concluir();
                     }
 
@@ -78,7 +79,7 @@ function aplicarStatusNaReferencia(pagamentoInterno, novoStatus, concluir) {
                 'cancelado',
                 (err) => {
                     if (err) {
-                        console.error('Erro ao cancelar agendamento após pagamento:', err);
+                        registrarErroInterno('pagamentoStatusService: cancelar agendamento após pagamento', err);
                         return concluir();
                     }
 
@@ -122,7 +123,7 @@ function registrarResultadoPagamento(pagamentoInterno, gatewayPaymentId, novoSta
         (err) => {
 
             if (err) {
-                console.error('Erro ao salvar gateway_payment_id:', err);
+                registrarErroInterno('pagamentoStatusService: salvar gateway_payment_id', err);
                 return concluir();
             }
 
@@ -135,7 +136,7 @@ function registrarResultadoPagamento(pagamentoInterno, gatewayPaymentId, novoSta
                 (err) => {
 
                     if (err) {
-                        console.error('Erro ao atualizar status do pagamento:', err);
+                        registrarErroInterno('pagamentoStatusService: atualizar status do pagamento', err);
                         return concluir();
                     }
 

@@ -3,7 +3,7 @@ const AgendaDisponibilidade = require('../Models/agendaDisponibilidadeModel');
 const AgendaBloqueios = require('../Models/agendaBloqueiosModel');
 const Agendamentos = require('../Models/agendamentosModel');
 const Servicos = require('../Models/servicosModel');
-const { responderErroInterno } = require('../utils/erroInterno');
+const { responderErroInterno, registrarErroInterno } = require('../utils/erroInterno');
 
 // ========================
 // Configura��o da Agenda
@@ -209,11 +209,8 @@ exports.getHorariosDisponiveis = async (req, res) => {
             const [ano, mes, dia] = data.split("-").map(Number);
 
             const diaSemana = new Date(ano, mes - 1, dia).getDay();
-            console.log("Data:", data);
-            console.log("DiaSemana:", diaSemana);
 
             const config = await AgendaConfig.getByLojaIdPromise(loja_id);
-            console.log("Config:", config);
 
             if (!config) {
                 return res.status(400).json({
@@ -226,7 +223,6 @@ exports.getHorariosDisponiveis = async (req, res) => {
                     loja_id,
                     diaSemana
                 );
-            console.log("Disponibilidade:", disponibilidade);
 
             if (!disponibilidade.length) {
                 return res.json([]);
@@ -237,14 +233,12 @@ exports.getHorariosDisponiveis = async (req, res) => {
                     loja_id,
                     data
                 );
-            console.log("Bloqueios:", bloqueios);
 
             const agendamentos =
                 await Agendamentos.getByDataPromise(
                     loja_id,
                     data
                 );
-            console.log("Agendamentos:", agendamentos);
 
             // Cada dia possui apenas um registro de disponibilidade.
             const horario = disponibilidade[0];
@@ -313,7 +307,6 @@ exports.getHorariosDisponiveis = async (req, res) => {
 
             }
 
-            console.log("Hor�rios gerados:", horarios);
             return res.json(horarios);
 
         });
@@ -376,10 +369,7 @@ exports.getDatasComAgendamentosConfirmados = (req, res) => {
         dataFinal,
         (err, resultados) => {
             if (err) {
-                console.error(
-                    'Erro ao buscar datas com agendamentos confirmados:',
-                    err
-                );
+                registrarErroInterno('agendaLojistaController: Erro ao buscar datas com agendamentos confirmados', err);
 
                 return res.status(500).json({
                     message: 'Erro ao buscar agendamentos.'

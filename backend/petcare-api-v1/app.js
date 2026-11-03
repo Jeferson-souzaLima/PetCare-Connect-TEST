@@ -23,6 +23,7 @@ const pagamentosRoutes = require('./Routes/pagamentos');
 const relatoriosRoutes = require('./Routes/relatorios');
 const pedidosModel = require('./Models/pedidosModel');
 const cepRoutes = require('./Routes/cep');
+const { registrarErroInterno } = require('./utils/erroInterno');
 
 const app = express();
 
@@ -79,7 +80,7 @@ app.use('/cep', cepRoutes);
 
 // Libera reservas de estoque expiradas. O pagamento aprovado fora da janela não confirma o pedido.
 setInterval(() => pedidosModel.cancelarReservasExpiradas((err) => {
-    if (err) console.error('Erro ao liberar reservas expiradas:', err);
+    if (err) registrarErroInterno('app: liberar reservas expiradas', err);
 }), 60 * 1000).unref();
 
 // Inicia o servidor
