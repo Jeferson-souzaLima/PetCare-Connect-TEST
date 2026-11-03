@@ -1,6 +1,7 @@
 const db = require('../db');
 const usuarioModel = require('../Models/usuariosModel');
 const geocodingService = require('../Services/geocodingService');
+const { responderErroInterno } = require('../utils/erroInterno');
 
 const CAMPOS_ENDERECO = ['cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf'];
 
@@ -22,7 +23,7 @@ function salvarPerfil(id, dados) {
 
 exports.listarUsuarios = (req, res) => {
     usuarioModel.getAll((err, results) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "usuariosController.listarUsuarios");
         res.json(results);
     });
 };
@@ -30,7 +31,7 @@ exports.listarUsuarios = (req, res) => {
 exports.criarUsuario = (req, res) => {
     const novoUsuario = req.body;
     usuarioModel.create(novoUsuario, (err, result) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "usuariosController.criarUsuario");
         res.status(201).json({ id: result.insertId, ...novoUsuario });
     });
 };

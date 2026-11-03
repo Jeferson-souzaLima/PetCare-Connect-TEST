@@ -2,6 +2,7 @@ const db = require('../db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { secret } = require('../Config/jwt');
+const { responderErroInterno } = require('../utils/erroInterno');
 
 
 // =========================
@@ -18,20 +19,20 @@ exports.register = (req, res) => {
     }
 
     db.query('SELECT * FROM usuarios WHERE email = ?', [email], (err, results) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "authController.register");
 
         if (results.length > 0) {
             return res.status(409).json({ mensagem: 'Email já cadastrado.' });
         }
 
         bcrypt.hash(senha, 10, (err, hash) => {
-            if (err) return res.status(500).send(err);
+            if (err) return responderErroInterno(res, err, "authController.register");
 
             db.query(
                 'INSERT INTO usuarios (nome, email, senha_hash, tipo) VALUES (?, ?, ?, ?)',
                 [nome, email, hash, tipo],
                 (err, result) => {
-                    if (err) return res.status(500).send(err);
+                    if (err) return responderErroInterno(res, err, "authController.register");
 
                     const token = jwt.sign(
                         { id: result.insertId, tipo },
@@ -68,7 +69,7 @@ exports.login = (req, res) => {
     }
 
     db.query('SELECT * FROM usuarios WHERE email = ?', [email], (err, results) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "authController.login");
 
         if (results.length === 0) {
             return res.status(401).json({ mensagem: 'Email ou senha inválidos.' });
@@ -80,7 +81,7 @@ exports.login = (req, res) => {
         const tipoUsuario = usuario.tipo;
 
         bcrypt.compare(senha, usuario.senha_hash, (err, isMatch) => {
-            if (err) return res.status(500).send(err);
+            if (err) return responderErroInterno(res, err, "authController.login");
 
             if (!isMatch) {
                 return res.status(401).json({ mensagem: 'Email ou senha inválidos.' });
@@ -94,7 +95,7 @@ exports.login = (req, res) => {
                     'SELECT id FROM lojas WHERE usuario_id = ? LIMIT 1',
                     [usuario.id],
                     (err, lojaResults) => {
-                        if (err) return res.status(500).send(err);
+                        if (err) return responderErroInterno(res, err, "authController.login");
 
                         if (lojaResults.length === 0) {
                             return res.status(400).json({
@@ -169,7 +170,7 @@ exports.me = (req, res) => {
          FROM usuarios WHERE id = ?`,
         [userId],
         (err, results) => {
-            if (err) return res.status(500).send(err);
+            if (err) return responderErroInterno(res, err, "authController.me");
 
             if (results.length === 0) {
                 return res.status(404).json({
@@ -185,7 +186,7 @@ exports.me = (req, res) => {
                     'SELECT id FROM lojas WHERE usuario_id = ? LIMIT 1',
                     [usuario.id],
                     (err, lojaResults) => {
-                        if (err) return res.status(500).send(err);
+                        if (err) return responderErroInterno(res, err, "authController.me");
 
                         return res.json({
                             ...usuario,
@@ -226,7 +227,7 @@ exports.registerLojista = (req, res) => {
 
     // 1) verifica se email já existe
     db.query('SELECT * FROM usuarios WHERE email = ?', [email], (err, results) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "authController.registerLojista");
 
         if (results.length > 0) {
             return res.status(409).json({ mensagem: 'Email já cadastrado.' });
@@ -234,13 +235,13 @@ exports.registerLojista = (req, res) => {
 
         // 2) cria usuário lojista
         bcrypt.hash(senha, 10, (err, hash) => {
-            if (err) return res.status(500).send(err);
+            if (err) return responderErroInterno(res, err, "authController.registerLojista");
 
             db.query(
                 'INSERT INTO usuarios (nome, email, senha_hash, tipo) VALUES (?, ?, ?, ?)',
                 [nomeFantasia, email, hash, 'lojista'],
                 (err, result) => {
-                    if (err) return res.status(500).send(err);
+                    if (err) return responderErroInterno(res, err, "authController.registerLojista");
 
                     const usuarioId = result.insertId;
 
@@ -260,7 +261,7 @@ exports.registerLojista = (req, res) => {
                             descricao
                         ],
                         (err, lojaResult) => {
-                            if (err) return res.status(500).send(err);
+                            if (err) return responderErroInterno(res, err, "authController.registerLojista");
 
                             const lojaId = lojaResult.insertId;
 

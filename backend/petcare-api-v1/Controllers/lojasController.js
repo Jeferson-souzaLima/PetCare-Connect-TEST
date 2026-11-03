@@ -1,6 +1,7 @@
 // controllers/lojasController.js
 const lojaModel = require('../Models/lojasModel');
 const db = require('../db');
+const { responderErroInterno } = require('../utils/erroInterno');
 
 // Listar todas as lojas
 exports.listarLojas = (req, res) => {
@@ -51,7 +52,7 @@ exports.uploadImagem = (req, res) => {
     const query = 'UPDATE lojas SET imagem = ? WHERE id = ?';
 
     db.query(query, [imagemUrl, id], (err, result) => {
-        if (err) return res.status(500).json({ erro: err });
+        if (err) return responderErroInterno(res, err, "lojasController.uploadImagem");
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ mensagem: 'Loja n�o encontrada.' });
@@ -70,7 +71,7 @@ exports.atualizarLoja = (req, res) => {
     const dados = req.body;
 
     lojaModel.update(id, dados, (err, result) => {
-        if (err) return res.status(500).json({ erro: err });
+        if (err) return responderErroInterno(res, err, "lojasController.atualizarLoja");
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ mensagem: 'Loja n�o encontrada.' });
@@ -85,7 +86,7 @@ exports.deletarLoja = (req, res) => {
     const { id } = req.params;
 
     lojaModel.delete(id, (err, result) => {
-        if (err) return res.status(500).json({ erro: err });
+        if (err) return responderErroInterno(res, err, "lojasController.deletarLoja");
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ mensagem: 'Loja n�o encontrada.' });
@@ -101,7 +102,7 @@ exports.getLojaPorId = (req, res) => {
 
     const query = 'SELECT * FROM lojas WHERE id = ?';
     db.query(query, [id], (err, results) => {
-        if (err) return res.status(500).json({ erro: err });
+        if (err) return responderErroInterno(res, err, "lojasController.getLojaPorId");
 
         if (results.length === 0) {
             return res.status(404).json({ mensagem: 'Loja n�o encontrada.' });

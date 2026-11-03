@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const db = require('../db');
 const { enviarEmailConfirmacao } = require('../Services/emailService');
+const { responderErroInterno } = require('../utils/erroInterno');
 
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
@@ -80,7 +81,7 @@ exports.confirmarEmail = (req, res) => {
           AND email_verificado = 0`;
 
     db.query(sql, [tokenHash], (err, result) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "emailConfirmationController.confirmarEmail");
         if (result.affectedRows === 0) {
             return res.status(400).json({ mensagem: 'Link inválido, expirado ou já utilizado.' });
         }
@@ -139,7 +140,7 @@ exports.validarEmailConfirmado = (req, res, next) => {
         'SELECT email_verificado FROM usuarios WHERE email = ? AND tipo = ?',
         [email, 'cliente'],
         (err, users) => {
-            if (err) return res.status(500).send(err);
+            if (err) return responderErroInterno(res, err, "emailConfirmationController.validarEmailConfirmado");
             if (users.length > 0 && !users[0].email_verificado) {
                 return res.status(403).json({
                     codigo: 'EMAIL_NAO_VERIFICADO',

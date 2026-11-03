@@ -1,4 +1,5 @@
 const historicoModel = require('../Models/historicoUsuarioModel');
+const { responderErroInterno } = require('../utils/erroInterno');
 
 exports.getHistoricoUsuario = (req, res) => {
     const usuario = req.usuario;
@@ -11,7 +12,7 @@ exports.getHistoricoUsuario = (req, res) => {
 
     // ?? Buscar produtos
     historicoModel.getProdutosPorUsuario(usuario_id, (err, produtos) => {
-        if (err) return res.status(500).json(err);
+        if (err) return responderErroInterno(res, err, "historicoUsuarioController.getHistoricoUsuario");
 
         // Agrupar produtos por pedido
         const pedidosMap = {};
@@ -56,7 +57,7 @@ exports.getHistoricoUsuario = (req, res) => {
     // ?? Buscar servi�os
     function buscarServicos(produtos) {
         historicoModel.getServicosPorUsuario(usuario_id, (err, servicos) => {
-            if (err) return res.status(500).json(err);
+            if (err) return responderErroInterno(res, err, "historicoUsuarioController.buscarServicos");
 
             let pendentes = servicos.length;
 

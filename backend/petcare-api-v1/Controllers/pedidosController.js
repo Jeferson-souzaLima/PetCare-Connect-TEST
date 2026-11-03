@@ -6,6 +6,7 @@ const {
 } = require('../Services/pedidoCheckoutService');
 const MercadoPagoService = require('../Services/mercadoPagoService');
 const PagamentosModel = require('../Models/pagamentosModel');
+const { responderErroInterno, responderErroDoServico } = require('../utils/erroInterno');
 
 // ===============================
 // ADMIN — ver todos pedidos
@@ -18,7 +19,7 @@ exports.getAll = (req, res) => {
     }
 
     pedidosModel.getAll((err, results) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "pedidosController.getAll");
         res.json(results);
     });
 };
@@ -37,7 +38,7 @@ exports.create = (req, res) => {
     novoPedido.usuario_id = usuario.id;
 
     pedidosModel.createPedidoComItens(novoPedido, (err, pedidoId) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "pedidosController.create");
         res.status(201).json({ mensagem: 'Pedido criado com sucesso!', pedidoId });
     });
 };
@@ -197,7 +198,7 @@ exports.updateStatus = (req, res) => {
     }
 
     pedidosModel.getByIdSimples(id, (err, pedido) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "pedidosController.updateStatus");
         if (!pedido) {
             return res.status(404).json({ mensagem: 'Pedido não encontrado.' });
         }
@@ -235,7 +236,7 @@ exports.updateStatus = (req, res) => {
             }
 
             pedidosModel.updateStatus(id, status, (err, result) => {
-                if (err) return res.status(500).send(err);
+                if (err) return responderErroInterno(res, err, "pedidosController.atualizar");
 
                 res.json({ mensagem: 'Status atualizado com sucesso!' });
             });
@@ -269,7 +270,7 @@ exports.relatorioPedidos = (req, res) => {
     }
 
     pedidosModel.getByFilters(query, values, (err, results) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "pedidosController.relatorioPedidos");
         res.json(results);
     });
 };
@@ -286,7 +287,7 @@ exports.deletarPedido = (req, res) => {
     }
 
     pedidosModel.delete(id, (err, result) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "pedidosController.deletarPedido");
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ mensagem: 'Pedido não encontrado.' });
@@ -331,13 +332,7 @@ exports.calcularFrete = async (req, res) => {
         return res.json(resultado);
 
     } catch (erro) {
-        console.error('Erro ao calcular frete:', erro);
-
-        return res.status(erro.status || 500).json({
-            mensagem:
-                erro.message ||
-                'Não foi possível calcular o frete.'
-        });
+        return responderErroDoServico(res, erro, 'pedidosController.calcularFrete', 'Não foi possível calcular o frete.');
     }
 };
 
@@ -374,7 +369,6 @@ exports.checkout = async (req, res) => {
             return res.status(201).json({ pedido_id: pedido.pedidoId, pagamento_id: resultado.insertId, total: pedido.total, valor_entrega: pedido.frete, checkout_url: preference.init_point, expira_em_minutos: 10 });
         });
     } catch (erro) {
-        console.error('Erro ao iniciar checkout:', erro);
-        return res.status(erro.status || 500).json({ mensagem: erro.message || 'Não foi possível iniciar o checkout.' });
+        return responderErroDoServico(res, erro, 'pedidosController.checkout', 'Não foi possível iniciar o checkout.');
     }
 };
