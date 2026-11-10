@@ -4,6 +4,7 @@ const Servicos = require('../Models/servicosModel');
 const AgendaConfig = require('../Models/agendaConfigModel');
 const AgendaDisponibilidade = require('../Models/agendaDisponibilidadeModel');
 const AgendaBloqueios = require('../Models/agendaBloqueiosModel');
+const { responderErroInterno } = require('../utils/erroInterno');
 
 exports.criarAgendamento = (req, res) => {
 
@@ -12,7 +13,7 @@ exports.criarAgendamento = (req, res) => {
 
     if (!servico_id) {
         return res.status(400).json({
-            message: 'Servi�o � obrigat�rio.'
+            message: 'Serviço é obrigatório.'
         });
     }
 
@@ -24,39 +25,39 @@ exports.criarAgendamento = (req, res) => {
 
     if (!data_inicio) {
         return res.status(400).json({
-            message: 'Selecione uma data e hor�rio.'
+            message: 'Selecione uma data e horário.'
         });
     }
 
     const inicio = new Date(data_inicio);
 
     if (isNaN(inicio.getTime())) {
-        return res.status(400).json({ message: 'Data inv�lida.' });
+        return res.status(400).json({ message: 'Data inválida.' });
     }
 
-    // ?? N�o permitir passado
+    // ?? Não permitir passado
     if (inicio < new Date()) {
-        return res.status(400).json({ message: 'N�o � poss�vel agendar no passado.' });
+        return res.status(400).json({ message: 'Não é possível agendar no passado.' });
     }
 
-    // 1?? Buscar servi�o
+    // 1?? Buscar serviço
     Servicos.getById(servico_id, (err, servico) => {
 
-        if (err) return res.status(500).json({ error: err });
+        if (err) return responderErroInterno(res, err, "agendamentosController.criarAgendamento");
         if (!servico || servico.ativo !== 1) {
-            return res.status(404).json({ message: 'Servi�o inv�lido ou inativo.' });
+            return res.status(404).json({ message: 'Serviço inválido ou inativo.' });
         }
 
         const loja_id = servico.loja_id;
         const duracao = servico.duracao_min;
         const fim = new Date(inicio.getTime() + duracao * 60000);
 
-        // 2?? Buscar configura��o da agenda
+        // 2?? Buscar configuração da agenda
         AgendaConfig.getByLojaId(loja_id, (err, config) => {
 
-            if (err) return res.status(500).json({ error: err });
+            if (err) return responderErroInterno(res, err, "agendamentosController.criarAgendamento");
             if (!config) {
-                return res.status(400).json({ message: 'Agenda n�o configurada para esta loja.' });
+                return res.status(400).json({ message: 'Agenda não configurada para esta loja.' });
             }
 
             // ?? Regra dias_limite_agendamento
@@ -65,7 +66,7 @@ exports.criarAgendamento = (req, res) => {
 
             if (inicio > limite) {
                 return res.status(400).json({
-                    message: `Agendamentos permitidos apenas para os pr�ximos ${config.dias_limite_agendamento} dias.`
+                    message: `Agendamentos permitidos apenas para os próximos ${config.dias_limite_agendamento} dias.`
                 });
             }
 
@@ -73,11 +74,11 @@ exports.criarAgendamento = (req, res) => {
             const minutos = inicio.getMinutes();
             if (minutos % config.intervalo_minutos !== 0) {
                 return res.status(400).json({
-                    message: `Hor�rios permitidos de ${config.intervalo_minutos} em ${config.intervalo_minutos} minutos.`
+                    message: `Horários permitidos de ${config.intervalo_minutos} em ${config.intervalo_minutos} minutos.`
                 });
             }
 
-            // 3?? Validar disponibilidade (se n�o for 24h)
+            // 3?? Validar disponibilidade (se não for 24h)
             const validarDisponibilidade = (callback) => {
 
                 if (config.trabalha_24h === 1) {
@@ -88,9 +89,9 @@ exports.criarAgendamento = (req, res) => {
 
                 AgendaDisponibilidade.getByLojaEDia(loja_id, diaSemana, (err, horarios) => {
 
-                    if (err) return res.status(500).json({ error: err });
+                    if (err) return responderErroInterno(res, err, "agendamentosController.criarAgendamento");
                     if (!horarios || horarios.length === 0) {
-                        return res.status(400).json({ message: 'Loja n�o atende neste dia.' });
+                        return res.status(400).json({ message: 'Loja não atende neste dia.' });
                     }
 
                     const horaInicio = inicio.toTimeString().slice(0, 5);
@@ -101,7 +102,7 @@ exports.criarAgendamento = (req, res) => {
                     });
 
                     if (!dentroDoHorario) {
-                        return res.status(400).json({ message: 'Hor�rio fora do expediente.' });
+                        return res.status(400).json({ message: 'Horário fora do expediente.' });
                     }
 
                     callback();
@@ -113,22 +114,22 @@ exports.criarAgendamento = (req, res) => {
                 // 4?? Validar bloqueios
                 AgendaBloqueios.existeBloqueio(loja_id, inicio, fim, (err, bloqueado) => {
 
-                    if (err) return res.status(500).json({ error: err });
+                    if (err) return responderErroInterno(res, err, "agendamentosController.criarAgendamento");
 
                     if (bloqueado) {
-                        return res.status(400).json({ message: 'Hor�rio bloqueado pela loja.' });
+                        return res.status(400).json({ message: 'Horário bloqueado pela loja.' });
                     }
 
                     // 5?? Validar capacidade
                     Agendamentos.contarNoIntervalo(loja_id, inicio, fim, (err, resultado) => {
 
-                        if (err) return res.status(500).json({ error: err });
+                        if (err) return responderErroInterno(res, err, "agendamentosController.criarAgendamento");
 
                         const total = resultado[0].total;
 
                         if (total >= config.capacidade_por_horario) {
                             return res.status(400).json({
-                                message: 'Hor�rio n�o dispon�vel.'
+                                message: 'Horário não disponível.'
                             });
                         }
 
@@ -156,7 +157,7 @@ exports.criarAgendamento = (req, res) => {
 
                             if (!cliente_nome_externo) {
                                 return res.status(400).json({
-                                    message: 'Nome do cliente � obrigat�rio para agendamento manual.'
+                                    message: 'Nome do cliente é obrigatório para agendamento manual.'
                                 });
                             }
 
@@ -168,7 +169,7 @@ exports.criarAgendamento = (req, res) => {
                         }
 
                         Agendamentos.create(novoAgendamento, (err, result) => {
-                            if (err) return res.status(500).json({ error: err });
+                            if (err) return responderErroInterno(res, err, "agendamentosController.criarAgendamento");
 
                             res.status(201).json({
                                 message: 'Agendamento criado. Aguardando pagamento.',
@@ -197,7 +198,7 @@ exports.getAgendamentosDoLojista = (req, res) => {
     }
 
     if (!data) {
-        return res.status(400).json({ message: 'Data � obrigat�ria.' });
+        return res.status(400).json({ message: 'Data é obrigatória.' });
     }
 
     // 1?? Buscar loja do lojista
@@ -206,11 +207,11 @@ exports.getAgendamentosDoLojista = (req, res) => {
         [usuario.id],
         (err, lojas) => {
 
-            if (err) return res.status(500).json({ error: err });
+            if (err) return responderErroInterno(res, err, "agendamentosController.getAgendamentosDoLojista");
 
             if (!lojas.length) {
                 return res.status(404).json({
-                    message: 'Loja n�o encontrada.'
+                    message: 'Loja não encontrada.'
                 });
             }
 
@@ -233,7 +234,7 @@ exports.getAgendamentosDoLojista = (req, res) => {
                 [loja_id, data],
                 (err, agendamentos) => {
 
-                    if (err) return res.status(500).json({ error: err });
+                    if (err) return responderErroInterno(res, err, "agendamentosController.getAgendamentosDoLojista");
 
                     res.json(agendamentos);
 
@@ -257,9 +258,9 @@ exports.getAgendamentoPorId = (req, res) => {
          WHERE a.id = ?`,
         [id],
         (err, results) => {
-            if (err) return res.status(500).json({ error: err });
+            if (err) return responderErroInterno(res, err, "agendamentosController.getAgendamentoPorId");
             if (!results.length) {
-                return res.status(404).json({ message: 'Agendamento n�o encontrado.' });
+                return res.status(404).json({ message: 'Agendamento não encontrado.' });
             }
 
             res.json(results[0]);
@@ -284,13 +285,13 @@ exports.atualizarStatus = (req, res) => {
 
     if (!status) {
         return res.status(400).json({
-            message: 'Status � obrigat�rio.'
+            message: 'Status é obrigatório.'
         });
     }
 
     if (!statusPermitidos.includes(status)) {
         return res.status(400).json({
-            message: 'Status inv�lido.'
+            message: 'Status inválido.'
         });
     }
 
@@ -307,11 +308,11 @@ exports.atualizarStatus = (req, res) => {
         [usuario.id],
         (err, lojas) => {
 
-            if (err) return res.status(500).json({ error: err });
+            if (err) return responderErroInterno(res, err, "agendamentosController.atualizarStatus");
 
             if (!lojas.length) {
                 return res.status(404).json({
-                    message: 'Loja n�o encontrada.'
+                    message: 'Loja não encontrada.'
                 });
             }
 
@@ -323,11 +324,11 @@ exports.atualizarStatus = (req, res) => {
                 [id, loja_id],
                 (err, agendamentos) => {
 
-                    if (err) return res.status(500).json({ error: err });
+                    if (err) return responderErroInterno(res, err, "agendamentosController.atualizarStatus");
 
                     if (!agendamentos.length) {
                         return res.status(404).json({
-                            message: 'Agendamento n�o encontrado.'
+                            message: 'Agendamento não encontrado.'
                         });
                     }
 
@@ -358,7 +359,7 @@ exports.atualizarStatus = (req, res) => {
 
                     if (!transicoes.includes(status)) {
                         return res.status(400).json({
-                            message: `N�o � poss�vel alterar um agendamento de '${statusAtual}' para '${status}'.`
+                            message: `Não é possível alterar um agendamento de '${statusAtual}' para '${status}'.`
                         });
                     }
 
@@ -368,7 +369,7 @@ exports.atualizarStatus = (req, res) => {
                         (err) => {
 
                             if (err) {
-                                return res.status(500).json({ error: err });
+                                return responderErroInterno(res, err, "agendamentosController.atualizarStatus");
                             }
 
                             res.json({
@@ -403,24 +404,24 @@ exports.deletarAgendamento = (req, res) => {
         [usuario.id],
         (err, lojas) => {
 
-            if (err) return res.status(500).json({ error: err });
+            if (err) return responderErroInterno(res, err, "agendamentosController.deletarAgendamento");
             if (!lojas || lojas.length === 0) {
-                return res.status(404).json({ message: 'Loja n�o encontrada.' });
+                return res.status(404).json({ message: 'Loja não encontrada.' });
             }
 
             const loja_id = lojas[0].id;
 
-            // Verificar se agendamento pertence � loja
+            // Verificar se agendamento pertence à loja
             db.query(
                 'SELECT * FROM agendamentos WHERE id = ? AND loja_id = ?',
                 [id, loja_id],
                 (err, agendamentos) => {
 
-                    if (err) return res.status(500).json({ error: err });
+                    if (err) return responderErroInterno(res, err, "agendamentosController.deletarAgendamento");
 
                     if (!agendamentos || agendamentos.length === 0) {
                         return res.status(404).json({
-                            message: 'Agendamento n�o encontrado.'
+                            message: 'Agendamento não encontrado.'
                         });
                     }
 
@@ -430,7 +431,7 @@ exports.deletarAgendamento = (req, res) => {
                         [id],
                         (err) => {
 
-                            if (err) return res.status(500).json({ error: err });
+                            if (err) return responderErroInterno(res, err, "agendamentosController.deletarAgendamento");
 
                             res.json({
                                 message: 'Agendamento deletado com sucesso.'
@@ -451,7 +452,7 @@ exports.getAgendamentosPorPedido = (req, res) => {
         'SELECT * FROM agendamentos WHERE pedido_id = ?',
         [pedido_id],
         (err, results) => {
-            if (err) return res.status(500).json({ error: err });
+            if (err) return responderErroInterno(res, err, "agendamentosController.getAgendamentosPorPedido");
 
             res.json(results);
         }
@@ -469,32 +470,32 @@ exports.criarAgendamentoManual = (req, res) => {
 
     if (!servico_id || !data_inicio || !cliente_nome_externo) {
         return res.status(400).json({
-            message: 'Servi�o, data e nome do cliente s�o obrigat�rios.'
+            message: 'Serviço, data e nome do cliente são obrigatórios.'
         });
     }
 
     const inicio = new Date(data_inicio);
 
     if (isNaN(inicio.getTime())) {
-        return res.status(400).json({ message: 'Data inv�lida.' });
+        return res.status(400).json({ message: 'Data inválida.' });
     }
 
     // Loja do lojista
     const loja_id = usuario.loja_id;
 
     if (!loja_id) {
-        return res.status(403).json({ message: 'Loja n�o identificada.' });
+        return res.status(403).json({ message: 'Loja não identificada.' });
     }
 
-    // Buscar servi�o
+    // Buscar serviço
     db.query(
         'SELECT * FROM servicos WHERE id = ? AND loja_id = ?',
         [servico_id, loja_id],
         (err, servicos) => {
 
-            if (err) return res.status(500).json({ error: err });
+            if (err) return responderErroInterno(res, err, "agendamentosController.criarAgendamentoManual");
             if (!servicos || servicos.length === 0) {
-                return res.status(404).json({ message: 'Servi�o n�o encontrado para esta loja.' });
+                return res.status(404).json({ message: 'Serviço não encontrado para esta loja.' });
             }
 
             const servico = servicos[0];
@@ -520,7 +521,7 @@ exports.criarAgendamentoManual = (req, res) => {
                 novoAgendamento,
                 (err, result) => {
 
-                    if (err) return res.status(500).json({ error: err });
+                    if (err) return responderErroInterno(res, err, "agendamentosController.criarAgendamentoManual");
 
                     res.status(201).json({
                         message: 'Agendamento criado manualmente com sucesso.',
@@ -547,9 +548,9 @@ exports.editarAgendamentoManual = (req, res) => {
         [usuario.id],
         (err, lojas) => {
 
-            if (err) return res.status(500).json({ error: err });
+            if (err) return responderErroInterno(res, err, "agendamentosController.editarAgendamentoManual");
             if (!lojas || lojas.length === 0) {
-                return res.status(404).json({ message: 'Loja n�o encontrada.' });
+                return res.status(404).json({ message: 'Loja não encontrada.' });
             }
 
             const loja_id = lojas[0].id;
@@ -560,17 +561,17 @@ exports.editarAgendamentoManual = (req, res) => {
                 [id, loja_id],
                 (err, agendamentos) => {
 
-                    if (err) return res.status(500).json({ error: err });
+                    if (err) return responderErroInterno(res, err, "agendamentosController.editarAgendamentoManual");
                     if (!agendamentos || agendamentos.length === 0) {
-                        return res.status(404).json({ message: 'Agendamento n�o encontrado.' });
+                        return res.status(404).json({ message: 'Agendamento não encontrado.' });
                     }
 
                     const agendamento = agendamentos[0];
 
-                    // S� permitir editar agendamento criado pelo lojista
+                    // Só permitir editar agendamento criado pelo lojista
                     if (agendamento.criado_por !== 'lojista') {
                         return res.status(400).json({
-                            message: 'S� � poss�vel editar agendamentos criados manualmente.'
+                            message: 'Só é possível editar agendamentos criados manualmente.'
                         });
                     }
 
@@ -580,7 +581,7 @@ exports.editarAgendamentoManual = (req, res) => {
                     if (data_inicio) {
                         novoInicio = new Date(data_inicio);
                         if (isNaN(novoInicio.getTime())) {
-                            return res.status(400).json({ message: 'Data inv�lida.' });
+                            return res.status(400).json({ message: 'Data inválida.' });
                         }
 
                         const duracaoMin = (agendamento.data_fim - agendamento.data_inicio) / 60000;
@@ -600,7 +601,7 @@ exports.editarAgendamentoManual = (req, res) => {
                         [dadosAtualizados, id],
                         (err) => {
 
-                            if (err) return res.status(500).json({ error: err });
+                            if (err) return responderErroInterno(res, err, "agendamentosController.editarAgendamentoManual");
 
                             res.json({ message: 'Agendamento atualizado com sucesso.' });
                         }
@@ -658,7 +659,7 @@ exports.getMeusAgendamentos = (req, res) => {
     db.query(query, [usuario.id], (err, resultados) => {
 
         if (err) {
-            return res.status(500).json({ error: err });
+            return responderErroInterno(res, err, "agendamentosController.getMeusAgendamentos");
         }
 
         res.json(resultados);
@@ -685,12 +686,12 @@ exports.cancelarAgendamentoCliente = (req, res) => {
     db.query(queryBuscar, [id], (err, resultados) => {
 
         if (err) {
-            return res.status(500).json({ error: err });
+            return responderErroInterno(res, err, "agendamentosController.cancelarAgendamentoCliente");
         }
 
         if (!resultados.length) {
             return res.status(404).json({
-                message: "Agendamento n�o encontrado."
+                message: "Agendamento não encontrado."
             });
         }
 
@@ -699,21 +700,21 @@ exports.cancelarAgendamentoCliente = (req, res) => {
         // Verifica se pertence ao cliente
         if (agendamento.cliente_id !== usuario.id) {
             return res.status(403).json({
-                message: "Voc� n�o pode cancelar este agendamento."
+                message: "Você não pode cancelar este agendamento."
             });
         }
 
         // Verifica status
         if (!['aguardando_pagamento', 'confirmado'].includes(agendamento.status)) {
             return res.status(400).json({
-                message: "Este agendamento n�o pode mais ser cancelado."
+                message: "Este agendamento não pode mais ser cancelado."
             });
         }
 
-        // Verifica se o hor�rio j� come�ou
+        // Verifica se o horário já começou
         if (new Date(agendamento.data_inicio) <= new Date()) {
             return res.status(400).json({
-                message: "O hor�rio do atendimento j� come�ou."
+                message: "O horário do atendimento já começou."
             });
         }
 
@@ -725,7 +726,7 @@ exports.cancelarAgendamentoCliente = (req, res) => {
             (err) => {
 
                 if (err) {
-                    return res.status(500).json({ error: err });
+                    return responderErroInterno(res, err, "agendamentosController.cancelarAgendamentoCliente");
                 }
 
                 res.json({

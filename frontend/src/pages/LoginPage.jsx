@@ -83,7 +83,7 @@ export default function LoginPage() {
           <p className="text-gray-600 mt-2">Entre para cuidar do seu pet</p>
         </div>
 
-        {/* FormulÃƒÂ¡rio */}
+        {/* Formulário */}
         <form onSubmit={handleLogin} className="space-y-5">
           <div className="flex items-center border-2 border-[#0E5617] rounded-xl p-3 focus-within:ring-2 focus-within:ring-[#F0F2A0]">
             <FaEnvelope className="text-[#0E5617] mr-3" />
@@ -129,7 +129,7 @@ export default function LoginPage() {
 
         {/* Link para cadastro */}
         <p className="text-center text-sm text-gray-600 mt-6">
-          Ainda nÃƒÂ£o tem conta?{" "}
+          Ainda não tem conta?{" "}
           <span
             onClick={() => navigate("/register")}
             className="text-[#0E5617] font-semibold cursor-pointer hover:underline"

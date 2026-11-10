@@ -1,4 +1,5 @@
 const Servicos = require('../Models/servicosModel');
+const { responderErroInterno } = require('../utils/erroInterno');
 
 //
 // ===============================
@@ -26,7 +27,7 @@ exports.getServico = (req, res) => {
     const id = req.params.id;
 
     Servicos.getById(id, (err, servico) => {
-        if (err) return res.status(500).json({ error: err });
+        if (err) return responderErroInterno(res, err, "servicosController.getServico");
 
         if (!servico) {
             return res.status(404).json({ message: "Servi�o n�o encontrado." });
@@ -49,7 +50,7 @@ exports.listarServicosPorLoja = (req, res) => {
     const lojaId = req.params.id;
 
     Servicos.getByLojaId(lojaId, (err, results) => {
-        if (err) return res.status(500).json({ error: err });
+        if (err) return responderErroInterno(res, err, "servicosController.listarServicosPorLoja");
 
         // Filtra apenas ativos
         const ativos = results.filter(s => s.ativo === 1);
@@ -88,7 +89,7 @@ exports.criarServico = (req, res) => {
     };
 
     Servicos.create(novoServico, (err, result) => {
-        if (err) return res.status(500).json({ error: err });
+        if (err) return responderErroInterno(res, err, "servicosController.criarServico");
 
         res.status(201).json({
             message: "Servi�o criado com sucesso!",
@@ -108,7 +109,7 @@ exports.atualizarServico = (req, res) => {
 
     Servicos.getById(servicoId, (err, servico) => {
 
-        if (err) return res.status(500).json({ error: err });
+        if (err) return responderErroInterno(res, err, "servicosController.atualizarServico");
 
         if (!servico) {
             return res.status(404).json({ message: "Servi�o n�o encontrado." });
@@ -121,7 +122,7 @@ exports.atualizarServico = (req, res) => {
         }
 
         Servicos.update(servicoId, req.body, (err) => {
-            if (err) return res.status(500).json({ error: err });
+            if (err) return responderErroInterno(res, err, "servicosController.atualizarServico");
 
             res.json({ message: "Servi�o atualizado com sucesso!" });
         });
@@ -139,7 +140,7 @@ exports.deletarServico = (req, res) => {
 
     Servicos.getById(servicoId, (err, servico) => {
 
-        if (err) return res.status(500).json({ error: err });
+        if (err) return responderErroInterno(res, err, "servicosController.deletarServico");
 
         if (!servico) {
             return res.status(404).json({ message: "Servi�o n�o encontrado." });
@@ -152,7 +153,7 @@ exports.deletarServico = (req, res) => {
         }
 
         Servicos.delete(servicoId, (err) => {
-            if (err) return res.status(500).json({ error: err });
+            if (err) return responderErroInterno(res, err, "servicosController.deletarServico");
 
             res.json({ message: "Servi�o deletado com sucesso!" });
         });
@@ -170,7 +171,7 @@ exports.listarMeusServicos = (req, res) => {
     }
 
     Servicos.getByLojaId(lojaId, (err, results) => {
-        if (err) return res.status(500).json({ error: err });
+        if (err) return responderErroInterno(res, err, "servicosController.listarMeusServicos");
         res.json(results);
     });
 };

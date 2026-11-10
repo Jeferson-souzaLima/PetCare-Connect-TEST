@@ -1,4 +1,8 @@
 const db = require('../db');
+const {
+    RAIO_PADRAO_KM,
+    LIMITE_RESULTADOS
+} = require('../Config/geolocalizacaoConfig');
 
 exports.getAll = (callback) => {
 

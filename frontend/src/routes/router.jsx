@@ -2,7 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import Layout from "../layout/Layout";
 import { useAuth } from "../hooks/useAuth";
 
-// PÃƒÂ¡ginas pÃƒÂºblicas
+// Páginas públicas
 import HomePage from "../pages/HomePage";
 import HomeLojistaPage from "../pages/lojista/HomeLojistaPage";
 import ProdutoDetalhes from "../pages/ProdutoDetalhes";
@@ -33,7 +33,7 @@ import AnunciosPage from "../pages/lojista/AnunciosPage";
 import RelatoriosPage from "../pages/lojista/RelatoriosPage";
 import MeusPedidosLojistaPage from "../pages/lojista/MeusPedidosPage";
 
-// ProteÃƒÂ§ÃƒÂ£o
+// Proteção
 import PrivateRoute from "../components/navigation/PrivateRoute";
 import ServicosLojistaPage from "../pages/lojista/ServicosLojistaPage";
 
@@ -51,7 +51,7 @@ function HomeRoute() {
 
 export const router = createBrowserRouter([
   // ===============================
-  // PÃƒÅ¡BLICAS
+  // PÚBLICAS
   // ===============================
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },

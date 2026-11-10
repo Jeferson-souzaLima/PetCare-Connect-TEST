@@ -221,15 +221,6 @@ export default function AgendaLojistaPage() {
     buscarServicos();
   }, []);
 
-  const buscarHorarios = async (data) => {
-    const response = await fetch(
-      `${API_URL}/agenda/horarios?data=${data}&loja_id=1`
-    );
-
-    const horarios = await response.json();
-    setHorariosDisponiveis(horarios);
-  };
-
   const criarAgendamento = async () => {
   try {
 

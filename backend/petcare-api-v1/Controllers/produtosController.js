@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const produtosModel = require('../Models/produtosModel');
 const r2Storage = require('../Services/r2Storage');
+const { responderErroInterno, responderErroDoServico } = require('../utils/erroInterno');
 
 const saveImagens = (imagens) => new Promise((resolve, reject) => {
     produtosModel.saveImagens(imagens, (err, result) => err ? reject(err) : resolve(result));
@@ -43,11 +44,7 @@ exports.listarProdutos = (req, res) => {
         (err, resultado) => {
 
             if (err) {
-                console.error(err);
-
-                return res.status(500).json({
-                    erro: err
-                });
+                return responderErroInterno(res, err, "produtosController.listarProdutos");
             }
 
             res.json(resultado);
@@ -66,7 +63,7 @@ exports.getProduto = (req, res) => {
     const id = req.params.id;
 
     produtosModel.getById(id, (err, produto) => {
-        if (err) return res.status(500).json({ erro: err });
+        if (err) return responderErroInterno(res, err, "produtosController.getProduto");
         if (!produto) {
             return res.status(404).json({ mensagem: 'Produto n�o encontrado.' });
         }
@@ -108,7 +105,7 @@ exports.criarProduto = (req, res) => {
     };
 
     produtosModel.create(novoProduto, (err, result) => {
-        if (err) return res.status(500).json({ erro: err });
+        if (err) return responderErroInterno(res, err, "produtosController.criarProduto");
 
         res.status(201).json({
             mensagem: 'Produto criado com sucesso!',
@@ -128,7 +125,7 @@ exports.atualizarProduto = (req, res) => {
 
     produtosModel.getById(produtoId, (err, produto) => {
 
-        if (err) return res.status(500).json({ erro: err });
+        if (err) return responderErroInterno(res, err, "produtosController.atualizarProduto");
         if (!produto) {
             return res.status(404).json({ mensagem: 'Produto n�o encontrado.' });
         }
@@ -138,7 +135,7 @@ exports.atualizarProduto = (req, res) => {
         }
 
         produtosModel.update(produtoId, req.body, (err) => {
-            if (err) return res.status(500).json({ erro: err });
+            if (err) return responderErroInterno(res, err, "produtosController.atualizarProduto");
 
             res.status(200).json({ mensagem: 'Produto atualizado com sucesso!' });
         });
@@ -156,7 +153,7 @@ exports.deletarProduto = (req, res) => {
 
     produtosModel.getById(produtoId, (err, produto) => {
 
-        if (err) return res.status(500).json({ erro: err });
+        if (err) return responderErroInterno(res, err, "produtosController.deletarProduto");
         if (!produto) {
             return res.status(404).json({ mensagem: 'Produto n�o encontrado.' });
         }
@@ -166,7 +163,7 @@ exports.deletarProduto = (req, res) => {
         }
 
         produtosModel.delete(produtoId, (err) => {
-            if (err) return res.status(500).json({ erro: err });
+            if (err) return responderErroInterno(res, err, "produtosController.deletarProduto");
 
             res.status(200).json({ mensagem: 'Produto deletado com sucesso!' });
         });
@@ -235,7 +232,7 @@ exports.definirImagemPrincipal = (req, res) => {
     produtosModel.getById(produtoId, (err, produto) => {
 
         if (err) {
-            return res.status(500).json({ erro: err });
+            return responderErroInterno(res, err, "produtosController.definirImagemPrincipal");
         }
 
         if (!produto) {
@@ -258,7 +255,7 @@ exports.definirImagemPrincipal = (req, res) => {
             (err, imagem) => {
 
                 if (err) {
-                    return res.status(500).json({ erro: err });
+                    return responderErroInterno(res, err, "produtosController.definirImagemPrincipal");
                 }
 
                 if (!imagem) {
@@ -281,11 +278,7 @@ exports.definirImagemPrincipal = (req, res) => {
                     (err) => {
 
                         if (err) {
-                            return res.status(err.status || 500).json({
-                                mensagem:
-                                    err.message ||
-                                    'Erro ao definir imagem principal.'
-                            });
+                            return responderErroDoServico(res, err, 'produtosController.definirImagemPrincipal', 'Erro ao definir imagem principal.');
                         }
 
                         return res.status(200).json({
@@ -311,7 +304,7 @@ exports.deletarImagemProduto = (req, res) => {
     // 1) Busca o produto
     produtosModel.getById(produtoId, (err, produto) => {
 
-        if (err) return res.status(500).json({ erro: err });
+        if (err) return responderErroInterno(res, err, "produtosController.deletarImagemProduto");
 
         if (!produto) {
             return res.status(404).json({
@@ -333,7 +326,7 @@ exports.deletarImagemProduto = (req, res) => {
             (err, imagem) => {
 
                 if (err) {
-                    return res.status(500).json({ erro: err });
+                    return responderErroInterno(res, err, "produtosController.deletarImagemProduto");
                 }
 
                 if (!imagem) {
@@ -348,7 +341,7 @@ exports.deletarImagemProduto = (req, res) => {
                     (err, total) => {
 
                         if (err) {
-                            return res.status(500).json({ erro: err });
+                            return responderErroInterno(res, err, "produtosController.deletarImagemProduto");
                         }
 
                         // MVP: produto deve manter pelo menos uma imagem
@@ -367,7 +360,7 @@ exports.deletarImagemProduto = (req, res) => {
                                 (err, result) => {
 
                                     if (err) {
-                                        return res.status(500).json({ erro: err });
+                                        return responderErroInterno(res, err, "produtosController.deletarImagemProduto");
                                     }
 
                                     if (result.affectedRows === 0) {
@@ -423,7 +416,7 @@ exports.deletarImagemProduto = (req, res) => {
                                 (err) => {
 
                                     if (err) {
-                                        return res.status(500).json({ erro: err });
+                                        return responderErroInterno(res, err, "produtosController.deletarImagemProduto");
                                     }
 
                                     excluirImagem();
@@ -453,7 +446,7 @@ exports.listarMeusProdutos = (req, res) => {
     }
 
     produtosModel.getByLojaId(lojaId, (err, produtos) => {
-        if (err) return res.status(500).json({ erro: err });
+        if (err) return responderErroInterno(res, err, "produtosController.listarMeusProdutos");
         res.json(produtos);
     });
 };
@@ -470,7 +463,7 @@ exports.listarProdutosPorLoja = (req, res) => {
     const loja_id = req.params.id;
 
     produtosModel.getAtivosByLojaId(loja_id, (err, produtos) => {
-        if (err) return res.status(500).json({ erro: err });
+        if (err) return responderErroInterno(res, err, "produtosController.listarProdutosPorLoja");
         res.json(produtos);
     });
 };
@@ -483,7 +476,7 @@ exports.listarProdutosPorLoja = (req, res) => {
 exports.listarProdutosDistribuidoras = (req, res) => {
 
     produtosModel.getProdutosDistribuidoras((err, produtos) => {
-        if (err) return res.status(500).json({ erro: err });
+        if (err) return responderErroInterno(res, err, "produtosController.listarProdutosDistribuidoras");
         res.json(produtos);
     });
 };

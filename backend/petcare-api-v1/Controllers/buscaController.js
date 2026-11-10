@@ -1,4 +1,5 @@
 const buscaModel = require('../Models/buscaModel');
+const { responderErroInterno } = require('../utils/erroInterno');
 
 exports.buscar = (req, res) => {
     const { q } = req.query;
@@ -25,9 +26,7 @@ exports.buscar = (req, res) => {
 
     buscaModel.buscar(q.trim(), (err, resultados) => {
         if (err) {
-            return res.status(500).json({
-                erro: err
-            });
+            return responderErroInterno(res, err, "buscaController.buscar");
         }
 
         res.status(200).json({
@@ -63,9 +62,7 @@ exports.buscarResultados = (req, res) => {
 
     buscaModel.buscarResultados(q.trim(), (err, resultados) => {
         if (err) {
-            return res.status(500).json({
-                erro: err
-            });
+            return responderErroInterno(res, err, "buscaController.buscarResultados");
         }
 
         res.status(200).json({

@@ -2,6 +2,7 @@ const db = require('../db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { secret } = require('../Config/jwt');
+const { responderErroInterno } = require('../utils/erroInterno');
 
 
 // =========================
@@ -13,25 +14,25 @@ exports.register = (req, res) => {
 
     if (!nome || !email || !senha) {
         return res.status(400).json({
-            mensagem: 'Nome, email e senha sÃƒÂ£o obrigatÃƒÂ³rios.'
+            mensagem: 'Nome, email e senha são obrigatórios.'
         });
     }
 
     db.query('SELECT * FROM usuarios WHERE email = ?', [email], (err, results) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "authController.register");
 
         if (results.length > 0) {
-            return res.status(409).json({ mensagem: 'Email jÃƒÂ¡ cadastrado.' });
+            return res.status(409).json({ mensagem: 'Email já cadastrado.' });
         }
 
         bcrypt.hash(senha, 10, (err, hash) => {
-            if (err) return res.status(500).send(err);
+            if (err) return responderErroInterno(res, err, "authController.register");
 
             db.query(
                 'INSERT INTO usuarios (nome, email, senha_hash, tipo) VALUES (?, ?, ?, ?)',
                 [nome, email, hash, tipo],
                 (err, result) => {
-                    if (err) return res.status(500).send(err);
+                    if (err) return responderErroInterno(res, err, "authController.register");
 
                     const token = jwt.sign(
                         { id: result.insertId, tipo },
@@ -40,7 +41,7 @@ exports.register = (req, res) => {
                     );
 
                     return res.status(201).json({
-                        mensagem: 'UsuÃƒÂ¡rio registrado com sucesso!',
+                        mensagem: 'Usuário registrado com sucesso!',
                         token,
                         usuario: {
                             id: result.insertId,
@@ -63,27 +64,27 @@ exports.login = (req, res) => {
 
     if (!email || !senha) {
         return res.status(400).json({
-            mensagem: 'Email e senha sÃƒÂ£o obrigatÃƒÂ³rios.'
+            mensagem: 'Email e senha são obrigatórios.'
         });
     }
 
     db.query('SELECT * FROM usuarios WHERE email = ?', [email], (err, results) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "authController.login");
 
         if (results.length === 0) {
-            return res.status(401).json({ mensagem: 'Email ou senha invÃƒÂ¡lidos.' });
+            return res.status(401).json({ mensagem: 'Email ou senha inválidos.' });
         }
 
         const usuario = results[0];
 
-        // Compatibilidade temporÃƒÂ¡ria durante a migraÃƒÂ§ÃƒÂ£o
+        // Compatibilidade temporária durante a migração
         const tipoUsuario = usuario.tipo;
 
         bcrypt.compare(senha, usuario.senha_hash, (err, isMatch) => {
-            if (err) return res.status(500).send(err);
+            if (err) return responderErroInterno(res, err, "authController.login");
 
             if (!isMatch) {
-                return res.status(401).json({ mensagem: 'Email ou senha invÃƒÂ¡lidos.' });
+                return res.status(401).json({ mensagem: 'Email ou senha inválidos.' });
             }
 
             // =========================
@@ -94,11 +95,11 @@ exports.login = (req, res) => {
                     'SELECT id FROM lojas WHERE usuario_id = ? LIMIT 1',
                     [usuario.id],
                     (err, lojaResults) => {
-                        if (err) return res.status(500).send(err);
+                        if (err) return responderErroInterno(res, err, "authController.login");
 
                         if (lojaResults.length === 0) {
                             return res.status(400).json({
-                                mensagem: 'Loja nÃƒÂ£o encontrada para este usuÃƒÂ¡rio.'
+                                mensagem: 'Loja não encontrada para este usuário.'
                             });
                         }
 
@@ -169,23 +170,23 @@ exports.me = (req, res) => {
          FROM usuarios WHERE id = ?`,
         [userId],
         (err, results) => {
-            if (err) return res.status(500).send(err);
+            if (err) return responderErroInterno(res, err, "authController.me");
 
             if (results.length === 0) {
                 return res.status(404).json({
-                    mensagem: 'UsuÃƒÂ¡rio nÃƒÂ£o encontrado.'
+                    mensagem: 'Usuário não encontrado.'
                 });
             }
 
             const usuario = results[0];
 
-            // Se for lojista, devolve tambÃƒÂ©m a loja vinculada
+            // Se for lojista, devolve também a loja vinculada
             if (usuario.tipo === 'lojista') {
                 db.query(
                     'SELECT id FROM lojas WHERE usuario_id = ? LIMIT 1',
                     [usuario.id],
                     (err, lojaResults) => {
-                        if (err) return res.status(500).send(err);
+                        if (err) return responderErroInterno(res, err, "authController.me");
 
                         return res.json({
                             ...usuario,
@@ -220,31 +221,31 @@ exports.registerLojista = (req, res) => {
 
     if (!nomeFantasia || !cnpj || !email || !senha) {
         return res.status(400).json({
-            mensagem: 'Campos obrigatÃƒÂ³rios faltando.'
+            mensagem: 'Campos obrigatórios faltando.'
         });
     }
 
-    // 1) verifica se email jÃƒÂ¡ existe
+    // 1) verifica se email já existe
     db.query('SELECT * FROM usuarios WHERE email = ?', [email], (err, results) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "authController.registerLojista");
 
         if (results.length > 0) {
-            return res.status(409).json({ mensagem: 'Email jÃƒÂ¡ cadastrado.' });
+            return res.status(409).json({ mensagem: 'Email já cadastrado.' });
         }
 
-        // 2) cria usuÃƒÂ¡rio lojista
+        // 2) cria usuário lojista
         bcrypt.hash(senha, 10, (err, hash) => {
-            if (err) return res.status(500).send(err);
+            if (err) return responderErroInterno(res, err, "authController.registerLojista");
 
             db.query(
                 'INSERT INTO usuarios (nome, email, senha_hash, tipo) VALUES (?, ?, ?, ?)',
                 [nomeFantasia, email, hash, 'lojista'],
                 (err, result) => {
-                    if (err) return res.status(500).send(err);
+                    if (err) return responderErroInterno(res, err, "authController.registerLojista");
 
                     const usuarioId = result.insertId;
 
-                    // 3) cria loja vinculada ao usuÃƒÂ¡rio
+                    // 3) cria loja vinculada ao usuário
                     db.query(
                         `INSERT INTO lojas
                         (usuario_id, nome_fantasia, razao_social, cnpj, telefone, cidade, uf, descricao)
@@ -260,11 +261,11 @@ exports.registerLojista = (req, res) => {
                             descricao
                         ],
                         (err, lojaResult) => {
-                            if (err) return res.status(500).send(err);
+                            if (err) return responderErroInterno(res, err, "authController.registerLojista");
 
                             const lojaId = lojaResult.insertId;
 
-                            // opcionalmente jÃƒÂ¡ loga o lojista apÃƒÂ³s cadastro
+                            // opcionalmente já loga o lojista após cadastro
                             const token = jwt.sign(
                                 {
                                     id: usuarioId,

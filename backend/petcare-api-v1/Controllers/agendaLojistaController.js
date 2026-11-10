@@ -3,6 +3,7 @@ const AgendaDisponibilidade = require('../Models/agendaDisponibilidadeModel');
 const AgendaBloqueios = require('../Models/agendaBloqueiosModel');
 const Agendamentos = require('../Models/agendamentosModel');
 const Servicos = require('../Models/servicosModel');
+const { responderErroInterno } = require('../utils/erroInterno');
 
 // ========================
 // Configura��o da Agenda
@@ -12,7 +13,7 @@ exports.getConfig = (req, res) => {
     const loja_id  = req.usuario.loja_id;
 
     AgendaConfig.getByLojaId(loja_id, (err, config) => {
-        if (err) return res.status(500).json({ error: err });
+        if (err) return responderErroInterno(res, err, "agendaLojistaController.getConfig");
         if (!config) return res.status(404).json({ message: 'Configura��o n�o encontrada.' });
         res.json(config);
     });
@@ -25,20 +26,20 @@ exports.createOrUpdateConfig = (req, res) => {
     if (!loja_id) return res.status(400).json({ message: 'ID da loja � obrigat�rio.' });
 
     AgendaConfig.getByLojaId(loja_id, (err, existing) => {
-        if (err) return res.status(500).json({ error: err });
+        if (err) return responderErroInterno(res, err, "agendaLojistaController.createOrUpdateConfig");
 
         const data = { loja_id, capacidade_por_horario, dias_limite_agendamento, intervalo_minutos, trabalha_24h };
 
         if (existing) {
             // Atualiza
             AgendaConfig.update(loja_id, data, (err) => {
-                if (err) return res.status(500).json({ error: err });
+                if (err) return responderErroInterno(res, err, "agendaLojistaController.createOrUpdateConfig");
                 res.json({ message: 'Configura��o atualizada com sucesso.' });
             });
         } else {
             // Cria
             AgendaConfig.create(data, (err) => {
-                if (err) return res.status(500).json({ error: err });
+                if (err) return responderErroInterno(res, err, "agendaLojistaController.createOrUpdateConfig");
                 res.status(201).json({ message: 'Configura��o criada com sucesso.' });
             });
         }
@@ -53,7 +54,7 @@ exports.getDisponibilidade = (req, res) => {
     const loja_id = req.usuario.loja_id;
 
     AgendaDisponibilidade.getByLoja(loja_id, (err, horarios) => {
-        if (err) return res.status(500).json({ error: err });
+        if (err) return responderErroInterno(res, err, "agendaLojistaController.getDisponibilidade");
         res.json(horarios);
     });
 };
@@ -106,7 +107,7 @@ exports.createDisponibilidade = (req, res) => {
     AgendaDisponibilidade.create(
         { loja_id, dia_semana, hora_inicio, hora_fim, intervalo_inicio, intervalo_fim },
         (err, result) => {
-            if (err) return res.status(500).json({ error: err });
+            if (err) return responderErroInterno(res, err, "agendaLojistaController.createDisponibilidade");
             res.status(201).json({
                 message: 'Disponibilidade criada com sucesso.',
                 id: result.insertId
@@ -119,7 +120,7 @@ exports.deleteDisponibilidade = (req, res) => {
     const { id } = req.params;
 
     AgendaDisponibilidade.delete(id, (err) => {
-        if (err) return res.status(500).json({ error: err });
+        if (err) return responderErroInterno(res, err, "agendaLojistaController.deleteDisponibilidade");
         res.json({ message: 'Disponibilidade removida com sucesso.' });
     });
 };
@@ -132,7 +133,7 @@ exports.getBloqueios = (req, res) => {
     const loja_id = req.usuario.loja_id;
 
     AgendaBloqueios.getByLoja(loja_id, (err, bloqueios) => {
-        if (err) return res.status(500).json({ error: err });
+        if (err) return responderErroInterno(res, err, "agendaLojistaController.getBloqueios");
         res.json(bloqueios);
     });
 };
@@ -150,7 +151,7 @@ exports.createBloqueio = (req, res) => {
     AgendaBloqueios.create(
         { loja_id, data_inicio, data_fim, motivo },
         (err, result) => {
-            if (err) return res.status(500).json({ error: err });
+            if (err) return responderErroInterno(res, err, "agendaLojistaController.createBloqueio");
             res.status(201).json({
                 message: 'Bloqueio criado com sucesso.',
                 id: result.insertId
@@ -163,7 +164,7 @@ exports.deleteBloqueio = (req, res) => {
     const { id } = req.params;
 
     AgendaBloqueios.delete(id, (err) => {
-        if (err) return res.status(500).json({ error: err });
+        if (err) return responderErroInterno(res, err, "agendaLojistaController.deleteBloqueio");
         res.json({ message: 'Bloqueio removido com sucesso.' });
     });
 };
@@ -183,7 +184,7 @@ exports.getHorariosDisponiveis = async (req, res) => {
         Servicos.getById(servico_id, async (err, servico) => {
 
             if (err)
-                return res.status(500).json({ error: err });
+                return responderErroInterno(res, err, "agendaLojistaController.getHorariosDisponiveis");
 
             if (!servico) {
                 return res.status(404).json({
@@ -307,13 +308,7 @@ exports.getHorariosDisponiveis = async (req, res) => {
 
     } catch (error) {
 
-        console.error("ERRO COMPLETO:", error);
-
-        res.status(500).json({
-            message: "Erro ao gerar hor�rios.",
-            error: error.message,
-            stack: error.stack
-        });
+        responderErroInterno(res, error, "agendaLojistaController.getHorariosDisponiveis - Erro ao gerar horários");
 
     }
 
@@ -327,17 +322,13 @@ exports.deleteDisponibilidadeByLoja = (req, res) => {
 
         /*
         AgendaDisponibilidade.deleteByLoja(loja_id, (err) => {
-            if (err) return res.status(500).json({ error: err });
+            if (err) return responderErroInterno(res, err, "agendaLojistaController.deleteDisponibilidadeByLoja");
             res.json({ message: 'Disponibilidades removidas com sucesso.' });
         });
         */
 
         if (err) {
-            console.error("ERRO AO APAGAR DISPONIBILIDADE:", err);
-            return res.status(500).json({
-                error: err.message,
-                code: err.code
-            });
+            return responderErroInterno(res, err, "agendaLojistaController.deleteDisponibilidadeByLoja - Erro ao apagar disponibilidade");
         }
 
         res.json({

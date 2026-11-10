@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const db = require('../db');
 const { enviarEmailConfirmacao } = require('../Services/emailService');
+const { responderErroInterno } = require('../utils/erroInterno');
 
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
@@ -34,11 +35,11 @@ exports.register = (req, res) => {
     }
 
     db.query('SELECT id FROM usuarios WHERE email = ?', [emailNormalizado], (selectErr, users) => {
-        if (selectErr) return res.status(500).send(selectErr);
+        if (selectErr) return responderErroInterno(res, selectErr, "emailConfirmationController - consulta de usuário");
         if (users.length > 0) return res.status(409).json({ mensagem: 'E-mail já cadastrado.' });
 
         bcrypt.hash(senha, 10, (hashErr, senhaHash) => {
-            if (hashErr) return res.status(500).send(hashErr);
+            if (hashErr) return responderErroInterno(res, hashErr, "emailConfirmationController.register - hash da senha");
 
             const { token, tokenHash } = gerarTokenConfirmacao();
             const sql = `INSERT INTO usuarios
@@ -46,7 +47,7 @@ exports.register = (req, res) => {
                 VALUES (?, ?, ?, 'cliente', 0, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))`;
 
             db.query(sql, [nomeNormalizado, emailNormalizado, senhaHash, tokenHash], (insertErr) => {
-                if (insertErr) return res.status(500).send(insertErr);
+                if (insertErr) return responderErroInterno(res, insertErr, "emailConfirmationController.register - inserção do usuário");
 
                 enviarEmailConfirmacao(emailNormalizado, token)
                     .then(() => res.status(201).json({
@@ -80,7 +81,7 @@ exports.confirmarEmail = (req, res) => {
           AND email_verificado = 0`;
 
     db.query(sql, [tokenHash], (err, result) => {
-        if (err) return res.status(500).send(err);
+        if (err) return responderErroInterno(res, err, "emailConfirmationController.confirmarEmail");
         if (result.affectedRows === 0) {
             return res.status(400).json({ mensagem: 'Link inválido, expirado ou já utilizado.' });
         }
@@ -100,7 +101,7 @@ exports.reenviarConfirmacao = (req, res) => {
         'SELECT id, email_verificado FROM usuarios WHERE email = ? AND tipo = ?',
         [email, 'cliente'],
         (selectErr, users) => {
-            if (selectErr) return res.status(500).send(selectErr);
+            if (selectErr) return responderErroInterno(res, selectErr, "emailConfirmationController - consulta de usuário");
             if (users.length === 0) {
                 return res.json({ mensagem: 'Se houver uma conta pendente para este e-mail, enviaremos um novo link.' });
             }
@@ -116,7 +117,7 @@ exports.reenviarConfirmacao = (req, res) => {
                  WHERE id = ?`,
                 [tokenHash, users[0].id],
                 (updateErr) => {
-                    if (updateErr) return res.status(500).send(updateErr);
+                    if (updateErr) return responderErroInterno(res, updateErr, "emailConfirmationController.reenviarConfirmacao - atualização do token");
 
                     enviarEmailConfirmacao(email, token)
                         .then(() => res.json({ mensagem: 'Enviamos um novo link de confirmação para seu e-mail.' }))
@@ -139,7 +140,7 @@ exports.validarEmailConfirmado = (req, res, next) => {
         'SELECT email_verificado FROM usuarios WHERE email = ? AND tipo = ?',
         [email, 'cliente'],
         (err, users) => {
-            if (err) return res.status(500).send(err);
+            if (err) return responderErroInterno(res, err, "emailConfirmationController.validarEmailConfirmado");
             if (users.length > 0 && !users[0].email_verificado) {
                 return res.status(403).json({
                     codigo: 'EMAIL_NAO_VERIFICADO',
