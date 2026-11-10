@@ -7,57 +7,6 @@ const { MENSAGEM_ACEITE_OBRIGATORIO, aceitouTermos, COLUNAS_ACEITE, VALORES_ACEI
 
 
 // =========================
-// REGISTER
-// =========================
-exports.register = (req, res) => {
-    const { nome, email, senha } = req.body;
-    const tipo = 'cliente';
-
-    if (!nome || !email || !senha) {
-        return res.status(400).json({
-            mensagem: 'Nome, email e senha são obrigatórios.'
-        });
-    }
-
-    db.query('SELECT * FROM usuarios WHERE email = ?', [email], (err, results) => {
-        if (err) return responderErroInterno(res, err, "authController.register");
-
-        if (results.length > 0) {
-            return res.status(409).json({ mensagem: 'Email já cadastrado.' });
-        }
-
-        bcrypt.hash(senha, 10, (err, hash) => {
-            if (err) return responderErroInterno(res, err, "authController.register");
-
-            db.query(
-                'INSERT INTO usuarios (nome, email, senha_hash, tipo) VALUES (?, ?, ?, ?)',
-                [nome, email, hash, tipo],
-                (err, result) => {
-                    if (err) return responderErroInterno(res, err, "authController.register");
-
-                    const token = jwt.sign(
-                        { id: result.insertId, tipo },
-                        secret,
-                        { expiresIn: '1d' }
-                    );
-
-                    return res.status(201).json({
-                        mensagem: 'Usuário registrado com sucesso!',
-                        token,
-                        usuario: {
-                            id: result.insertId,
-                            nome,
-                            email,
-                            tipo
-                        }
-                    });
-                }
-            );
-        });
-    });
-};
-
-// =========================
 // LOGIN
 // =========================
 exports.login = (req, res) => {

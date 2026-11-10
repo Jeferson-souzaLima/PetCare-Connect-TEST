@@ -1,7 +1,6 @@
-const db = require('../db');
 const usuarioModel = require('../Models/usuariosModel');
 const geocodingService = require('../Services/geocodingService');
-const { responderErroInterno, registrarErroInterno } = require('../utils/erroInterno');
+const { registrarErroInterno } = require('../utils/erroInterno');
 
 const CAMPOS_ENDERECO = ['cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf'];
 
@@ -20,39 +19,6 @@ function salvarPerfil(id, dados) {
         usuarioModel.updatePerfil(id, dados, (err, result) => err ? reject(err) : resolve(result));
     });
 }
-
-exports.listarUsuarios = (req, res) => {
-    usuarioModel.getAll((err, results) => {
-        if (err) return responderErroInterno(res, err, "usuariosController.listarUsuarios");
-        res.json(results);
-    });
-};
-
-exports.criarUsuario = (req, res) => {
-    const novoUsuario = req.body;
-    usuarioModel.create(novoUsuario, (err, result) => {
-        if (err) return responderErroInterno(res, err, "usuariosController.criarUsuario");
-        res.status(201).json({ id: result.insertId, ...novoUsuario });
-    });
-};
-
-exports.deletarUsuario = (req, res) => {
-    const id = req.params.id;
-    db.query('DELETE FROM usuarios WHERE id = ?', [id], (err, result) => {
-        if (err) return res.status(500).json({ erro: 'Erro ao deletar usuario.' });
-        if (result.affectedRows === 0) return res.status(404).json({ mensagem: 'Usuario nao encontrado.' });
-        return res.status(200).json({ mensagem: 'Usuario deletado com sucesso!' });
-    });
-};
-
-exports.atualizarUsuario = (req, res) => {
-    const id = req.params.id;
-    usuarioModel.update(id, req.body, (err, result) => {
-        if (err) return res.status(500).json({ erro: 'Erro ao atualizar usuario.' });
-        if (result.affectedRows === 0) return res.status(404).json({ mensagem: 'Usuario nao encontrado.' });
-        return res.status(200).json({ mensagem: 'Usuario atualizado com sucesso!' });
-    });
-};
 
 exports.atualizarMeuPerfil = async (req, res) => {
     const id = req.usuario.id;
