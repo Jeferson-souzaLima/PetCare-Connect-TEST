@@ -9,7 +9,8 @@ exports.buscarPorCep = async (cep) => {
 
     try {
         const response = await axios.get(
-            `https://viacep.com.br/ws/${cepNormalizado}/json/`
+            `https://viacep.com.br/ws/${cepNormalizado}/json/`,
+            { timeout: 5000 }
         );
 
         const dados = response.data;
