@@ -30,3 +30,22 @@ async function enviarEmailConfirmacao(email, token) {
 }
 
 module.exports = { enviarEmailConfirmacao };
+
+/*
+ * Aviso enviado quando alguém tenta cadastrar um e-mail que já tem conta
+ * confirmada. A API responde ao cadastro como se fosse novo (não revela
+ * que o e-mail existe); só o dono do e-mail fica sabendo da tentativa.
+ */
+async function enviarAvisoCadastroExistente(email) {
+    const loginUrl = new URL('/login', process.env.APP_URL);
+
+    await getTransporter().sendMail({
+        from: process.env.MAIL_FROM,
+        to: email,
+        subject: 'Tentativa de cadastro com o seu e-mail no PetCare Connect',
+        text: `Alguém tentou criar uma conta no PetCare Connect com este e-mail, mas você já tem uma conta. Se foi você, entre em ${loginUrl.toString()} com a sua senha. Se não foi, pode ignorar esta mensagem: nada foi alterado na sua conta.`,
+        html: `<p>Olá!</p><p>Alguém tentou criar uma conta no PetCare Connect com este e-mail, mas você já tem uma conta.</p><p>Se foi você, <a href="${loginUrl.toString()}">entre com a sua senha</a>.</p><p>Se não foi, pode ignorar esta mensagem: nada foi alterado na sua conta.</p>`
+    });
+}
+
+module.exports.enviarAvisoCadastroExistente = enviarAvisoCadastroExistente;
