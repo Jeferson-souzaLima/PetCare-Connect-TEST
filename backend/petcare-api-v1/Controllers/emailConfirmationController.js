@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const db = require('../db');
 const { enviarEmailConfirmacao } = require('../Services/emailService');
-const { responderErroInterno } = require('../utils/erroInterno');
+const { responderErroInterno, registrarErroInterno } = require('../utils/erroInterno');
 
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
@@ -54,7 +54,7 @@ exports.register = (req, res) => {
                         mensagem: 'Cadastro realizado. Verifique seu e-mail para ativar a conta.'
                     }))
                     .catch((emailErr) => {
-                        console.error('Erro ao enviar e-mail de confirmação:', emailErr);
+                        registrarErroInterno('emailConfirmationController: Erro ao enviar e-mail de confirmação', emailErr);
                         res.status(503).json({
                             mensagem: 'Conta criada, mas não foi possível enviar o e-mail. Solicite um novo link de confirmação.'
                         });
@@ -122,7 +122,7 @@ exports.reenviarConfirmacao = (req, res) => {
                     enviarEmailConfirmacao(email, token)
                         .then(() => res.json({ mensagem: 'Enviamos um novo link de confirmação para seu e-mail.' }))
                         .catch((emailErr) => {
-                            console.error('Erro ao reenviar confirmação de e-mail:', emailErr);
+                            registrarErroInterno('emailConfirmationController: Erro ao reenviar confirmação de e-mail', emailErr);
                             res.status(503).json({ mensagem: 'Não foi possível enviar o e-mail agora. Tente novamente mais tarde.' });
                         });
                 }

@@ -1,7 +1,7 @@
 // controllers/lojasController.js
 const lojaModel = require('../Models/lojasModel');
 const db = require('../db');
-const { responderErroInterno } = require('../utils/erroInterno');
+const { responderErroInterno, registrarErroInterno } = require('../utils/erroInterno');
 
 // Listar todas as lojas
 exports.listarLojas = (req, res) => {
@@ -27,7 +27,7 @@ exports.listarLojas = (req, res) => {
         (err, resultado) => {
 
             if (err) {
-                console.error(err);
+                registrarErroInterno('lojasController', err);
 
                 return res.status(500).json({
                     mensagem: "Erro ao listar lojas."
@@ -39,29 +39,29 @@ exports.listarLojas = (req, res) => {
     );
 };
 
-// Criar uma nova loja (sem imagem ainda)
-// Upload/atualiza��o da imagem da loja
-exports.uploadImagem = (req, res) => {
-    const { id } = req.params;
+/**
+ * Só o administrador ou o lojista dono da loja podem alterar/apagar uma loja
+ * pelo id. Responde 404 se a loja não existe e 403 se pertence a outro usuário.
+ */
+exports.exigirDonoDaLojaOuAdmin = (req, res, next) => {
+    const { usuario } = req;
 
-    if (!req.file) {
-        return res.status(400).json({ mensagem: 'Nenhuma imagem foi enviada.' });
+    if (!usuario || !['admin', 'lojista'].includes(usuario.tipo)) {
+        return res.status(403).json({ mensagem: 'Acesso negado.' });
     }
 
-    const imagemUrl = `/uploads/${ req.file.filename }`;
-    const query = 'UPDATE lojas SET imagem = ? WHERE id = ?';
+    db.query('SELECT usuario_id FROM lojas WHERE id = ? LIMIT 1', [req.params.id], (err, results) => {
+        if (err) return responderErroInterno(res, err, 'lojasController.exigirDonoDaLojaOuAdmin');
 
-    db.query(query, [imagemUrl, id], (err, result) => {
-        if (err) return responderErroInterno(res, err, "lojasController.uploadImagem");
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ mensagem: 'Loja n�o encontrada.' });
+        if (results.length === 0) {
+            return res.status(404).json({ mensagem: 'Loja não encontrada.' });
         }
 
-        res.json({
-            mensagem: 'Imagem da loja atualizada com sucesso!',
-            imagemUrl
-        });
+        if (usuario.tipo !== 'admin' && Number(results[0].usuario_id) !== Number(usuario.id)) {
+            return res.status(403).json({ mensagem: 'Acesso negado.' });
+        }
+
+        next();
     });
 };
 

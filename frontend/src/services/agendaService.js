@@ -19,7 +19,7 @@ export const getAgendamentosDoLogista = async (data, token) => {
 
     return response.data;
   } catch (error) {
-    console.error("Erro ao buscar agendamentos:", error);
+    console.error("Erro ao buscar agendamentos:", error?.response?.status ?? error?.message);
     throw error;
   }
 };
@@ -41,7 +41,7 @@ export const atualizarStatusAgendamento = async (id, status, token) => {
 
     return response.data;
   } catch (error) {
-    console.error("Erro ao atualizar status:", error);
+    console.error("Erro ao atualizar status:", error?.response?.status ?? error?.message);
     throw error;
   }
 };
@@ -62,7 +62,7 @@ export const deletarAgendamento = async (id, token) => {
 
     return response.data;
   } catch (error) {
-    console.error("Erro ao deletar agendamento:", error);
+    console.error("Erro ao deletar agendamento:", error?.response?.status ?? error?.message);
     throw error;
   }
 };

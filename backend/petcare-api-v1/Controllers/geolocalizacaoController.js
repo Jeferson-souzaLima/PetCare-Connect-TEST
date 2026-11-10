@@ -1,4 +1,5 @@
 const geolocalizacaoModel = require("../Models/geolocalizacaoModel");
+const { registrarErroInterno } = require('../utils/erroInterno');
 
 exports.buscar = (req, res) => {
 
@@ -55,7 +56,7 @@ exports.buscar = (req, res) => {
 
         if (err) {
 
-            console.error(err);
+            registrarErroInterno('geolocalizacaoController', err);
 
             return res.status(500).json({
                 mensagem: "Erro ao buscar lojas próximas."
@@ -74,7 +75,7 @@ exports.buscar = (req, res) => {
 
                 if (err) {
 
-                    console.error(err);
+                    registrarErroInterno('geolocalizacaoController', err);
 
                     return res.status(500).json({
                         mensagem: "Erro ao buscar produtos próximos."
@@ -93,7 +94,7 @@ exports.buscar = (req, res) => {
 
                     if (err) {
 
-                        console.error(err);
+                        registrarErroInterno('geolocalizacaoController', err);
 
                         return res.status(500).json({
                             mensagem: "Erro ao buscar serviços próximos."

@@ -29,7 +29,7 @@ export function useFavorito(
 
             } catch (error) {
 
-                console.error(error);
+                console.error(error?.response?.status ?? error?.message);
 
             } finally {
 
@@ -46,12 +46,6 @@ export function useFavorito(
     
 
     async function toggleFavorito() {
-
-        console.log({
-            favoritado,
-            tipo,
-            referenciaId,
-        });
 
         try {
 
@@ -79,11 +73,8 @@ export function useFavorito(
 
         } catch (error) {
 
-            console.error("Erro:", error);
-
-            if (error.response) {
-                console.log(error.response.data);
-            }
+            // Só o status: o objeto de erro do axios inclui o cabeçalho com o token.
+            console.error("Erro ao atualizar favorito:", error.response?.status ?? error.message);
 
         } finally {
 

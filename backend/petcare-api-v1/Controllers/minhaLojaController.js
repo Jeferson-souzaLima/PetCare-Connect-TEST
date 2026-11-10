@@ -125,7 +125,6 @@ exports.atualizarMinhaLoja = async (req, res) => {
     if (erro) return res.status(400).json({ mensagem: erro });
     const coordenadas = await obterCoordenadas(loja);
 
-    console.log("Coordenadas recebidas:", coordenadas);
 
     const sql = `
     UPDATE lojas

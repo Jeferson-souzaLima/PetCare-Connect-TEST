@@ -36,15 +36,12 @@ export default function ProdutosLojistaPage() {
   // ===============================
   const carregarProdutos = async () => {
 
-    console.log("TOKEN:", token);
-    console.log("USUARIO", usuario);
-    
     try {
       const res = await api.get("/produtos/meus");
 
       setProdutos(res.data);
     } catch (err) {
-      console.error("Erro ao carregar produtos", err);
+      console.error("Erro ao carregar produtos", err?.response?.status ?? err?.message);
     } finally {
       setLoading(false);
     }

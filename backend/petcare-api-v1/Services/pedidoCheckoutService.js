@@ -94,14 +94,6 @@ async function calcularFrete({ lojaId, latitude, longitude }) {
         Number(longitude)
     );
 
-    console.log('DEBUG FRETE:', {
-        lojaLat: Number(loja.latitude),
-        lojaLng: Number(loja.longitude),
-        destinoLat: Number(latitude),
-        destinoLng: Number(longitude),
-        km,
-        raio: Number(loja.raio_entrega_km)
-    });
 
     if (km > Number(loja.raio_entrega_km)) {
         const erro = new Error(

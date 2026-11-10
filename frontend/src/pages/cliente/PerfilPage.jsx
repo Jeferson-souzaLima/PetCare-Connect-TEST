@@ -65,7 +65,7 @@ export default function PerfilPage() {
       const { data } = await petService.listar(token);
       setPets(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Erro ao carregar pets:", err);
+      console.error("Erro ao carregar pets:", err?.response?.status ?? err?.message);
       setPets([]);
     } finally {
       setLoadingPets(false);
@@ -93,7 +93,7 @@ export default function PerfilPage() {
 
         atualizarUsuario(data);
       } catch (err) {
-        console.error("Erro ao carregar perfil:", err);
+        console.error("Erro ao carregar perfil:", err?.response?.status ?? err?.message);
       }
     }
 
@@ -157,7 +157,7 @@ export default function PerfilPage() {
       setCampoEditando(null);
       setValorEditando("");
     } catch (err) {
-      console.error("Erro ao atualizar perfil:", err);
+      console.error("Erro ao atualizar perfil:", err?.response?.status ?? err?.message);
 
       setMensagemPerfil({
         tipo: "erro",
@@ -185,9 +185,8 @@ export default function PerfilPage() {
       setPets((prev) =>
         prev.filter((p) => p.id !== id)
       );
-    } catch (err) {
+    } catch {
       alert("Erro ao remover pet.");
-      console.log(err);
     }
   }
 

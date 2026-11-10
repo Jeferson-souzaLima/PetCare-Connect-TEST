@@ -3,7 +3,7 @@ const AgendaDisponibilidade = require('../Models/agendaDisponibilidadeModel');
 const AgendaBloqueios = require('../Models/agendaBloqueiosModel');
 const Agendamentos = require('../Models/agendamentosModel');
 const Servicos = require('../Models/servicosModel');
-const { responderErroInterno } = require('../utils/erroInterno');
+const { responderErroInterno, registrarErroInterno } = require('../utils/erroInterno');
 
 // ========================
 // Configura��o da Agenda
@@ -118,9 +118,15 @@ exports.createDisponibilidade = (req, res) => {
 
 exports.deleteDisponibilidade = (req, res) => {
     const { id } = req.params;
+    const loja_id = req.usuario.loja_id;
 
-    AgendaDisponibilidade.delete(id, (err) => {
+    if (req.usuario.tipo !== 'lojista' || !loja_id) {
+        return res.status(403).json({ message: 'Apenas o lojista da loja pode remover.' });
+    }
+
+    AgendaDisponibilidade.delete(id, loja_id, (err, result) => {
         if (err) return responderErroInterno(res, err, "agendaLojistaController.deleteDisponibilidade");
+        if (!result.affectedRows) return res.status(404).json({ message: 'Disponibilidade não encontrada.' });
         res.json({ message: 'Disponibilidade removida com sucesso.' });
     });
 };
@@ -162,9 +168,15 @@ exports.createBloqueio = (req, res) => {
 
 exports.deleteBloqueio = (req, res) => {
     const { id } = req.params;
+    const loja_id = req.usuario.loja_id;
 
-    AgendaBloqueios.delete(id, (err) => {
+    if (req.usuario.tipo !== 'lojista' || !loja_id) {
+        return res.status(403).json({ message: 'Apenas o lojista da loja pode remover.' });
+    }
+
+    AgendaBloqueios.delete(id, loja_id, (err, result) => {
         if (err) return responderErroInterno(res, err, "agendaLojistaController.deleteBloqueio");
+        if (!result.affectedRows) return res.status(404).json({ message: 'Bloqueio não encontrado.' });
         res.json({ message: 'Bloqueio removido com sucesso.' });
     });
 };
@@ -197,11 +209,8 @@ exports.getHorariosDisponiveis = async (req, res) => {
             const [ano, mes, dia] = data.split("-").map(Number);
 
             const diaSemana = new Date(ano, mes - 1, dia).getDay();
-            console.log("Data:", data);
-            console.log("DiaSemana:", diaSemana);
 
             const config = await AgendaConfig.getByLojaIdPromise(loja_id);
-            console.log("Config:", config);
 
             if (!config) {
                 return res.status(400).json({
@@ -214,7 +223,6 @@ exports.getHorariosDisponiveis = async (req, res) => {
                     loja_id,
                     diaSemana
                 );
-            console.log("Disponibilidade:", disponibilidade);
 
             if (!disponibilidade.length) {
                 return res.json([]);
@@ -225,14 +233,12 @@ exports.getHorariosDisponiveis = async (req, res) => {
                     loja_id,
                     data
                 );
-            console.log("Bloqueios:", bloqueios);
 
             const agendamentos =
                 await Agendamentos.getByDataPromise(
                     loja_id,
                     data
                 );
-            console.log("Agendamentos:", agendamentos);
 
             // Cada dia possui apenas um registro de disponibilidade.
             const horario = disponibilidade[0];
@@ -301,7 +307,6 @@ exports.getHorariosDisponiveis = async (req, res) => {
 
             }
 
-            console.log("Hor�rios gerados:", horarios);
             return res.json(horarios);
 
         });
@@ -364,10 +369,7 @@ exports.getDatasComAgendamentosConfirmados = (req, res) => {
         dataFinal,
         (err, resultados) => {
             if (err) {
-                console.error(
-                    'Erro ao buscar datas com agendamentos confirmados:',
-                    err
-                );
+                registrarErroInterno('agendaLojistaController: Erro ao buscar datas com agendamentos confirmados', err);
 
                 return res.status(500).json({
                     message: 'Erro ao buscar agendamentos.'

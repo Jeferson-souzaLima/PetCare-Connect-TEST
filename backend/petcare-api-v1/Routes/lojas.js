@@ -15,13 +15,10 @@ router.post('/minha/imagem', authMiddleware, authorizeRoles('lojista'), minhaLoj
 
 // Rotas protegidas
 router.post('/', authMiddleware, authorizeRoles('lojista'), minhaLojaController.criarMinhaLoja);
-router.put('/:id', authMiddleware, lojasController.atualizarLoja);
-router.delete('/:id', authMiddleware, lojasController.deletarLoja);
+router.put('/:id', authMiddleware, lojasController.exigirDonoDaLojaOuAdmin, lojasController.atualizarLoja);
+router.delete('/:id', authMiddleware, lojasController.exigirDonoDaLojaOuAdmin, lojasController.deletarLoja);
 
 // Rota para buscar loja por ID (pública)
 router.get(`/:id`, lojasController.getLojaPorId);
-
-// Upload de imagem da loja (protegido)
-router.post('/:id/imagem', authMiddleware, upload.single('imagem'), lojasController.uploadImagem);
 
 module.exports = router;

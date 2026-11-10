@@ -6,7 +6,7 @@ const {
 } = require('../Services/pedidoCheckoutService');
 const MercadoPagoService = require('../Services/mercadoPagoService');
 const PagamentosModel = require('../Models/pagamentosModel');
-const { responderErroInterno, responderErroDoServico } = require('../utils/erroInterno');
+const { responderErroInterno, responderErroDoServico, registrarErroInterno } = require('../utils/erroInterno');
 
 // ===============================
 // ADMIN — ver todos pedidos
@@ -25,25 +25,6 @@ exports.getAll = (req, res) => {
 };
 
 // ===============================
-// CLIENTE — criar pedido
-// ===============================
-exports.create = (req, res) => {
-    const usuario = req.usuario;
-
-    if (usuario.tipo !== 'cliente') {
-        return res.status(403).json({ mensagem: 'Somente clientes podem criar pedidos.' });
-    }
-
-    const novoPedido = req.body;
-    novoPedido.usuario_id = usuario.id;
-
-    pedidosModel.createPedidoComItens(novoPedido, (err, pedidoId) => {
-        if (err) return responderErroInterno(res, err, "pedidosController.create");
-        res.status(201).json({ mensagem: 'Pedido criado com sucesso!', pedidoId });
-    });
-};
-
-// ===============================
 // CLIENTE — ver apenas seus pedidos
 // ===============================
 exports.getMeusPedidos = (req, res) => {
@@ -57,7 +38,7 @@ exports.getMeusPedidos = (req, res) => {
 
     pedidosModel.getMeusPedidosCompletos(usuario.id, (err, resultados) => {
         if (err) {
-            console.error('Erro ao buscar meus pedidos:', err);
+            registrarErroInterno('pedidosController: Erro ao buscar meus pedidos', err);
             return res.status(500).json({
                 mensagem: 'Não foi possível carregar seus pedidos.'
             });
@@ -117,10 +98,7 @@ exports.getPedidosLoja = (req, res) => {
         usuario.loja_id,
         (err, resultados) => {
             if (err) {
-                console.error(
-                    'Erro ao buscar pedidos da loja:',
-                    err
-                );
+                registrarErroInterno('pedidosController: Erro ao buscar pedidos da loja', err);
 
                 return res.status(500).json({
                     mensagem: 'Não foi possível carregar os pedidos.'
