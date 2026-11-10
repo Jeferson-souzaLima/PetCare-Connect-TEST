@@ -1,5 +1,6 @@
 import { API_URL } from "@/services/apiUrl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { lerAvisoParaLogin, limparAvisoParaLogin } from "@/utils/sessao";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { FaEnvelope, FaLock } from "react-icons/fa";
@@ -8,10 +9,15 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
-  const [aviso, setAviso] = useState("");
+  const [aviso, setAviso] = useState(lerAvisoParaLogin);
   const [emailNaoVerificado, setEmailNaoVerificado] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // O aviso (ex.: sessão expirada) é exibido uma vez e então descartado.
+  useEffect(() => {
+    limparAvisoParaLogin();
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -42,7 +48,7 @@ export default function LoginPage() {
         navigate("/perfil");
       }
       
-    } catch (err) {
+    } catch {
       setErro("Erro ao conectar com o servidor");
     }
   };
@@ -65,7 +71,7 @@ export default function LoginPage() {
       }
 
       setAviso(data.mensagem);
-    } catch (error) {
+    } catch {
       setErro("Erro ao conectar com o servidor");
     }
   };

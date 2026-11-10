@@ -3,8 +3,15 @@ import {
   createContext,
   useContext,
   useState,
-  useCallback
+  useCallback,
+  useEffect
 } from "react";
+import {
+  EVENTO_SESSAO_EXPIRADA,
+  deixarAvisoParaLogin,
+  expiracaoDoToken,
+  tokenExpirado
+} from "@/utils/sessao";
 
 const AuthContext = createContext();
 
@@ -12,7 +19,8 @@ const AuthContext = createContext();
  * Lê a sessão salva de forma síncrona, antes da primeira renderização.
  * Assim o PrivateRoute já recebe o usuário em uma recarga (F5) ou link direto,
  * em vez de redirecionar para /login enquanto a sessão ainda não foi lida.
- * Dados corrompidos no localStorage são tratados como "sem sessão".
+ * Dados corrompidos no localStorage ou token já expirado são tratados como
+ * "sem sessão".
  */
 function lerSessaoSalva() {
   try {
@@ -22,9 +30,12 @@ function lerSessaoSalva() {
     if (storedUser && storedToken) {
       const usuario = JSON.parse(storedUser);
 
-      if (usuario && typeof usuario === "object") {
+      if (usuario && typeof usuario === "object" && !tokenExpirado(storedToken)) {
         return { usuario, token: storedToken };
       }
+
+      localStorage.removeItem("usuario");
+      localStorage.removeItem("token");
     }
   } catch {
     console.warn("Sessão salva inválida; é necessário entrar novamente.");
@@ -60,12 +71,36 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUsuario(null);
     setToken(null);
     localStorage.removeItem("usuario");
     localStorage.removeItem("token");
-  };
+  }, []);
+
+  // Encerra a sessão quando o token vence ou a API o recusa (401),
+  // em vez de manter a pessoa "logada" com chamadas falhando.
+  const encerrarSessaoExpirada = useCallback(() => {
+    deixarAvisoParaLogin("Sua sessão expirou. Entre novamente para continuar.");
+    logout();
+  }, [logout]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+
+    const expiraEm = expiracaoDoToken(token);
+    if (expiraEm === null) return undefined;
+
+    const timer = setTimeout(encerrarSessaoExpirada, Math.max(expiraEm - Date.now(), 0));
+    return () => clearTimeout(timer);
+  }, [token, encerrarSessaoExpirada]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+
+    window.addEventListener(EVENTO_SESSAO_EXPIRADA, encerrarSessaoExpirada);
+    return () => window.removeEventListener(EVENTO_SESSAO_EXPIRADA, encerrarSessaoExpirada);
+  }, [token, encerrarSessaoExpirada]);
 
   return (
     <AuthContext.Provider

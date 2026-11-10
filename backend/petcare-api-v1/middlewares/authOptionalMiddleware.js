@@ -1,5 +1,4 @@
-const jwt = require('jsonwebtoken');
-const { secret } = require('../Config/jwt');
+const { verificar } = require('../Config/jwt');
 
 module.exports = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -19,7 +18,7 @@ module.exports = (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        const decoded = jwt.verify(token, secret);
+        const decoded = verificar(token);
 
         // Mantém o mesmo padrão do authMiddleware existente
         req.usuario = decoded;

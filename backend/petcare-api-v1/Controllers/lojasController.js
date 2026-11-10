@@ -98,16 +98,9 @@ exports.deletarLoja = (req, res) => {
 
 // Buscar loja por ID (p�blica)
 exports.getLojaPorId = (req, res) => {
-    const { id } = req.params;
-
-    const query = 'SELECT * FROM lojas WHERE id = ?';
-    db.query(query, [id], (err, results) => {
+    lojaModel.getPublicaPorId(req.params.id, (err, loja) => {
         if (err) return responderErroInterno(res, err, "lojasController.getLojaPorId");
-
-        if (results.length === 0) {
-            return res.status(404).json({ mensagem: 'Loja n�o encontrada.' });
-        }
-
-        res.json(results[0]);
+        if (!loja) return res.status(404).json({ mensagem: "Loja não encontrada." });
+        res.json(loja);
     });
 };

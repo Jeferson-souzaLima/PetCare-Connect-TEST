@@ -11,9 +11,9 @@ const {
 
 // Rotas de autenticação
 router.post('/register', limitarCadastro, emailConfirmationController.register);
-router.post('/login', limitarLogin, emailConfirmationController.validarEmailConfirmado, authController.login);
+router.post('/login', limitarLogin, authController.login);
 router.get('/confirmar-email', emailConfirmationController.confirmarEmail);
 router.post('/reenviar-confirmacao', limitarReenvioConfirmacao, emailConfirmationController.reenviarConfirmacao);
-router.post('/register-lojista', authController.registerLojista);
+router.post('/register-lojista', limitarCadastro, authController.registerLojista);
 
 module.exports = router;

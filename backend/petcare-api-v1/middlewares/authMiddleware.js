@@ -1,5 +1,4 @@
-const jwt = require('jsonwebtoken');
-const { secret } = require('../Config/jwt');
+const { verificar } = require('../Config/jwt');
 
 // Middleware de verificação do token
 module.exports = (req, res, next) => {
@@ -12,7 +11,7 @@ module.exports = (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        const decoded = jwt.verify(token, secret);
+        const decoded = verificar(token);
         req.usuario = decoded; // Aqui fica { id, tipo, loja_id }
         next();
     } catch (err) {

@@ -4,7 +4,7 @@ const express = require('express');
 
 // db.js exige estas variáveis ao ser carregado; nenhum teste abre conexão real.
 for (const nome of ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'JWT_SECRET']) {
-    process.env[nome] = process.env[nome] || 'test';
+    process.env[nome] = process.env[nome] || (nome === 'JWT_SECRET' ? 'segredo-de-teste-com-mais-de-32-caracteres' : 'test');
 }
 
 // Os controllers são substituídos por stubs ANTES de carregar as rotas,
@@ -12,10 +12,10 @@ for (const nome of ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'JWT_SECRET'
 const authController = require('../Controllers/authController');
 const emailConfirmationController = require('../Controllers/emailConfirmationController');
 let loginDeveFalhar = true;
-emailConfirmationController.validarEmailConfirmado = (_req, _res, next) => next();
 authController.login = (_req, res) =>
     loginDeveFalhar ? res.status(401).json({ mensagem: 'Email ou senha inválidos.' }) : res.json({ ok: true });
 emailConfirmationController.register = (_req, res) => res.status(201).json({ ok: true });
+authController.registerLojista = (_req, res) => res.status(201).json({ ok: true });
 emailConfirmationController.reenviarConfirmacao = (_req, res) => res.json({ ok: true });
 emailConfirmationController.confirmarEmail = (_req, res) => res.json({ ok: true });
 
@@ -101,6 +101,16 @@ test('cadastro: a 11ª tentativa na mesma hora recebe 429', async () => {
         const ip = { 'CF-Connecting-IP': '203.0.113.40' };
         for (let i = 1; i <= 10; i++) assert.equal((await post(base, '/auth/register', ip)).status, 201);
         const r = await post(base, '/auth/register', ip);
+        assert.equal(r.status, 429);
+        assert.match((await r.json()).mensagem, /Muitas tentativas de cadastro/);
+    });
+});
+
+test('cadastro de lojista: a 11ª tentativa na mesma hora recebe 429 (A4)', async () => {
+    await comServidor(novoApp(), async (base) => {
+        const ip = { 'CF-Connecting-IP': '203.0.113.45' };
+        for (let i = 1; i <= 10; i++) assert.equal((await post(base, '/auth/register-lojista', ip)).status, 201);
+        const r = await post(base, '/auth/register-lojista', ip);
         assert.equal(r.status, 429);
         assert.match((await r.json()).mensagem, /Muitas tentativas de cadastro/);
     });

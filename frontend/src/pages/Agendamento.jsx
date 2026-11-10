@@ -58,7 +58,7 @@ export default function Agendamento() {
   // ==========================================================
 
   const [frete, setFrete] = useState(0);
-  const [distanciaEntrega, setDistanciaEntrega] = useState(null);
+  const [, setDistanciaEntrega] = useState(null);
   const [calculandoFrete, setCalculandoFrete] = useState(false);
   const [usandoLocalizacao, setUsandoLocalizacao] = useState(false);
   const [mensagemLocalizacao, setMensagemLocalizacao] = useState("");

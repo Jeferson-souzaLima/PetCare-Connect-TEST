@@ -1,5 +1,4 @@
 import { getMediaUrl } from "@/services/mediaUrl";
-import { useCarrinho } from "../../context/CarrinhoContext";
 
 export default function CarrinhoItem({
   item,
@@ -9,7 +8,6 @@ export default function CarrinhoItem({
 }) {
   const precoUnitario = Number(item.preco_unitario);
   const subtotal = precoUnitario * item.quantidade;
-  const { adicionarItem } = useCarrinho();
 
   const precoFormatado = precoUnitario.toLocaleString("pt-BR", {
     style: "currency",

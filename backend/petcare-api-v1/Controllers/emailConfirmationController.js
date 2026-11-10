@@ -1,18 +1,13 @@
-const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const db = require('../db');
 const { enviarEmailConfirmacao } = require('../Services/emailService');
 const { responderErroInterno, registrarErroInterno } = require('../utils/erroInterno');
 const { MENSAGEM_ACEITE_OBRIGATORIO, aceitouTermos, COLUNAS_ACEITE, VALORES_ACEITE_SQL, valoresAceite } = require('../utils/aceiteTermos');
 
-const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
+const { gerarTokenConfirmacao, hashTokenConfirmacao } = require("../utils/tokenConfirmacaoEmail");
 
-function gerarTokenConfirmacao() {
-    const token = crypto.randomBytes(32).toString('hex');
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-
-    return { token, tokenHash };
-}
+const { EMAIL_REGEX } = require('../utils/validacaoUsuario');
+const { CUSTO_BCRYPT } = require('../Config/senha');
 
 exports.register = (req, res) => {
     const { nome, email, senha, confirmacaoSenha } = req.body;
@@ -43,7 +38,7 @@ exports.register = (req, res) => {
         if (selectErr) return responderErroInterno(res, selectErr, "emailConfirmationController - consulta de usuário");
         if (users.length > 0) return res.status(409).json({ mensagem: 'E-mail já cadastrado.' });
 
-        bcrypt.hash(senha, 10, (hashErr, senhaHash) => {
+        bcrypt.hash(senha, CUSTO_BCRYPT, (hashErr, senhaHash) => {
             if (hashErr) return responderErroInterno(res, hashErr, "emailConfirmationController.register - hash da senha");
 
             const { token, tokenHash } = gerarTokenConfirmacao();
@@ -76,7 +71,7 @@ exports.confirmarEmail = (req, res) => {
         return res.status(400).json({ mensagem: 'Link de confirmação inválido.' });
     }
 
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const tokenHash = hashTokenConfirmacao(token);
     const sql = `UPDATE usuarios
         SET email_verificado = 1,
             email_verificacao_token_hash = NULL,
@@ -95,6 +90,9 @@ exports.confirmarEmail = (req, res) => {
     });
 };
 
+// Mesma resposta exista ou não a conta, já confirmada ou não (M5).
+const MENSAGEM_REENVIO = 'Se houver uma conta pendente de confirmação para este e-mail, enviaremos um novo link.';
+
 exports.reenviarConfirmacao = (req, res) => {
     const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
 
@@ -103,15 +101,15 @@ exports.reenviarConfirmacao = (req, res) => {
     }
 
     db.query(
-        'SELECT id, email_verificado FROM usuarios WHERE email = ? AND tipo = ?',
-        [email, 'cliente'],
+        'SELECT id, email_verificado FROM usuarios WHERE email = ? AND tipo IN (?, ?)',
+        [email, 'cliente', 'lojista'],
         (selectErr, users) => {
             if (selectErr) return responderErroInterno(res, selectErr, "emailConfirmationController - consulta de usuário");
             if (users.length === 0) {
-                return res.json({ mensagem: 'Se houver uma conta pendente para este e-mail, enviaremos um novo link.' });
+                return res.json({ mensagem: MENSAGEM_REENVIO });
             }
             if (users[0].email_verificado) {
-                return res.json({ mensagem: 'Este e-mail já foi confirmado. Você já pode entrar.' });
+                return res.json({ mensagem: MENSAGEM_REENVIO });
             }
 
             const { token, tokenHash } = gerarTokenConfirmacao();
@@ -125,35 +123,13 @@ exports.reenviarConfirmacao = (req, res) => {
                     if (updateErr) return responderErroInterno(res, updateErr, "emailConfirmationController.reenviarConfirmacao - atualização do token");
 
                     enviarEmailConfirmacao(email, token)
-                        .then(() => res.json({ mensagem: 'Enviamos um novo link de confirmação para seu e-mail.' }))
+                        .then(() => res.json({ mensagem: MENSAGEM_REENVIO }))
                         .catch((emailErr) => {
                             registrarErroInterno('emailConfirmationController: Erro ao reenviar confirmação de e-mail', emailErr);
                             res.status(503).json({ mensagem: 'Não foi possível enviar o e-mail agora. Tente novamente mais tarde.' });
                         });
                 }
             );
-        }
-    );
-};
-
-exports.validarEmailConfirmado = (req, res, next) => {
-    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-
-    if (!EMAIL_REGEX.test(email)) return next();
-
-    db.query(
-        'SELECT email_verificado FROM usuarios WHERE email = ? AND tipo = ?',
-        [email, 'cliente'],
-        (err, users) => {
-            if (err) return responderErroInterno(res, err, "emailConfirmationController.validarEmailConfirmado");
-            if (users.length > 0 && !users[0].email_verificado) {
-                return res.status(403).json({
-                    codigo: 'EMAIL_NAO_VERIFICADO',
-                    mensagem: 'Confirme seu e-mail antes de entrar.'
-                });
-            }
-
-            return next();
         }
     );
 };

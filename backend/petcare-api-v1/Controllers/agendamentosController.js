@@ -7,10 +7,29 @@ const AgendaBloqueios = require('../Models/agendaBloqueiosModel');
 const { responderErroInterno } = require('../utils/erroInterno');
 const { podeAcessar, podeAcessarReferencia } = require('../utils/acessoRegistro');
 
+/*
+ * Busca o serviço a agendar. O lojista só agenda (já confirmado) em serviço
+ * da própria loja; serviço de outra loja é tratado como inexistente (null).
+ */
+function buscarServicoParaAgendar(usuario, servicoId, callback) {
+    Servicos.getById(servicoId, (err, servico) => {
+        if (err || !servico || usuario.tipo !== "lojista") return callback(err, servico);
+
+        podeAcessar(usuario, { donoId: null, lojaId: servico.loja_id }, (erroAcesso, pode) => {
+            if (erroAcesso) return callback(erroAcesso);
+            callback(null, pode ? servico : null);
+        });
+    });
+}
+
 exports.criarAgendamento = (req, res) => {
 
     const { servico_id, data_inicio,observacoes, pet_nome } = req.body;
     const usuario = req.usuario;
+
+    if (!["cliente", "lojista"].includes(usuario.tipo)) {
+        return res.status(403).json({ message: "Apenas clientes e lojistas podem criar agendamentos." });
+    }
 
     if (!servico_id) {
         return res.status(400).json({
@@ -42,7 +61,7 @@ exports.criarAgendamento = (req, res) => {
     }
 
     // 1?? Buscar serviço
-    Servicos.getById(servico_id, (err, servico) => {
+    buscarServicoParaAgendar(usuario, servico_id, (err, servico) => {
 
         if (err) return responderErroInterno(res, err, "agendamentosController.criarAgendamento");
         if (!servico || servico.ativo !== 1) {

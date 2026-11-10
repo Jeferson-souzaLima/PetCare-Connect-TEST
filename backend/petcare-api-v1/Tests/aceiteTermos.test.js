@@ -26,13 +26,14 @@ function chamar(handler, body) {
 function banco(t) {
     return simularBanco(t, db, [
         [/SELECT .* FROM usuarios WHERE email = \?/, []],
+        [/FROM lojas WHERE REGEXP_REPLACE/, []],
         [/INSERT INTO usuarios/, { insertId: 77 }],
         [/INSERT INTO lojas/, { insertId: 88 }]
     ]);
 }
 
 const cliente = { nome: 'Fulano', email: 'fulano@exemplo.com', senha: 'senha12345', confirmacaoSenha: 'senha12345' };
-const lojista = { nomeFantasia: 'Pet Feliz', cnpj: '12345678000199', email: 'loja@exemplo.com', senha: 'senha12345' };
+const lojista = { nomeFantasia: 'Pet Feliz', cnpj: '11.222.333/0001-81', email: 'loja@exemplo.com', senha: 'senha12345', confirmacaoSenha: 'senha12345' };
 
 for (const [nome, handler, corpo] of [
     ['cadastro de cliente', emailConfirmationController.register, cliente],

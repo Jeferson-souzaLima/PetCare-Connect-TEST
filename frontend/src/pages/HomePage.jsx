@@ -58,9 +58,7 @@ export default function HomePage() {
         latitude,
         longitude,
 
-        loading: geoLoading,
-
-        error
+        loading: geoLoading
 
     } = useGeolocation();
 

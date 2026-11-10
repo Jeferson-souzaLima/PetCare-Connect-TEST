@@ -24,11 +24,17 @@ export default defineConfig([
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // Nomes com inicial maiúscula são componentes usados no JSX (ex.: { icon: Icon }).
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^[A-Z_]' }],
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },
       ],
     },
+  },
+  {
+    // Arquivos de configuração do Vite, Tailwind e PostCSS rodam no Node.
+    files: ['*.config.{js,mjs}'],
+    languageOptions: { globals: globals.node },
   },
 ])

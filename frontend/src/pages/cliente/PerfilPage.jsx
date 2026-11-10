@@ -8,6 +8,8 @@ import PerfilCabecalho from "../../components/perfil/PerfilCabecalho";
 import AcessosRapidos from "../../components/perfil/AcessosRapidos";
 import DadosConta from "../../components/perfil/DadosConta";
 import ListaPets from "../../components/perfil/ListaPets";
+import PrivacidadeConta from "../../components/perfil/PrivacidadeConta";
+import { deixarAvisoParaLogin } from "@/utils/sessao";
 import petService from "../../services/petService";
 import api from "../../services/api";
 import { Footer } from "../../components/layout/Footer";
@@ -41,7 +43,6 @@ export default function PerfilPage() {
   const [loadingPets, setLoadingPets] = useState(true);
 
   const [showUserData, setShowUserData] = useState(false);
-  const [activeTab, setActiveTab] = useState(null);
 
   const [showModalPet, setShowModalPet] = useState(false);
   const [petParaEditar, setPetParaEditar] = useState(null);
@@ -232,6 +233,12 @@ export default function PerfilPage() {
     }
   }
 
+  function contaExcluida(mensagem) {
+    deixarAvisoParaLogin(mensagem);
+    logout();
+    navigate("/login");
+  }
+
   // =========================================================
   // RENDER
   // =========================================================
@@ -298,6 +305,8 @@ export default function PerfilPage() {
             setShowModalPet(true);
           }}
         />
+
+        <PrivacidadeConta onContaExcluida={contaExcluida} />
 
       </main>
 

@@ -64,5 +64,12 @@ module.exports = {
         janelaMs: UMA_HORA,
         limite: 5,
         mensagem: 'Muitos reenvios do e-mail de confirmação. Aguarde uma hora e tente novamente.'
+    }),
+
+    // /cep é público e consulta o ViaCEP: o limite evita uso da API como proxy gratuito (M6).
+    limitarConsultaCep: criarLimitador({
+        janelaMs: QUINZE_MINUTOS,
+        limite: 60,
+        mensagem: 'Muitas consultas de CEP. Aguarde alguns minutos e tente novamente.'
     })
 };

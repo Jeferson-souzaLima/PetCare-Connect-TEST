@@ -2,8 +2,9 @@ const express = require("express");
 const router = express.Router();
 
 const cepService = require("../Services/cepService");
+const { limitarConsultaCep } = require("../middlewares/rateLimitAuth");
 
-router.get("/:cep", async (req, res) => {
+router.get("/:cep", limitarConsultaCep, async (req, res) => {
     try {
         const dados = await cepService.buscarPorCep(req.params.cep);
 
