@@ -1,107 +1,127 @@
 const Pet = require('../Models/petsModel');
+const { enviarImagem, removerImagem } = require('../utils/imagens');
+const { responderErroInterno, responderErroDoServico } = require('../utils/erroInterno');
 
-// Criar pet
-const criarPet = (req, res) => {
-    const { nome, especie, raca, idade } = req.body;
-    const usuario_id = req.usuario.id;
+const LIMITES = { nome: 100, especie: 50, raca: 100 };
 
-    const imagem = req.file ? `/uploads/${ req.file.filename }`: null;
+const textoLimpo = (valor) => (typeof valor === 'string' ? valor.trim() : '');
 
-    const dadosPet = { usuario_id, nome, especie, raca, idade, imagem };
+/*
+ * Valida os campos enviados pelo formulário (multipart: tudo chega como texto).
+ * Na criação, nome e espécie são obrigatórios; na edição, só o que vier é alterado.
+ */
+function validarDadosPet(corpo = {}, { criacao }) {
+    const dados = {};
 
-    Pet.criar(dadosPet, (err, result) => {
-        if (err) return res.status(500).json({ erro: "Erro ao criar pet" });
-        res.status(201).json({
-            mensagem: "Pet criado com sucesso",
-            petId: result.insertId
-        });
-    });
+    for (const campo of ['nome', 'especie', 'raca']) {
+        if (corpo[campo] === undefined) continue;
+        const texto = textoLimpo(corpo[campo]);
+        if (texto.length > LIMITES[campo]) return { erro: `O campo ${campo} é muito longo.` };
+        dados[campo] = campo === 'raca' ? texto || null : texto;
+    }
+
+    if (corpo.idade !== undefined) {
+        const idade = textoLimpo(String(corpo.idade));
+        if (idade === '') {
+            dados.idade = null;
+        } else if (!/^\d{1,2}$/.test(idade)) {
+            return { erro: 'Informe a idade em anos (de 0 a 99).' };
+        } else {
+            dados.idade = Number(idade);
+        }
+    }
+
+    const obrigatorios = criacao ? ['nome', 'especie'] : Object.keys(dados).filter((c) => c !== 'raca' && c !== 'idade');
+    if (obrigatorios.some((campo) => !dados[campo])) {
+        return { erro: 'Nome e espécie do pet são obrigatórios.' };
+    }
+
+    return { dados };
+}
+
+const executar = (fn, ...args) => new Promise((resolve, reject) =>
+    fn(...args, (err, resultado) => (err ? reject(err) : resolve(resultado))));
+
+const buscarPetDoUsuario = (id, usuarioId) => executar(Pet.buscarDoUsuario, id, usuarioId);
+
+/** Envia a imagem nova (se houver); se a gravação falhar, apaga o que foi enviado. */
+async function comImagemNova(file, gravar) {
+    const url = file ? await enviarImagem(file, 'pets') : undefined;
+    try {
+        return await gravar(url);
+    } catch (erro) {
+        if (url) await removerImagem(url);
+        throw erro;
+    }
+}
+
+const criarPet = async (req, res) => {
+    const { dados, erro } = validarDadosPet(req.body, { criacao: true });
+    if (erro) return res.status(400).json({ mensagem: erro, erro });
+
+    try {
+        const result = await comImagemNova(req.file, (imagem) =>
+            executar(Pet.criar, { ...dados, usuario_id: req.usuario.id, imagem: imagem || null }));
+
+        return res.status(201).json({ mensagem: 'Pet criado com sucesso', petId: result.insertId });
+    } catch (err) {
+        return responderErroDoServico(res, err, 'petsController.criarPet', 'Erro ao criar pet.');
+    }
 };
 
-// Listar pets do usu�rio
 const listarPetsDoUsuario = (req, res) => {
-    const usuario_id = req.usuario.id;
-
-    Pet.listarPorUsuario(usuario_id, (err, pets) => {
-        if (err) return res.status(500).json({ erro: "Erro ao listar pets" });
+    Pet.listarPorUsuario(req.usuario.id, (err, pets) => {
+        if (err) return responderErroInterno(res, err, 'petsController.listarPetsDoUsuario');
         res.json(pets);
     });
 };
 
-// Atualizar pet (ACEITA OU N�O IMAGEM)
-const atualizarPet = (req, res) => {
-    const id = req.params.id;
-    const { nome, especie, raca, idade } = req.body;
+/** Atualiza dados e/ou imagem; a imagem anterior é apagada depois de salvar a nova. */
+async function atualizar(req, res, dados, contexto) {
+    try {
+        const pet = await buscarPetDoUsuario(req.params.id, req.usuario.id);
+        if (!pet) return res.status(404).json({ mensagem: 'Pet não encontrado.', erro: 'Pet não encontrado.' });
 
-    const imagem = req.file ? `/uploads/${ req.file.filename }` : undefined;
-
-    const dadosAtualizados = {
-        nome,
-        especie,
-        raca,
-        idade,
-        imagem
-    };
-
-    Pet.atualizar(id, req.usuario.id, dadosAtualizados, (err, result) => {
-        if (err) {
-            return res.status(500).json({ erro: "Erro ao atualizar pet" });
-        }
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ erro: "Pet n�o encontrado." });
-        }
-
-        res.json({
-            mensagem: "Pet atualizado com sucesso",
-            imagem: imagem || null
+        const imagem = await comImagemNova(req.file, async (url) => {
+            await executar(Pet.atualizar, pet.id, req.usuario.id, { ...dados, imagem: url });
+            return url;
         });
-    });
-};
 
-// Atualizar apenas a imagem
-const uploadImagem = (req, res) => {
-    const id = req.params.id;
+        if (imagem && pet.imagem) await removerImagem(pet.imagem);
 
-    if (!req.file) {
-        return res.status(400).json({ erro: "Nenhuma imagem enviada" });
+        return res.json({
+            mensagem: 'Pet atualizado com sucesso',
+            imagem: imagem || pet.imagem || null,
+            imagemUrl: imagem || pet.imagem || null
+        });
+    } catch (err) {
+        return responderErroDoServico(res, err, contexto, 'Erro ao atualizar pet.');
     }
+}
 
-    const caminho = `/uploads/${ req.file.filename }`;
-
-    Pet.atualizarImagem(id, req.usuario.id, caminho, (err, result) => {
-        if (err) {
-            return res.status(500).json({ erro: "Erro ao atualizar imagem" });
-        }
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ erro: "Pet n�o encontrado." });
-        }
-
-        res.json({
-            mensagem: "Imagem atualizada com sucesso",
-            imagemUrl: caminho
-        });
-    });
+const atualizarPet = (req, res) => {
+    const { dados, erro } = validarDadosPet(req.body, { criacao: false });
+    if (erro) return res.status(400).json({ mensagem: erro, erro });
+    return atualizar(req, res, dados, 'petsController.atualizarPet');
 };
 
-// Deletar pet
-const deletarPet = (req, res) => {
-    const id = req.params.id;
+const uploadImagem = (req, res) => {
+    if (!req.file) return res.status(400).json({ mensagem: 'Nenhuma imagem enviada.', erro: 'Nenhuma imagem enviada.' });
+    return atualizar(req, res, {}, 'petsController.uploadImagem');
+};
 
-    Pet.deletar(id, req.usuario.id, (err, result) => {
-        if (err) {
-            return res.status(500).json({ erro: "Erro ao deletar pet" });
-        }
+const deletarPet = async (req, res) => {
+    try {
+        const pet = await buscarPetDoUsuario(req.params.id, req.usuario.id);
+        if (!pet) return res.status(404).json({ mensagem: 'Pet não encontrado.', erro: 'Pet não encontrado.' });
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ erro: "Pet n�o encontrado." });
-        }
+        await executar(Pet.deletar, pet.id, req.usuario.id);
+        await removerImagem(pet.imagem);
 
-        res.json({
-            mensagem: "Pet deletado com sucesso"
-        });
-    });
+        return res.json({ mensagem: 'Pet deletado com sucesso' });
+    } catch (err) {
+        return responderErroInterno(res, err, 'petsController.deletarPet');
+    }
 };
 
 module.exports = {

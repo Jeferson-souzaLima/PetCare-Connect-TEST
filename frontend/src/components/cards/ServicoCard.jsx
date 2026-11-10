@@ -1,4 +1,4 @@
-import { API_URL } from "@/services/apiUrl";
+import { getMediaUrl } from "@/services/mediaUrl";
 import { useNavigate } from "react-router-dom";
 import { FavoriteButton } from "../ui/FavoriteButton";
 
@@ -44,9 +44,7 @@ export function ServicoCard({
       <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm flex items-center justify-center flex-shrink-0">
         <img
           src={
-            servico.loja_imagem
-              ? `${API_URL}${servico.loja_imagem}`
-              : "/images/loja-padrao.png"
+            getMediaUrl(servico.loja_imagem, "/images/loja-padrao.png")
           }
           alt={servico.loja_nome || "Logo da loja"}
           className="w-full h-full object-contain p-2"

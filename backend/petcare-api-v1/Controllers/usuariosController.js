@@ -1,12 +1,10 @@
 const usuarioModel = require('../Models/usuariosModel');
 const geocodingService = require('../Services/geocodingService');
 const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
 const bcrypt = require('bcrypt');
-const r2Storage = require('../Services/r2Storage');
 const { CUSTO_BCRYPT } = require('../Config/senha');
 const { emTransacao, erroDeNegocio } = require('../utils/transacao');
+const { removerImagem } = require('../utils/imagens');
 const {
     registrarErroInterno,
     responderErroInterno,
@@ -203,22 +201,10 @@ exports.excluirMinhaConta = async (req, res) => {
                 return responderErroDoServico(res, erro, 'usuariosController.excluirMinhaConta', MENSAGEM_ERRO_INTERNO);
             }
 
-            apagarArquivosLocais(imagensDosPets);
+            imagensDosPets.forEach(removerImagem);
             return res.json({ mensagem: 'Sua conta foi excluída e seus dados pessoais foram removidos.' });
         });
     } catch (err) {
         return responderErroInterno(res, err, 'usuariosController.excluirMinhaConta');
     }
 };
-
-/** Apaga as fotos dos pets guardadas em /uploads. Falhas só são registradas. */
-function apagarArquivosLocais(caminhos = []) {
-    for (const caminho of caminhos) {
-        const alvo = r2Storage.getStorageTarget(caminho);
-        if (alvo?.type !== 'local') continue;
-
-        fs.unlink(path.join(__dirname, '..', 'uploads', alvo.filename), (err) => {
-            if (err && err.code !== 'ENOENT') registrarErroInterno('usuariosController: apagar foto de pet', err);
-        });
-    }
-}

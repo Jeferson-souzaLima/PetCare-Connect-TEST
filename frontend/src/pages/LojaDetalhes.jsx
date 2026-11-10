@@ -288,9 +288,7 @@ export default function LojaDetalhes() {
               <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-white border border-gray-200 shadow-sm overflow-hidden flex items-center justify-center">
                 <img
                   src={
-                    loja.imagem
-                      ? `${API_URL}${loja.imagem}`
-                      : "/images/loja-padrao.png"
+                    getMediaUrl(loja.imagem, "/images/loja-padrao.png")
                   }
                   alt={loja.nome_fantasia}
                   className="w-full h-full object-cover"

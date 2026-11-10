@@ -1,4 +1,4 @@
-import { API_URL } from "@/services/apiUrl";
+import { getMediaUrl } from "@/services/mediaUrl";
 import { FaPaw, FaPen, FaPlus, FaTrash } from "react-icons/fa";
 
 /** Seção "Meus pets": listagem com editar/remover e botão de adicionar. */
@@ -83,9 +83,7 @@ export default function ListaPets({
 
                   <img
                     src={
-                      pet.imagem
-                        ? `${API_URL}${pet.imagem}`
-                        : "/banners/pet-padrao.jpg"
+                      getMediaUrl(pet.imagem, "/banners/pet-padrao.jpg")
                     }
                     alt={pet.nome}
                     className="w-24 h-24 md:w-28 md:h-28 rounded-xl object-cover shrink-0"

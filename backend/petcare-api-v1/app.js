@@ -23,6 +23,7 @@ const pedidosModel = require('./Models/pedidosModel');
 const cepRoutes = require('./Routes/cep');
 const { registrarErroInterno } = require('./utils/erroInterno');
 const { aplicarSegurancaHttp } = require('./middlewares/segurancaHttp');
+const tratarErros = require('./middlewares/tratarErros');
 
 const app = express();
 
@@ -64,6 +65,9 @@ app.use('/geolocalizacao', geolocalizacaoRoutes);
 app.use('/pagamentos', pagamentosRoutes);
 app.use('/relatorios', relatoriosRoutes);
 app.use('/cep', cepRoutes);
+
+// Erros que escapam das rotas (upload recusado, JSON malformado, etc.)
+app.use(tratarErros);
 
 // Libera reservas de estoque expiradas. O pagamento aprovado fora da janela não confirma o pedido.
 setInterval(() => pedidosModel.cancelarReservasExpiradas((err) => {

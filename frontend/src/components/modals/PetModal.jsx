@@ -38,8 +38,7 @@ export default function PetModal({ token, onClose, onPetSalvo, petExistente = nu
       onClose();
 
     } catch (error) {
-      console.error(error);
-      alert("Erro ao salvar o pet.");
+      alert(error.response?.data?.mensagem || "Erro ao salvar o pet.");
     } finally {
       setSalvandoPet(false);
     }
