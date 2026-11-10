@@ -1,18 +1,13 @@
-const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const db = require('../db');
 const { enviarEmailConfirmacao } = require('../Services/emailService');
 const { responderErroInterno, registrarErroInterno } = require('../utils/erroInterno');
 const { MENSAGEM_ACEITE_OBRIGATORIO, aceitouTermos, COLUNAS_ACEITE, VALORES_ACEITE_SQL, valoresAceite } = require('../utils/aceiteTermos');
 
-const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
+const { gerarTokenConfirmacao, hashTokenConfirmacao } = require("../utils/tokenConfirmacaoEmail");
 
-function gerarTokenConfirmacao() {
-    const token = crypto.randomBytes(32).toString('hex');
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-
-    return { token, tokenHash };
-}
+const { EMAIL_REGEX } = require('../utils/validacaoUsuario');
+const { CUSTO_BCRYPT } = require('../Config/senha');
 
 exports.register = (req, res) => {
     const { nome, email, senha, confirmacaoSenha } = req.body;
@@ -43,7 +38,7 @@ exports.register = (req, res) => {
         if (selectErr) return responderErroInterno(res, selectErr, "emailConfirmationController - consulta de usuário");
         if (users.length > 0) return res.status(409).json({ mensagem: 'E-mail já cadastrado.' });
 
-        bcrypt.hash(senha, 10, (hashErr, senhaHash) => {
+        bcrypt.hash(senha, CUSTO_BCRYPT, (hashErr, senhaHash) => {
             if (hashErr) return responderErroInterno(res, hashErr, "emailConfirmationController.register - hash da senha");
 
             const { token, tokenHash } = gerarTokenConfirmacao();
@@ -76,7 +71,7 @@ exports.confirmarEmail = (req, res) => {
         return res.status(400).json({ mensagem: 'Link de confirmação inválido.' });
     }
 
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const tokenHash = hashTokenConfirmacao(token);
     const sql = `UPDATE usuarios
         SET email_verificado = 1,
             email_verificacao_token_hash = NULL,
@@ -103,8 +98,8 @@ exports.reenviarConfirmacao = (req, res) => {
     }
 
     db.query(
-        'SELECT id, email_verificado FROM usuarios WHERE email = ? AND tipo = ?',
-        [email, 'cliente'],
+        'SELECT id, email_verificado FROM usuarios WHERE email = ? AND tipo IN (?, ?)',
+        [email, 'cliente', 'lojista'],
         (selectErr, users) => {
             if (selectErr) return responderErroInterno(res, selectErr, "emailConfirmationController - consulta de usuário");
             if (users.length === 0) {
@@ -142,8 +137,8 @@ exports.validarEmailConfirmado = (req, res, next) => {
     if (!EMAIL_REGEX.test(email)) return next();
 
     db.query(
-        'SELECT email_verificado FROM usuarios WHERE email = ? AND tipo = ?',
-        [email, 'cliente'],
+        'SELECT email_verificado FROM usuarios WHERE email = ? AND tipo IN (?, ?)',
+        [email, 'cliente', 'lojista'],
         (err, users) => {
             if (err) return responderErroInterno(res, err, "emailConfirmationController.validarEmailConfirmado");
             if (users.length > 0 && !users[0].email_verificado) {

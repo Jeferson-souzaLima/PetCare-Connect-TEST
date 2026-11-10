@@ -1,45 +1,7 @@
 const db = require('../db');
 const { buscarCoordenadas } = require("../Services/geocodingService");
 
-const LIMITES = {
-    nome_fantasia: 100,
-    razao_social: 255,
-    cnpj: 18,
-    telefone: 20,
-    cidade: 100,
-    uf: 2,
-    endereco: 255,
-    cep: 9,
-    descricao: 1000
-};
-
-function textoOpcional(valor, limite) {
-    if (valor === undefined || valor === null) return null;
-    if (typeof valor !== 'string') return undefined;
-    const texto = valor.trim();
-    return texto.length ? texto.slice(0, limite) : null;
-}
-
-function validarDados(dados) {
-    const loja = {};
-    for (const [campo, limite] of Object.entries(LIMITES)) {
-        loja[campo] = textoOpcional(dados[campo], limite);
-        if (loja[campo] === undefined) return { erro: `O campo ${campo} é inválido.` };
-    }
-    if (!loja.nome_fantasia) return { erro: 'O nome fantasia é obrigatório.' };
-    if (loja.uf) {
-        loja.uf = loja.uf.toUpperCase();
-        if (!/^[A-Z]{2}$/.test(loja.uf)) return { erro: 'Informe uma UF válida com duas letras.' };
-    }
-    if (loja.cnpj && loja.cnpj.replace(/\D/g, '').length !== 14) return { erro: 'Informe um CNPJ com 14 dígitos.' };
-    loja.entrega_ativa = dados.entrega_ativa === true || dados.entrega_ativa === 1 || dados.entrega_ativa === '1';
-    for (const campo of ['taxa_entrega_fixa', 'taxa_entrega_por_km', 'raio_entrega_km']) {
-        const valor = Number(dados[campo] ?? (campo === 'raio_entrega_km' ? 10 : 0));
-        if (!Number.isFinite(valor) || valor < 0 || (campo === 'raio_entrega_km' && valor === 0)) return { erro: `O campo ${campo} é inválido.` };
-        loja[campo] = valor;
-    }
-    return { loja };
-}
+const { validarDadosLoja: validarDados } = require("../utils/validacaoLoja");
 
 function buscarPorUsuario(usuarioId, callback) {
     db.query('SELECT * FROM lojas WHERE usuario_id = ? LIMIT 1', [usuarioId], callback);

@@ -16,6 +16,7 @@ emailConfirmationController.validarEmailConfirmado = (_req, _res, next) => next(
 authController.login = (_req, res) =>
     loginDeveFalhar ? res.status(401).json({ mensagem: 'Email ou senha inválidos.' }) : res.json({ ok: true });
 emailConfirmationController.register = (_req, res) => res.status(201).json({ ok: true });
+authController.registerLojista = (_req, res) => res.status(201).json({ ok: true });
 emailConfirmationController.reenviarConfirmacao = (_req, res) => res.json({ ok: true });
 emailConfirmationController.confirmarEmail = (_req, res) => res.json({ ok: true });
 
@@ -101,6 +102,16 @@ test('cadastro: a 11ª tentativa na mesma hora recebe 429', async () => {
         const ip = { 'CF-Connecting-IP': '203.0.113.40' };
         for (let i = 1; i <= 10; i++) assert.equal((await post(base, '/auth/register', ip)).status, 201);
         const r = await post(base, '/auth/register', ip);
+        assert.equal(r.status, 429);
+        assert.match((await r.json()).mensagem, /Muitas tentativas de cadastro/);
+    });
+});
+
+test('cadastro de lojista: a 11ª tentativa na mesma hora recebe 429 (A4)', async () => {
+    await comServidor(novoApp(), async (base) => {
+        const ip = { 'CF-Connecting-IP': '203.0.113.45' };
+        for (let i = 1; i <= 10; i++) assert.equal((await post(base, '/auth/register-lojista', ip)).status, 201);
+        const r = await post(base, '/auth/register-lojista', ip);
         assert.equal(r.status, 429);
         assert.match((await r.json()).mensagem, /Muitas tentativas de cadastro/);
     });

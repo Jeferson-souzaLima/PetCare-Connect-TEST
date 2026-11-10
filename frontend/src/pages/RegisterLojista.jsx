@@ -10,19 +10,28 @@ export default function RegisterLojista() {
   const [cnpj, setCnpj] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [confirmacaoSenha, setConfirmacaoSenha] = useState("");
   const [telefone, setTelefone] = useState("");
   const [cidade, setCidade] = useState("");
   const [uf, setUf] = useState("");
   const [descricao, setDescricao] = useState("");
   const [aceiteTermos, setAceiteTermos] = useState(false);
   const [erro, setErro] = useState("");
+  const [sucesso, setSucesso] = useState("");
+  const [enviando, setEnviando] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setErro("");
+    setSucesso("");
 
     if (!nomeFantasia || !cnpj || !email || !senha) {
       setErro("Preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    if (senha !== confirmacaoSenha) {
+      setErro("A confirmação de senha não confere.");
       return;
     }
 
@@ -31,6 +40,7 @@ export default function RegisterLojista() {
       return;
     }
 
+    setEnviando(true);
     try {
       const res = await fetch(`${API_URL}/auth/register-lojista`, {
         method: "POST",
@@ -41,6 +51,7 @@ export default function RegisterLojista() {
           cnpj,
           email,
           senha,
+          confirmacaoSenha,
           telefone,
           cidade,
           uf,
@@ -56,11 +67,12 @@ export default function RegisterLojista() {
         return;
       }
 
-      alert("Cadastro de lojista realizado com sucesso! Faça login.");
-      navigate("/login");
+      setSucesso(data.mensagem);
     } catch (err) {
       console.error(err);
       setErro("Erro de conexão. Tente novamente.");
+    } finally {
+      setEnviando(false);
     }
   };
 
@@ -74,7 +86,16 @@ export default function RegisterLojista() {
         {erro && (
           <p className="text-red-500 mb-4 text-sm text-center">{erro}</p>
         )}
+        {sucesso && (
+          <div className="mb-4 rounded-xl bg-green-50 p-4 text-sm text-green-800 text-center">
+            <p>{sucesso}</p>
+            <button type="button" onClick={() => navigate("/login")} className="mt-2 font-semibold underline">
+              Ir para o login
+            </button>
+          </div>
+        )}
 
+        {!sucesso && (
         <form onSubmit={handleRegister} className="space-y-4">
           <input
             type="text"
@@ -113,7 +134,17 @@ export default function RegisterLojista() {
             className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-900"
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
-            placeholder="Senha"
+            placeholder="Senha (mínimo 8 caracteres)"
+            autoComplete="new-password"
+          />
+
+          <input
+            type="password"
+            className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-900"
+            value={confirmacaoSenha}
+            onChange={(e) => setConfirmacaoSenha(e.target.value)}
+            placeholder="Confirme a senha"
+            autoComplete="new-password"
           />
 
           <input
@@ -154,11 +185,13 @@ export default function RegisterLojista() {
 
           <button
             type="submit"
-            className="w-full mt-6 bg-green-900 text-white py-3 rounded-xl font-semibold hover:bg-green-800 transition"
+            disabled={enviando}
+            className="w-full mt-6 bg-green-900 text-white py-3 rounded-xl font-semibold hover:bg-green-800 transition disabled:opacity-60"
           >
-            Cadastrar Loja
+            {enviando ? "Cadastrando..." : "Cadastrar Loja"}
           </button>
         </form>
+        )}
 
         <p className="mt-6 text-sm text-gray-600 text-center">
           Já tem conta?{" "}

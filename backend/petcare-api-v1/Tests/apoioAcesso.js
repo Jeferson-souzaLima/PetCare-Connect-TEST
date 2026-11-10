@@ -56,6 +56,10 @@ function simularBanco(t, db, regras) {
         const resposta = typeof regra[1] === 'function' ? regra[1](values) : regra[1];
         return cb(null, resposta);
     });
+    // Transações: registradas como BEGIN/COMMIT/ROLLBACK, sem conexão real.
+    t.mock.method(db, 'beginTransaction', (cb) => { consultas.push({ sql: 'BEGIN' }); cb(null); });
+    t.mock.method(db, 'commit', (cb) => { consultas.push({ sql: 'COMMIT' }); cb(null); });
+    t.mock.method(db, 'rollback', (cb) => { consultas.push({ sql: 'ROLLBACK' }); cb?.(null); });
     return consultas;
 }
 
