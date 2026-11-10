@@ -1,4 +1,4 @@
-import { API_URL } from "@/services/apiUrl";
+import { getMediaUrl } from "@/services/mediaUrl";
 import { Link } from "react-router-dom";
 import { FavoriteButton } from "../ui/FavoriteButton";
 import { formatarDistancia } from "@/utils/formatarDistancia";
@@ -8,9 +8,7 @@ export function LojaCard({
   className = "",
 }) {
 
-  const imagemUrl = loja.imagem
-    ? `${API_URL}${loja.imagem}`
-    : "/images/loja-padrao.jpg";
+  const imagemUrl = getMediaUrl(loja.imagem, "/images/loja-padrao.jpg");
 
   return (
     <Link

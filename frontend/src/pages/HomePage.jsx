@@ -13,22 +13,22 @@ import { buscarServicos } from "@/services/servicoService";
 import { buscarConteudoPorLocalizacao } from "@/services/geolocalizacaoService";
 import { useGeolocation } from "../hooks/useGeolocation";
 
+const CATEGORIAS_VALIDAS = ["produtos", "lojas", "servicos"];
+
 export default function HomePage() {
 
     const [searchParams] = useSearchParams();
 
     const categoriaInicial = searchParams.get("categoria");
 
-    const categoriasValidas = ["produtos", "lojas", "servicos"];
-
     const [selectedCategory, setSelectedCategory] = useState(
-    categoriasValidas.includes(categoriaInicial)
+    CATEGORIAS_VALIDAS.includes(categoriaInicial)
         ? categoriaInicial
         : "produtos"
     );
 
     useEffect(() => {
-        if (categoriasValidas.includes(categoriaInicial)) {
+        if (CATEGORIAS_VALIDAS.includes(categoriaInicial)) {
             setSelectedCategory(categoriaInicial);
         }
     }, [categoriaInicial]);

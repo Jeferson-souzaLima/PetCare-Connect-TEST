@@ -8,6 +8,9 @@ const { gerarTokenConfirmacao, hashTokenConfirmacao } = require("../utils/tokenC
 
 const { EMAIL_REGEX } = require('../utils/validacaoUsuario');
 const { CUSTO_BCRYPT } = require('../Config/senha');
+const { notificarCadastroExistente } = require('../Services/cadastroExistenteService');
+
+const MENSAGEM_CADASTRO = 'Cadastro realizado. Verifique seu e-mail para ativar a conta.';
 
 exports.register = (req, res) => {
     const { nome, email, senha, confirmacaoSenha } = req.body;
@@ -34,12 +37,18 @@ exports.register = (req, res) => {
         return res.status(400).json({ mensagem: MENSAGEM_ACEITE_OBRIGATORIO });
     }
 
-    db.query('SELECT id FROM usuarios WHERE email = ?', [emailNormalizado], (selectErr, users) => {
-        if (selectErr) return responderErroInterno(res, selectErr, "emailConfirmationController - consulta de usuário");
-        if (users.length > 0) return res.status(409).json({ mensagem: 'E-mail já cadastrado.' });
+    // O hash vem antes da consulta: com ou sem conta, a resposta leva o mesmo tempo.
+    bcrypt.hash(senha, CUSTO_BCRYPT, (hashErr, senhaHash) => {
+        if (hashErr) return responderErroInterno(res, hashErr, "emailConfirmationController.register - hash da senha");
 
-        bcrypt.hash(senha, CUSTO_BCRYPT, (hashErr, senhaHash) => {
-            if (hashErr) return responderErroInterno(res, hashErr, "emailConfirmationController.register - hash da senha");
+        db.query('SELECT id FROM usuarios WHERE email = ?', [emailNormalizado], (selectErr, users) => {
+            if (selectErr) return responderErroInterno(res, selectErr, "emailConfirmationController - consulta de usuário");
+
+            // E-mail já cadastrado: mesma resposta de um cadastro novo (M5); o dono do e-mail é avisado.
+            if (users.length > 0) {
+                return notificarCadastroExistente(emailNormalizado)
+                    .then(() => res.status(201).json({ mensagem: MENSAGEM_CADASTRO }));
+            }
 
             const { token, tokenHash } = gerarTokenConfirmacao();
             const sql = `INSERT INTO usuarios
@@ -47,12 +56,14 @@ exports.register = (req, res) => {
                 VALUES (?, ?, ?, 'cliente', 0, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR), ${VALORES_ACEITE_SQL})`;
 
             db.query(sql, [nomeNormalizado, emailNormalizado, senhaHash, tokenHash, ...valoresAceite()], (insertErr) => {
+                if (insertErr?.code === 'ER_DUP_ENTRY') {
+                    return notificarCadastroExistente(emailNormalizado)
+                        .then(() => res.status(201).json({ mensagem: MENSAGEM_CADASTRO }));
+                }
                 if (insertErr) return responderErroInterno(res, insertErr, "emailConfirmationController.register - inserção do usuário");
 
                 enviarEmailConfirmacao(emailNormalizado, token)
-                    .then(() => res.status(201).json({
-                        mensagem: 'Cadastro realizado. Verifique seu e-mail para ativar a conta.'
-                    }))
+                    .then(() => res.status(201).json({ mensagem: MENSAGEM_CADASTRO }))
                     .catch((emailErr) => {
                         registrarErroInterno('emailConfirmationController: Erro ao enviar e-mail de confirmação', emailErr);
                         res.status(503).json({

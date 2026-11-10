@@ -1,4 +1,4 @@
-import { API_URL } from "@/services/apiUrl";
+import { getMediaUrl } from "@/services/mediaUrl";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaBuilding, FaImage, FaMapMarkerAlt, FaSave } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -347,7 +347,7 @@ export default function DadosLojaPage() {
       </Section>
       
       <Section icon={<FaImage />} title="Imagem da loja">
-       <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center">{imagemAtual ? <img src={`${API_URL}${imagemAtual}`} alt="Logo da loja" className="h-24 w-24 rounded-2xl object-cover" /> : <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-green-100 text-3xl text-green-900"><FaBuilding /></div>}<div><input type="file" accept="image/jpeg,image/png" onChange={(event) => setImagem(event.target.files?.[0] || null)} className="block text-sm text-gray-600" /><p className="mt-2 text-xs text-gray-500">PNG ou JPG, até 5 MB. A imagem é enviada ao salvar.</p></div></div></Section>
+       <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center">{imagemAtual ? <img src={getMediaUrl(imagemAtual)} alt="Logo da loja" className="h-24 w-24 rounded-2xl object-cover" /> : <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-green-100 text-3xl text-green-900"><FaBuilding /></div>}<div><input type="file" accept="image/jpeg,image/png" onChange={(event) => setImagem(event.target.files?.[0] || null)} className="block text-sm text-gray-600" /><p className="mt-2 text-xs text-gray-500">PNG ou JPG, até 5 MB. A imagem é enviada ao salvar.</p></div></div></Section>
       
       <button type="submit" disabled={salvando} className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-900 py-3 font-semibold text-white transition hover:bg-green-800 disabled:opacity-60"><FaSave /> {salvando ? "Salvando..." : "Salvar dados da loja"}</button>
     </form>

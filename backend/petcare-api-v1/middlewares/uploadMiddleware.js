@@ -11,7 +11,9 @@ const fileFilter = (_req, file, cb) => {
     const extension = path.extname(file.originalname).toLowerCase();
 
     if (!extensions || !extensions.has(extension)) {
-        return cb(new Error('Tipo de arquivo inválido. Envie uma imagem JPEG ou PNG.'));
+        const erro = new Error('Tipo de arquivo inválido. Envie uma imagem JPEG ou PNG.');
+        erro.status = 400;
+        return cb(erro);
     }
     return cb(null, true);
 };

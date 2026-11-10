@@ -3,89 +3,93 @@ import { useEffect, useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
+// Dias da semana com o horário padrão. Cria uma lista nova a cada chamada,
+// para que nenhuma tela altere a lista usada por outra.
+function criarDiasPadrao() {
+  return [
+    { dia_semana: 0, nome: "Domingo", ativo: false, hora_inicio: "08:00", hora_fim: "18:00", intervalo_inicio: null, intervalo_fim: null },
+    { dia_semana: 1, nome: "Segunda", ativo: false, hora_inicio: "08:00", hora_fim: "18:00", intervalo_inicio: null, intervalo_fim: null },
+    { dia_semana: 2, nome: "Terça", ativo: false, hora_inicio: "08:00", hora_fim: "18:00", intervalo_inicio: null, intervalo_fim: null },
+    { dia_semana: 3, nome: "Quarta", ativo: false, hora_inicio: "08:00", hora_fim: "18:00", intervalo_inicio: null, intervalo_fim: null },
+    { dia_semana: 4, nome: "Quinta", ativo: false, hora_inicio: "08:00", hora_fim: "18:00", intervalo_inicio: null, intervalo_fim: null },
+    { dia_semana: 5, nome: "Sexta", ativo: false, hora_inicio: "08:00", hora_fim: "18:00", intervalo_inicio: null, intervalo_fim: null },
+    { dia_semana: 6, nome: "Sábado", ativo: false, hora_inicio: "08:00", hora_fim: "18:00", intervalo_inicio: null, intervalo_fim: null }
+  ];
+}
+
 export default function ConfiguracoesAgendaPage() {
   const navigate = useNavigate();
 
-  const diasPadrao = [
-    { dia_semana: 0, nome: "Domingo", ativo: false, hora_inicio: "08:00", hora_fim: "18:00", intervalo_inicio: null, intervalo_fim: null },
-    { dia_semana: 1, nome: "Segunda", ativo: false, hora_inicio: "08:00", hora_fim: "18:00", intervalo_inicio: null, intervalo_fim: null },
-    { dia_semana: 2, nome: "Terça", ativo: false, hora_inicio: "08:00", hora_fim: "18:00", intervalo_inicio: null, intervalo_fim: null },
-    { dia_semana: 3, nome: "Quarta", ativo: false, hora_inicio: "08:00", hora_fim: "18:00", intervalo_inicio: null, intervalo_fim: null },
-    { dia_semana: 4, nome: "Quinta", ativo: false, hora_inicio: "08:00", hora_fim: "18:00", intervalo_inicio: null, intervalo_fim: null },
-    { dia_semana: 5, nome: "Sexta", ativo: false, hora_inicio: "08:00", hora_fim: "18:00", intervalo_inicio: null, intervalo_fim: null },
-    { dia_semana: 6, nome: "Sábado", ativo: false, hora_inicio: "08:00", hora_fim: "18:00", intervalo_inicio: null, intervalo_fim: null }
-  ];
-
   const [config, setConfig] = useState({
-    disponibilidade: diasPadrao,
+    disponibilidade: criarDiasPadrao(),
     capacidade_por_horario: 1
   });
 
   useEffect(() => {
-    carregarConfiguracoes();
-  }, []);
+    const carregarConfiguracoes = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-  const carregarConfiguracoes = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const configResponse = await fetch(
-        `${API_URL}/agenda-lojista/config`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
+        const configResponse = await fetch(
+          `${API_URL}/agenda-lojista/config`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
           }
-        }
-      );
-
-      if (configResponse.status === 404) {
-        return;
-      }
-
-      const configData = await configResponse.json();
-
-      const disponibilidadeResponse = await fetch(
-        `${API_URL}/agenda-lojista/disponibilidade`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-
-      const disponibilidade = await disponibilidadeResponse.json();
-
-      const disponibilidadeFormatada = diasPadrao.map((dia) => {
-        const registro = disponibilidade.find(
-          (d) => d.dia_semana === dia.dia_semana
         );
 
-        if (!registro) {
-          return dia;
+        if (configResponse.status === 404) {
+          return;
         }
 
-        return {
-          ...dia,
-          ativo: true,
-          hora_inicio: registro.hora_inicio.slice(0, 5),
-          hora_fim: registro.hora_fim.slice(0, 5),
-          intervalo_inicio: registro.intervalo_inicio
-            ? registro.intervalo_inicio.slice(0, 5)
-            : null,
-          intervalo_fim: registro.intervalo_fim
-            ? registro.intervalo_fim.slice(0, 5)
-            : null
-        };
-      });
+        const configData = await configResponse.json();
 
-      setConfig({
-        capacidade_por_horario: configData.capacidade_por_horario,
-        disponibilidade: disponibilidadeFormatada
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
+        const disponibilidadeResponse = await fetch(
+          `${API_URL}/agenda-lojista/disponibilidade`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+
+        const disponibilidade = await disponibilidadeResponse.json();
+
+        const disponibilidadeFormatada = criarDiasPadrao().map((dia) => {
+          const registro = disponibilidade.find(
+            (d) => d.dia_semana === dia.dia_semana
+          );
+
+          if (!registro) {
+            return dia;
+          }
+
+          return {
+            ...dia,
+            ativo: true,
+            hora_inicio: registro.hora_inicio.slice(0, 5),
+            hora_fim: registro.hora_fim.slice(0, 5),
+            intervalo_inicio: registro.intervalo_inicio
+              ? registro.intervalo_inicio.slice(0, 5)
+              : null,
+            intervalo_fim: registro.intervalo_fim
+              ? registro.intervalo_fim.slice(0, 5)
+              : null
+          };
+        });
+
+        setConfig({
+          capacidade_por_horario: configData.capacidade_por_horario,
+          disponibilidade: disponibilidadeFormatada
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    carregarConfiguracoes();
+  }, []);
 
   const salvarConfiguracoes = async () => {
     try {

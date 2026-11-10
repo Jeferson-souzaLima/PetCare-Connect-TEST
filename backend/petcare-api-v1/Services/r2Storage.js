@@ -7,6 +7,9 @@ const signatures = [
     { mime: 'image/png', extension: '.png', matches: (buffer) => buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) }
 ];
 
+// Pastas do bucket aceitas para envio e remoção de imagens.
+const PASTAS = ['produtos', 'pets', 'lojas'];
+
 function createR2Storage({ env = process.env, client } = {}) {
     const getConfig = () => {
         const required = ['R2_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET_NAME', 'R2_ENDPOINT', 'R2_PUBLIC_URL'];
@@ -49,10 +52,11 @@ function createR2Storage({ env = process.env, client } = {}) {
             }
             return { contentType: detected.mime, extension: detected.extension };
         },
-        async upload(file) {
+        async upload(file, pasta = 'produtos') {
+            if (!PASTAS.includes(pasta)) throw new Error(`Pasta de imagens inválida: ${pasta}`);
             const config = getConfig();
             const { contentType, extension } = this.validateImage(file);
-            const key = `produtos/${crypto.randomUUID()}${extension}`;
+            const key = `${pasta}/${crypto.randomUUID()}${extension}`;
             await getClient(config).send(new PutObjectCommand({
                 Bucket: config.bucket,
                 Key: key,
@@ -69,7 +73,7 @@ function createR2Storage({ env = process.env, client } = {}) {
             const config = getConfig();
             if (typeof url !== 'string' || !url.startsWith(`${config.publicUrl}/`)) return null;
             const key = url.slice(config.publicUrl.length + 1);
-            if (!key.startsWith('produtos/') || key.includes('..')) return null;
+            if (!PASTAS.some((pasta) => key.startsWith(`${pasta}/`)) || key.includes('..')) return null;
             return key;
         },
         getStorageTarget(url) {

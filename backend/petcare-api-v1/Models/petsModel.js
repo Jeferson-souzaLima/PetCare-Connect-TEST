@@ -22,9 +22,10 @@ const Pet = {
         return db.query(sql, [usuario_id], callback);
     },
 
-    buscarPorId: (id, callback) => {
-        const sql = 'SELECT * FROM pets WHERE id = ?';
-        return db.query(sql, [id], callback);
+    // Só devolve o pet se ele for do usuário (null caso contrário).
+    buscarDoUsuario: (id, usuario_id, callback) => {
+        const sql = 'SELECT * FROM pets WHERE id = ? AND usuario_id = ? LIMIT 1';
+        return db.query(sql, [id, usuario_id], (err, pets) => callback(err, pets?.[0] || null));
     },
 
     // ⭐ AGORA ATUALIZA APENAS OS CAMPOS ENVIADOS
@@ -58,7 +59,7 @@ const Pet = {
         }
 
         if (campos.length === 0) {
-            return callback(null); // nada pra atualizar
+            return callback(null, { affectedRows: 0 }); // nada pra atualizar
         }
 
         const sql = `
@@ -74,11 +75,6 @@ const Pet = {
         return db.query(sql, valores, callback);
     },
 
-    // 🔧 AGORA FUNCIONA (FALTAVA A VÍRGULA ANTES)
-    atualizarImagem: (id, usuario_id, caminho, callback) => {
-        const sql = 'UPDATE pets SET imagem = ? WHERE id = ? AND usuario_id = ?';
-        return db.query(sql, [caminho, id, usuario_id], callback);
-    },
 
     deletar: (id, usuario_id, callback) => {
         const sql = 'DELETE FROM pets WHERE id = ? AND usuario_id = ?';

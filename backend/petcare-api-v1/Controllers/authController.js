@@ -8,6 +8,7 @@ const { normalizarEmail, emailValido, erroDaSenha } = require('../utils/validaca
 const { validarDadosLoja, somenteDigitos } = require('../utils/validacaoLoja');
 const { CUSTO_BCRYPT } = require('../Config/senha');
 const { consultar, emTransacao, erroDeNegocio } = require('../utils/transacao');
+const { notificarCadastroExistente } = require('../Services/cadastroExistenteService');
 const { MENSAGEM_ACEITE_OBRIGATORIO, aceitouTermos, COLUNAS_ACEITE, VALORES_ACEITE_SQL, valoresAceite } = require('../utils/aceiteTermos');
 
 
@@ -186,6 +187,8 @@ exports.me = (req, res) => {
  * Cadastro de lojista: cria o usuário e a loja na mesma transação e exige a
  * confirmação do e-mail antes do primeiro login (não devolve token).
  */
+const MENSAGEM_CADASTRO_LOJISTA = "Loja cadastrada. Verifique seu e-mail para ativar a conta.";
+
 exports.registerLojista = (req, res) => {
     const corpo = req.body || {};
     const email = normalizarEmail(corpo.email);
@@ -222,14 +225,16 @@ exports.registerLojista = (req, res) => {
         const { token, tokenHash } = gerarTokenConfirmacao();
 
         emTransacao(async () => {
-            const usuarios = await consultar("SELECT id FROM usuarios WHERE email = ? LIMIT 1", [email]);
-            if (usuarios.length) throw erroDeNegocio(409, "E-mail já cadastrado.");
-
+            // O CNPJ (dado público) é checado antes do e-mail: assim a resposta
+            // de CNPJ repetido não serve para descobrir se um e-mail tem conta.
             const lojas = await consultar(
                 "SELECT id FROM lojas WHERE REGEXP_REPLACE(cnpj, '[^0-9]', '') = ? LIMIT 1",
                 [somenteDigitos(loja.cnpj)]
             );
             if (lojas.length) throw erroDeNegocio(409, "Já existe uma loja cadastrada com este CNPJ.");
+
+            const usuarios = await consultar("SELECT id FROM usuarios WHERE email = ? LIMIT 1", [email]);
+            if (usuarios.length) return { emailJaCadastrado: true };
 
             const usuario = await consultar(
                 `INSERT INTO usuarios
@@ -244,14 +249,16 @@ exports.registerLojista = (req, res) => {
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                 [usuario.insertId, loja.nome_fantasia, loja.razao_social, loja.cnpj, loja.telefone, loja.cidade, loja.uf, loja.descricao]
             );
-        }, (erroCadastro) => {
-            if (erroCadastro?.code === "ER_DUP_ENTRY") return res.status(409).json({ mensagem: "E-mail já cadastrado." });
+        }, (erroCadastro, resultado) => {
+            // E-mail já cadastrado: mesma resposta de um cadastro novo (M5); o dono do e-mail é avisado.
+            if (resultado?.emailJaCadastrado || erroCadastro?.code === "ER_DUP_ENTRY") {
+                return notificarCadastroExistente(email)
+                    .then(() => res.status(201).json({ mensagem: MENSAGEM_CADASTRO_LOJISTA }));
+            }
             if (erroCadastro) return responderErroDoServico(res, erroCadastro, "authController.registerLojista", MENSAGEM_ERRO_INTERNO);
 
             enviarEmailConfirmacao(email, token)
-                .then(() => res.status(201).json({
-                    mensagem: "Loja cadastrada. Verifique seu e-mail para ativar a conta."
-                }))
+                .then(() => res.status(201).json({ mensagem: MENSAGEM_CADASTRO_LOJISTA }))
                 .catch((erroEmail) => {
                     registrarErroInterno("authController.registerLojista - envio do e-mail de confirmação", erroEmail);
                     res.status(503).json({

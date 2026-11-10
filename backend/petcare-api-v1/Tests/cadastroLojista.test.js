@@ -8,6 +8,7 @@ const db = require('../db');
 const emailService = require('../Services/emailService');
 const enviados = [];
 let falharEnvio = false;
+mock.method(emailService, 'enviarAvisoCadastroExistente', async () => {});
 mock.method(emailService, 'enviarEmailConfirmacao', async (email, token) => {
     if (falharEnvio) throw new Error('SMTP fora do ar');
     enviados.push({ email, token });
@@ -39,6 +40,7 @@ const VALIDO = {
 function banco(t, { emailExiste = false, cnpjExiste = false } = {}) {
     return simularBanco(t, db, [
         [/SELECT id FROM usuarios WHERE email = \?/, emailExiste ? [{ id: 1 }] : []],
+        [/SELECT id, email_verificado FROM usuarios/, emailExiste ? [{ id: 1, email_verificado: 1 }] : []],
         [/FROM lojas WHERE REGEXP_REPLACE/, cnpjExiste ? [{ id: 9 }] : []],
         [/INSERT INTO usuarios/, { insertId: 77 }],
         [/INSERT INTO lojas/, { insertId: 88 }]
@@ -88,13 +90,12 @@ for (const [descricao, alteracao, mensagem] of [
     });
 }
 
-test('e-mail já cadastrado: 409, transação desfeita, nada gravado', async (t) => {
+test('e-mail já cadastrado: mesma resposta de cadastro novo, sem gravar nada (M5)', async (t) => {
     const consultas = banco(t, { emailExiste: true });
     const r = await chamar(VALIDO);
-    assert.equal(r.status, 409);
-    assert.match(r.body.mensagem, /E-mail já cadastrado/);
+    assert.equal(r.status, 201);
+    assert.match(r.body.mensagem, /Verifique seu e-mail/);
     assert.equal(inseriu(consultas), false);
-    assert.ok(sqls(consultas).includes('ROLLBACK'));
 });
 
 test('CNPJ já usado por outra loja: 409, nada gravado', async (t) => {

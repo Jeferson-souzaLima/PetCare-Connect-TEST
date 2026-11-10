@@ -213,6 +213,7 @@ export default function Agendamento() {
     lojaId,
     coordenadasEntrega?.latitude,
     coordenadasEntrega?.longitude,
+    setErro,
   ]);
 
   useEffect(() => {
