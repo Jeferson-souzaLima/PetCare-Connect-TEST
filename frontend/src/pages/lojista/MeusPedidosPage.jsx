@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaBoxOpen,
@@ -37,7 +37,7 @@ export default function MeusPedidosPage() {
   const [busca, setBusca] = useState("");
   const [ordenacao, setOrdenacao] = useState("recentes");
 
-  async function carregarPedidos(exibirCarregamento = true) {
+  const carregarPedidos = useCallback(async (exibirCarregamento = true) => {
     try {
       if (exibirCarregamento) {
         setCarregando(true);
@@ -61,13 +61,13 @@ export default function MeusPedidosPage() {
       setCarregando(false);
       setAtualizando(false);
     }
-  }
+  }, [token]);
 
   useEffect(() => {
     if (token) {
       carregarPedidos();
     }
-  }, [token]);
+  }, [token, carregarPedidos]);
 
   /*
    * Pedidos antigos que ainda precisam de atenção.

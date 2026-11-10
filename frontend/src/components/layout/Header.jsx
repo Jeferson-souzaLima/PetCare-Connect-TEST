@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -105,13 +105,27 @@ export function Header() {
     navigate(`/busca?q=${encodeURIComponent(busca.trim())}`);
   }
 
+  // Os ouvintes abaixo são registrados no document; a ref faz com que chamem
+  // sempre a versão atual das ações (com o texto de busca atual), e não a da
+  // renderização em que foram registrados.
+  const acoesRef = useRef(null);
+  useLayoutEffect(() => {
+    acoesRef.current = {
+      fecharBuscaCompleta,
+      handleVerTodos,
+      handleProdutoClick,
+      handleLojaClick,
+      handleServicoClick,
+    };
+  });
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (
         buscaRef.current &&
         !buscaRef.current.contains(event.target)
       ) {
-        fecharBuscaCompleta();
+        acoesRef.current.fecharBuscaCompleta();
       }
     }
 
@@ -127,7 +141,7 @@ export function Header() {
   useEffect(() => {
     function handleEscape(event) {
       if (event.key === "Escape") {
-        fecharBuscaCompleta();
+        acoesRef.current.fecharBuscaCompleta();
       }
     }
 
@@ -169,7 +183,7 @@ export function Header() {
           event.preventDefault();
 
           if (itemSelecionado < 0) {
-            handleVerTodos();
+            acoesRef.current.handleVerTodos();
             return;
           }
 
@@ -179,15 +193,15 @@ export function Header() {
 
           switch (item.tipo) {
             case "produto":
-              handleProdutoClick(item.dados);
+              acoesRef.current.handleProdutoClick(item.dados);
               break;
 
             case "loja":
-              handleLojaClick(item.dados);
+              acoesRef.current.handleLojaClick(item.dados);
               break;
 
             case "servico":
-              handleServicoClick(item.dados);
+              acoesRef.current.handleServicoClick(item.dados);
               break;
           }
 

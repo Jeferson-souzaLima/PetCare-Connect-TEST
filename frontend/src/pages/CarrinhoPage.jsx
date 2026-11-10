@@ -289,47 +289,58 @@ export default function CarrinhoPage() {
     setEndereco(extrairEndereco(usuario));
   }
 
-  async function calcularFreteEntrega() {
-    if (
-      retirada !== "entrega" ||
-      !carrinho.loja_id ||
-      !coordenadasEntrega?.latitude ||
-      !coordenadasEntrega?.longitude
-    ) {
-      setFrete(0);
-      setDistanciaEntrega(null);
-      return;
-    }
+  const latitudeEntrega = coordenadasEntrega?.latitude;
+  const longitudeEntrega = coordenadasEntrega?.longitude;
 
-    try {
-      setCalculandoFrete(true);
-
-      const resultado = await calcularFreteApi({
-        lojaId: carrinho.loja_id,
-        latitude: coordenadasEntrega.latitude,
-        longitude: coordenadasEntrega.longitude,
-      });
-
-      setFrete(resultado.frete);
-      setDistanciaEntrega(resultado.distanciaKm);
-    } catch (erro) {
-      console.error("Erro ao calcular frete:", erro);
-
-      setFrete(0);
-      setDistanciaEntrega(null);
-    } finally {
-      setCalculandoFrete(false);
-    }
-  }
-
+  /*
+   * Recalcula o frete quando muda a forma de receber, a loja ou o endereço.
+   * Se o endereço mudar antes de a resposta chegar, a resposta antiga é
+   * descartada (não sobrescreve o frete do endereço atual).
+   */
   useEffect(() => {
+    let atual = true;
+
+    async function calcularFreteEntrega() {
+      if (
+        retirada !== "entrega" ||
+        !carrinho.loja_id ||
+        !latitudeEntrega ||
+        !longitudeEntrega
+      ) {
+        setFrete(0);
+        setDistanciaEntrega(null);
+        return;
+      }
+
+      try {
+        setCalculandoFrete(true);
+
+        const resultado = await calcularFreteApi({
+          lojaId: carrinho.loja_id,
+          latitude: latitudeEntrega,
+          longitude: longitudeEntrega,
+        });
+
+        if (!atual) return;
+        setFrete(resultado.frete);
+        setDistanciaEntrega(resultado.distanciaKm);
+      } catch (erro) {
+        console.error("Erro ao calcular frete:", erro);
+
+        if (!atual) return;
+        setFrete(0);
+        setDistanciaEntrega(null);
+      } finally {
+        if (atual) setCalculandoFrete(false);
+      }
+    }
+
     calcularFreteEntrega();
-  }, [
-      retirada,
-      carrinho.loja_id,
-      coordenadasEntrega?.latitude,
-      coordenadasEntrega?.longitude
-  ]);
+
+    return () => {
+      atual = false;
+    };
+  }, [retirada, carrinho.loja_id, latitudeEntrega, longitudeEntrega]);
 
   /*
    * Encerra o checkout.

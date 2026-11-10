@@ -99,7 +99,7 @@ export default function PerfilPage() {
     }
 
     carregarPerfil();
-  }, [token]);
+  }, [token, atualizarUsuario]);
 
   // =========================================================
   // DADOS DO PERFIL
