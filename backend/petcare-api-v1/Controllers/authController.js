@@ -14,8 +14,15 @@ const { MENSAGEM_ACEITE_OBRIGATORIO, aceitouTermos, COLUNAS_ACEITE, VALORES_ACEI
 // =========================
 // LOGIN
 // =========================
+/*
+ * Hash usado quando o e-mail não existe, para que a resposta leve o mesmo
+ * tempo de uma senha errada e não revele quais e-mails têm conta (M5).
+ */
+const HASH_SEM_CONTA = bcrypt.hashSync('senha-de-conta-inexistente', CUSTO_BCRYPT);
+
 exports.login = (req, res) => {
-    const { email, senha } = req.body;
+    const email = normalizarEmail(req.body?.email);
+    const { senha } = req.body || {};
 
     if (!email || !senha) {
         return res.status(400).json({
@@ -26,20 +33,22 @@ exports.login = (req, res) => {
     db.query('SELECT * FROM usuarios WHERE email = ?', [email], (err, results) => {
         if (err) return responderErroInterno(res, err, "authController.login");
 
-        if (results.length === 0) {
-            return res.status(401).json({ mensagem: 'Email ou senha inválidos.' });
-        }
-
         const usuario = results[0];
+        const tipoUsuario = usuario?.tipo;
 
-        // Compatibilidade temporária durante a migração
-        const tipoUsuario = usuario.tipo;
-
-        bcrypt.compare(senha, usuario.senha_hash, (err, isMatch) => {
+        bcrypt.compare(String(senha), usuario?.senha_hash || HASH_SEM_CONTA, (err, isMatch) => {
             if (err) return responderErroInterno(res, err, "authController.login");
 
-            if (!isMatch) {
+            if (!usuario || !isMatch) {
                 return res.status(401).json({ mensagem: 'Email ou senha inválidos.' });
+            }
+
+            // Só quem acertou a senha descobre que o e-mail ainda não foi confirmado.
+            if (['cliente', 'lojista'].includes(tipoUsuario) && !usuario.email_verificado) {
+                return res.status(403).json({
+                    codigo: 'EMAIL_NAO_VERIFICADO',
+                    mensagem: 'Confirme seu e-mail antes de entrar.'
+                });
             }
 
             // =========================

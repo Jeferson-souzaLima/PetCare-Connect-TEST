@@ -12,7 +12,6 @@ for (const nome of ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'JWT_SECRET'
 const authController = require('../Controllers/authController');
 const emailConfirmationController = require('../Controllers/emailConfirmationController');
 let loginDeveFalhar = true;
-emailConfirmationController.validarEmailConfirmado = (_req, _res, next) => next();
 authController.login = (_req, res) =>
     loginDeveFalhar ? res.status(401).json({ mensagem: 'Email ou senha inválidos.' }) : res.json({ ok: true });
 emailConfirmationController.register = (_req, res) => res.status(201).json({ ok: true });

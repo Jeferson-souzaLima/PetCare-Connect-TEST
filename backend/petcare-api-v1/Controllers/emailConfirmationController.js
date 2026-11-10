@@ -90,6 +90,9 @@ exports.confirmarEmail = (req, res) => {
     });
 };
 
+// Mesma resposta exista ou não a conta, já confirmada ou não (M5).
+const MENSAGEM_REENVIO = 'Se houver uma conta pendente de confirmação para este e-mail, enviaremos um novo link.';
+
 exports.reenviarConfirmacao = (req, res) => {
     const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
 
@@ -103,10 +106,10 @@ exports.reenviarConfirmacao = (req, res) => {
         (selectErr, users) => {
             if (selectErr) return responderErroInterno(res, selectErr, "emailConfirmationController - consulta de usuário");
             if (users.length === 0) {
-                return res.json({ mensagem: 'Se houver uma conta pendente para este e-mail, enviaremos um novo link.' });
+                return res.json({ mensagem: MENSAGEM_REENVIO });
             }
             if (users[0].email_verificado) {
-                return res.json({ mensagem: 'Este e-mail já foi confirmado. Você já pode entrar.' });
+                return res.json({ mensagem: MENSAGEM_REENVIO });
             }
 
             const { token, tokenHash } = gerarTokenConfirmacao();
@@ -120,35 +123,13 @@ exports.reenviarConfirmacao = (req, res) => {
                     if (updateErr) return responderErroInterno(res, updateErr, "emailConfirmationController.reenviarConfirmacao - atualização do token");
 
                     enviarEmailConfirmacao(email, token)
-                        .then(() => res.json({ mensagem: 'Enviamos um novo link de confirmação para seu e-mail.' }))
+                        .then(() => res.json({ mensagem: MENSAGEM_REENVIO }))
                         .catch((emailErr) => {
                             registrarErroInterno('emailConfirmationController: Erro ao reenviar confirmação de e-mail', emailErr);
                             res.status(503).json({ mensagem: 'Não foi possível enviar o e-mail agora. Tente novamente mais tarde.' });
                         });
                 }
             );
-        }
-    );
-};
-
-exports.validarEmailConfirmado = (req, res, next) => {
-    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-
-    if (!EMAIL_REGEX.test(email)) return next();
-
-    db.query(
-        'SELECT email_verificado FROM usuarios WHERE email = ? AND tipo IN (?, ?)',
-        [email, 'cliente', 'lojista'],
-        (err, users) => {
-            if (err) return responderErroInterno(res, err, "emailConfirmationController.validarEmailConfirmado");
-            if (users.length > 0 && !users[0].email_verificado) {
-                return res.status(403).json({
-                    codigo: 'EMAIL_NAO_VERIFICADO',
-                    mensagem: 'Confirme seu e-mail antes de entrar.'
-                });
-            }
-
-            return next();
         }
     );
 };
