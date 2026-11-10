@@ -1,7 +1,6 @@
 const db = require('../db');
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const { secret } = require('../Config/jwt');
+const { assinar } = require('../Config/jwt');
 const { responderErroInterno, registrarErroInterno, responderErroDoServico, MENSAGEM_ERRO_INTERNO } = require('../utils/erroInterno');
 const { enviarEmailConfirmacao } = require('../Services/emailService');
 const { gerarTokenConfirmacao } = require('../utils/tokenConfirmacaoEmail');
@@ -69,15 +68,12 @@ exports.login = (req, res) => {
 
                         const lojaId = lojaResults[0].id;
 
-                        const token = jwt.sign(
+                        const token = assinar(
                             {
                                 id: usuario.id,
                                 tipo: tipoUsuario,
                                 loja_id: lojaId
-                            },
-                            secret,
-                            { expiresIn: '1d' }
-                        );
+                            });
 
 
 
@@ -98,14 +94,11 @@ exports.login = (req, res) => {
                 // =========================
                 // CLIENTE / ADMIN / OUTROS
                 // =========================
-                const token = jwt.sign(
+                const token = assinar(
                     {
                         id: usuario.id,
                         tipo: tipoUsuario
-                    },
-                    secret,
-                    { expiresIn: '1d' }
-                );
+                    });
 
                 return res.json({
                     mensagem: 'Login realizado com sucesso!',

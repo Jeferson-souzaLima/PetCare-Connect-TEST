@@ -4,7 +4,7 @@ const express = require('express');
 
 // db.js exige estas variáveis ao ser carregado; nenhum teste abre conexão real.
 for (const nome of ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'JWT_SECRET']) {
-    process.env[nome] = process.env[nome] || 'test';
+    process.env[nome] = process.env[nome] || (nome === 'JWT_SECRET' ? 'segredo-de-teste-com-mais-de-32-caracteres' : 'test');
 }
 
 // Os controllers são substituídos por stubs ANTES de carregar as rotas,
