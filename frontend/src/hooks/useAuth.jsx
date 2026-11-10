@@ -8,7 +8,7 @@ import {
 } from "react";
 import {
   EVENTO_SESSAO_EXPIRADA,
-  CHAVE_AVISO_SESSAO_EXPIRADA,
+  deixarAvisoParaLogin,
   expiracaoDoToken,
   tokenExpirado
 } from "@/utils/sessao";
@@ -81,11 +81,7 @@ export function AuthProvider({ children }) {
   // Encerra a sessão quando o token vence ou a API o recusa (401),
   // em vez de manter a pessoa "logada" com chamadas falhando.
   const encerrarSessaoExpirada = useCallback(() => {
-    try {
-      sessionStorage.setItem(CHAVE_AVISO_SESSAO_EXPIRADA, "1");
-    } catch {
-      // Sem sessionStorage a sessão é encerrada mesmo assim, só sem o aviso.
-    }
+    deixarAvisoParaLogin("Sua sessão expirou. Entre novamente para continuar.");
     logout();
   }, [logout]);
 

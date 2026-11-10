@@ -7,6 +7,7 @@ const { gerarTokenConfirmacao } = require('../utils/tokenConfirmacaoEmail');
 const { normalizarEmail, emailValido, erroDaSenha } = require('../utils/validacaoUsuario');
 const { validarDadosLoja, somenteDigitos } = require('../utils/validacaoLoja');
 const { CUSTO_BCRYPT } = require('../Config/senha');
+const { consultar, emTransacao, erroDeNegocio } = require('../utils/transacao');
 const { MENSAGEM_ACEITE_OBRIGATORIO, aceitouTermos, COLUNAS_ACEITE, VALORES_ACEITE_SQL, valoresAceite } = require('../utils/aceiteTermos');
 
 
@@ -181,30 +182,6 @@ exports.me = (req, res) => {
 // =========================
 // REGISTER LOJISTA
 // =========================
-const consultar = (sql, valores) => new Promise((resolve, reject) =>
-    db.query(sql, valores, (err, resultado) => (err ? reject(err) : resolve(resultado))));
-
-/*
- * Executa trabalho() numa transação. As consultas precisam começar dentro do
- * callback de beginTransaction: é ali que db.js associa a conexão da transação.
- */
-function emTransacao(trabalho, callback) {
-    db.beginTransaction((erro) => {
-        if (erro) return callback(erro);
-        trabalho().then(
-            (resultado) => db.commit((erroCommit) =>
-                (erroCommit ? db.rollback(() => callback(erroCommit)) : callback(null, resultado))),
-            (falha) => db.rollback(() => callback(falha))
-        );
-    });
-}
-
-function conflito(mensagem) {
-    const erro = new Error(mensagem);
-    erro.status = 409;
-    return erro;
-}
-
 /*
  * Cadastro de lojista: cria o usuário e a loja na mesma transação e exige a
  * confirmação do e-mail antes do primeiro login (não devolve token).
@@ -246,13 +223,13 @@ exports.registerLojista = (req, res) => {
 
         emTransacao(async () => {
             const usuarios = await consultar("SELECT id FROM usuarios WHERE email = ? LIMIT 1", [email]);
-            if (usuarios.length) throw conflito("E-mail já cadastrado.");
+            if (usuarios.length) throw erroDeNegocio(409, "E-mail já cadastrado.");
 
             const lojas = await consultar(
                 "SELECT id FROM lojas WHERE REGEXP_REPLACE(cnpj, '[^0-9]', '') = ? LIMIT 1",
                 [somenteDigitos(loja.cnpj)]
             );
-            if (lojas.length) throw conflito("Já existe uma loja cadastrada com este CNPJ.");
+            if (lojas.length) throw erroDeNegocio(409, "Já existe uma loja cadastrada com este CNPJ.");
 
             const usuario = await consultar(
                 `INSERT INTO usuarios

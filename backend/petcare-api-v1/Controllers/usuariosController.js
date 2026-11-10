@@ -1,6 +1,18 @@
 const usuarioModel = require('../Models/usuariosModel');
 const geocodingService = require('../Services/geocodingService');
-const { registrarErroInterno } = require('../utils/erroInterno');
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+const bcrypt = require('bcrypt');
+const r2Storage = require('../Services/r2Storage');
+const { CUSTO_BCRYPT } = require('../Config/senha');
+const { emTransacao, erroDeNegocio } = require('../utils/transacao');
+const {
+    registrarErroInterno,
+    responderErroInterno,
+    responderErroDoServico,
+    MENSAGEM_ERRO_INTERNO
+} = require('../utils/erroInterno');
 
 const CAMPOS_ENDERECO = ['cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf'];
 
@@ -131,3 +143,82 @@ exports.atualizarMeuPerfil = async (req, res) => {
         return res.status(500).json({ mensagem: 'Erro ao processar atualizacao do perfil.' });
     }
 };
+
+
+// =====================================================================
+// LGPD (art. 18): exportar meus dados e excluir minha conta
+// =====================================================================
+
+exports.exportarMeusDados = async (req, res) => {
+    try {
+        const dados = await usuarioModel.buscarDadosParaExportacao(req.usuario.id);
+        if (!dados) return res.status(404).json({ mensagem: 'Usuario nao encontrado.' });
+
+        res.setHeader('Content-Disposition', 'attachment; filename="petcare-connect-meus-dados.json"');
+        res.setHeader('Cache-Control', 'no-store');
+        return res.json({ gerado_em: new Date().toISOString(), ...dados });
+    } catch (err) {
+        return responderErroInterno(res, err, 'usuariosController.exportarMeusDados');
+    }
+};
+
+/*
+ * Exclusão da conta do cliente por anonimização. Exige a senha atual e que
+ * não haja pedido ou agendamento em andamento. Contas de lojista envolvem a
+ * loja e os pedidos dela: são tratadas pelo canal de atendimento.
+ * Senha errada responde 403 (e não 401, que o site trata como sessão expirada).
+ */
+exports.excluirMinhaConta = async (req, res) => {
+    const { senha } = req.body || {};
+
+    if (typeof senha !== 'string' || !senha) {
+        return res.status(400).json({ mensagem: 'Informe sua senha para confirmar a exclusão.' });
+    }
+
+    if (req.usuario.tipo !== 'cliente') {
+        return res.status(409).json({
+            mensagem: 'Para excluir uma conta de lojista, fale com o atendimento: a exclusão envolve a loja e os pedidos dela.'
+        });
+    }
+
+    try {
+        const credenciais = await usuarioModel.buscarCredenciais(req.usuario.id);
+        if (!credenciais) return res.status(404).json({ mensagem: 'Usuario nao encontrado.' });
+
+        if (!(await bcrypt.compare(senha, credenciais.senha_hash))) {
+            return res.status(403).json({ mensagem: 'Senha incorreta.' });
+        }
+
+        const senhaInutilizavel = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), CUSTO_BCRYPT);
+
+        emTransacao(async () => {
+            const pendencias = await usuarioModel.contarPendencias(req.usuario.id);
+            if (pendencias.pedidos || pendencias.agendamentos) {
+                throw erroDeNegocio(409,
+                    'Você tem pedidos ou agendamentos em andamento. Conclua ou cancele antes de excluir a conta.');
+            }
+            return usuarioModel.anonimizarConta(req.usuario.id, senhaInutilizavel);
+        }, (erro, imagensDosPets) => {
+            if (erro) {
+                return responderErroDoServico(res, erro, 'usuariosController.excluirMinhaConta', MENSAGEM_ERRO_INTERNO);
+            }
+
+            apagarArquivosLocais(imagensDosPets);
+            return res.json({ mensagem: 'Sua conta foi excluída e seus dados pessoais foram removidos.' });
+        });
+    } catch (err) {
+        return responderErroInterno(res, err, 'usuariosController.excluirMinhaConta');
+    }
+};
+
+/** Apaga as fotos dos pets guardadas em /uploads. Falhas só são registradas. */
+function apagarArquivosLocais(caminhos = []) {
+    for (const caminho of caminhos) {
+        const alvo = r2Storage.getStorageTarget(caminho);
+        if (alvo?.type !== 'local') continue;
+
+        fs.unlink(path.join(__dirname, '..', 'uploads', alvo.filename), (err) => {
+            if (err && err.code !== 'ENOENT') registrarErroInterno('usuariosController: apagar foto de pet', err);
+        });
+    }
+}

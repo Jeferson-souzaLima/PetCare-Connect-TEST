@@ -1,8 +1,33 @@
 // Evento disparado quando a API recusa o token (401) de uma sessão aberta.
 export const EVENTO_SESSAO_EXPIRADA = "petcare:sessao-expirada";
 
-// Marca lida pela tela de login para explicar por que a pessoa saiu.
-export const CHAVE_AVISO_SESSAO_EXPIRADA = "sessaoExpirada";
+// Mensagem guardada para a tela de login explicar por que a pessoa saiu.
+const CHAVE_AVISO_LOGIN = "avisoLogin";
+
+export function deixarAvisoParaLogin(texto) {
+  try {
+    sessionStorage.setItem(CHAVE_AVISO_LOGIN, texto);
+  } catch {
+    // Sem sessionStorage a pessoa sai mesmo assim, só sem o aviso.
+  }
+}
+
+export function lerAvisoParaLogin() {
+  try {
+    return sessionStorage.getItem(CHAVE_AVISO_LOGIN) || "";
+  } catch {
+    return "";
+  }
+}
+
+/** Apaga o aviso depois de exibido, para não reaparecer. */
+export function limparAvisoParaLogin() {
+  try {
+    sessionStorage.removeItem(CHAVE_AVISO_LOGIN);
+  } catch {
+    // Nada a limpar sem sessionStorage.
+  }
+}
 
 /** Momento (em ms) em que o token expira, ou null se não for possível ler. */
 export function expiracaoDoToken(token) {

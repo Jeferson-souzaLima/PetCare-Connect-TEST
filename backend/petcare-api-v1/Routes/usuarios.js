@@ -10,4 +10,8 @@ router.get('/me', authMiddleware, authController.me);
 
 router.put('/me', authMiddleware, usuariosController.atualizarMeuPerfil);
 
+// LGPD: portabilidade e exclusão da própria conta
+router.get('/me/dados', authMiddleware, usuariosController.exportarMeusDados);
+router.delete('/me', authMiddleware, usuariosController.excluirMinhaConta);
+
 module.exports = router;
