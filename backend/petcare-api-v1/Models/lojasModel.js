@@ -1,7 +1,19 @@
 const db = require('../db');
 
-exports.getAll = (callback) => {
-    db.query('SELECT * FROM lojas', callback);
+/*
+ * Campos que qualquer visitante pode ver. Ficam de fora usuario_id, CNPJ,
+ * razão social, telefone, coordenadas e o status interno (ativo).
+ */
+const CAMPOS_PUBLICOS = `
+    id, nome_fantasia, descricao, imagem, endereco, cep, cidade, uf,
+    entrega_ativa, taxa_entrega_fixa, taxa_entrega_por_km, raio_entrega_km
+`;
+
+exports.getPublicaPorId = (id, callback) => {
+    db.query(`SELECT ${CAMPOS_PUBLICOS} FROM lojas WHERE id = ? LIMIT 1`, [id], (err, results) => {
+        if (err) return callback(err);
+        callback(null, results[0] || null);
+    });
 };
 
 exports.getPaginados = (page, limit, callback) => {
@@ -23,7 +35,7 @@ exports.getPaginados = (page, limit, callback) => {
         const total = Number(totalResults[0].total);
 
         const queryLojas = `
-            SELECT *
+            SELECT ${CAMPOS_PUBLICOS}
             FROM lojas
             WHERE ativo = 1
             ORDER BY id DESC
@@ -52,16 +64,6 @@ exports.getPaginados = (page, limit, callback) => {
             }
         );
     });
-};
-
-exports.create = (loja, callback) => {
-    const { usuario_id, nome_fantasia, cnpj, descricao, cidade, uf, endereco, ativo, imagem } = loja;
-    const query = `
-        INSERT INTO lojas (usuario_id, nome_fantasia, cnpj, descricao, cidade, uf, endereco, ativo, imagem)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    const values = [usuario_id, nome_fantasia, cnpj, descricao, cidade, uf, endereco, ativo, imagem];
-    db.query(query, values, callback);
 };
 
 exports.update = (id, dados, callback) => {
