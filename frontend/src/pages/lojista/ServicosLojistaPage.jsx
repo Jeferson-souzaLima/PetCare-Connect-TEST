@@ -1,6 +1,5 @@
-import { API_URL } from "@/services/apiUrl";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/services/api";
 import { useAuth } from "../../hooks/useAuth";
 import { FaArrowLeft, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -20,11 +19,6 @@ export default function ServicosLojistaPage() {
     preco: "",
     duracao_min: "",
     ativo: 1,
-  });
-
-  const api = axios.create({
-    baseURL: `${API_URL}`,
-    headers: { Authorization: `Bearer ${token}` },
   });
 
   // ===============================

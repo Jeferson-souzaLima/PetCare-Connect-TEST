@@ -1,7 +1,6 @@
-import { API_URL } from "@/services/apiUrl";
 import { getMediaUrl } from "@/services/mediaUrl";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/services/api";
 import { useAuth } from "../../hooks/useAuth";
 import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaImage } from "react-icons/fa"; 
 import { useNavigate } from "react-router-dom";
@@ -25,11 +24,6 @@ export default function ProdutosLojistaPage() {
   const [imagensFiles, setImagensFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
   const [imagensExistentes, setImagensExistentes] = useState([]);
-
-  const api = axios.create({
-    baseURL: `${API_URL}`,
-    headers: { Authorization: `Bearer ${token}` },
-  });
 
   // ===============================
   // Carregar produtos

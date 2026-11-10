@@ -1,14 +1,28 @@
 import { API_URL } from "@/services/apiUrl";
 import { useState } from "react";
+import { CHAVE_AVISO_SESSAO_EXPIRADA } from "@/utils/sessao";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { FaEnvelope, FaLock } from "react-icons/fa";
+
+// Mostra uma vez o motivo de a pessoa ter sido levada ao login.
+function lerAvisoSessaoExpirada() {
+  try {
+    if (sessionStorage.getItem(CHAVE_AVISO_SESSAO_EXPIRADA)) {
+      sessionStorage.removeItem(CHAVE_AVISO_SESSAO_EXPIRADA);
+      return "Sua sessão expirou. Entre novamente para continuar.";
+    }
+  } catch {
+    // sessionStorage indisponível: segue sem o aviso.
+  }
+  return "";
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
-  const [aviso, setAviso] = useState("");
+  const [aviso, setAviso] = useState(lerAvisoSessaoExpirada);
   const [emailNaoVerificado, setEmailNaoVerificado] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();

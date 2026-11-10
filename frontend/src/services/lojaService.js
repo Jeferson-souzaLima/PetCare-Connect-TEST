@@ -1,7 +1,4 @@
-import { API_URL } from "@/services/apiUrl";
-import axios from 'axios';
-
-const api = axios.create({ baseURL: `${API_URL}` });
+import api from "@/services/api";
 
 function authConfig(token) {
   return { headers: { Authorization: `Bearer ${token}` } };
