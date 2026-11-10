@@ -19,6 +19,22 @@ const { MENSAGEM_ACEITE_OBRIGATORIO, aceitouTermos, COLUNAS_ACEITE, VALORES_ACEI
  */
 const HASH_SEM_CONTA = bcrypt.hashSync('senha-de-conta-inexistente', CUSTO_BCRYPT);
 
+/*
+ * Senhas gravadas com custo menor que o atual são refeitas no login bem-sucedido
+ * (B3). Roda em segundo plano: uma falha só é registrada e não impede o login.
+ */
+function atualizarCustoDaSenha(usuario, senha) {
+    if (bcrypt.getRounds(usuario.senha_hash) >= CUSTO_BCRYPT) return;
+
+    bcrypt.hash(senha, CUSTO_BCRYPT)
+        .then((novoHash) => new Promise((resolve, reject) => db.query(
+            'UPDATE usuarios SET senha_hash = ? WHERE id = ? AND senha_hash = ?',
+            [novoHash, usuario.id, usuario.senha_hash],
+            (err) => (err ? reject(err) : resolve())
+        )))
+        .catch((err) => registrarErroInterno('authController.login - atualizar custo da senha', err));
+}
+
 exports.login = (req, res) => {
     const email = normalizarEmail(req.body?.email);
     const { senha } = req.body || {};
@@ -41,6 +57,8 @@ exports.login = (req, res) => {
             if (!usuario || !isMatch) {
                 return res.status(401).json({ mensagem: 'Email ou senha inválidos.' });
             }
+
+            atualizarCustoDaSenha(usuario, String(senha));
 
             // Só quem acertou a senha descobre que o e-mail ainda não foi confirmado.
             if (['cliente', 'lojista'].includes(tipoUsuario) && !usuario.email_verificado) {
