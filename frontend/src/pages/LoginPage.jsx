@@ -56,7 +56,7 @@ export default function LoginPage() {
         navigate("/perfil");
       }
       
-    } catch (err) {
+    } catch {
       setErro("Erro ao conectar com o servidor");
     }
   };
@@ -79,7 +79,7 @@ export default function LoginPage() {
       }
 
       setAviso(data.mensagem);
-    } catch (error) {
+    } catch {
       setErro("Erro ao conectar com o servidor");
     }
   };

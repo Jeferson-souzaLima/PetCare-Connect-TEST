@@ -193,7 +193,6 @@ export default function AgendaLojistaPage() {
     }
   };
 
-  const dataCompleta = `${formData.data}T${formData.hora}:00`; 
 
   useEffect(() => {
     buscarAgendamentosDoDia(selectedDate);

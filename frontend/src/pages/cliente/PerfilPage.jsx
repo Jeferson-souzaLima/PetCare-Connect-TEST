@@ -41,7 +41,6 @@ export default function PerfilPage() {
   const [loadingPets, setLoadingPets] = useState(true);
 
   const [showUserData, setShowUserData] = useState(false);
-  const [activeTab, setActiveTab] = useState(null);
 
   const [showModalPet, setShowModalPet] = useState(false);
   const [petParaEditar, setPetParaEditar] = useState(null);

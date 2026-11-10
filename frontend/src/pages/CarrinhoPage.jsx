@@ -64,7 +64,7 @@ export default function CarrinhoPage() {
   const [erroEndereco, setErroEndereco] = useState("");
 
   const [frete, setFrete] = useState(0);
-  const [distanciaEntrega, setDistanciaEntrega] = useState(null);
+  const [, setDistanciaEntrega] = useState(null);
   const [calculandoFrete, setCalculandoFrete] = useState(false);
 
   const [finalizando, setFinalizando] = useState(false);

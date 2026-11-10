@@ -165,7 +165,7 @@ export function Header() {
           );
           break;
 
-        case "Enter":
+        case "Enter": {
           event.preventDefault();
 
           if (itemSelecionado < 0) {
@@ -192,6 +192,7 @@ export function Header() {
           }
 
           break;
+        }
 
         default:
           break;

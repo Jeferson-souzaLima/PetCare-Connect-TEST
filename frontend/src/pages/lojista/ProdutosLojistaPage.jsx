@@ -118,7 +118,7 @@ export default function ProdutosLojistaPage() {
 
       setShowModal(false);
       carregarProdutos();
-    } catch (err) {
+    } catch {
       alert("Erro ao salvar produto");
     }
   };
@@ -196,7 +196,7 @@ export default function ProdutosLojistaPage() {
       });
 
       carregarProdutos();
-    } catch (err) {
+    } catch {
       alert("Erro ao atualizar status");
     }
   };

@@ -5,7 +5,7 @@ import { FaArrowLeft, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 export default function ServicosLojistaPage() {
-  const { usuario, token } = useAuth();
+  const { usuario } = useAuth();
   const navigate = useNavigate();
 
   const [servicos, setServicos] = useState([]);
@@ -28,7 +28,7 @@ export default function ServicosLojistaPage() {
     try {
       const res = await api.get("/servicos/meus");
       setServicos(res.data);
-    } catch (err) {
+    } catch {
       console.error("Erro ao carregar serviços");
     } finally {
       setLoading(false);
@@ -75,7 +75,7 @@ export default function ServicosLojistaPage() {
 
       setShowModal(false);
       carregarServicos();
-    } catch (err) {
+    } catch {
       alert("Erro ao salvar serviço");
     }
   };
@@ -89,7 +89,7 @@ export default function ServicosLojistaPage() {
     try {
       await api.delete(`/servicos/${id}`);
       carregarServicos();
-    } catch (err) {
+    } catch {
       alert("Erro ao deletar serviço");
     }
   };
@@ -104,7 +104,7 @@ export default function ServicosLojistaPage() {
         ativo: servico.ativo ? 0 : 1,
       });
       carregarServicos();
-    } catch (err) {
+    } catch {
       alert("Erro ao atualizar status");
     }
   };
