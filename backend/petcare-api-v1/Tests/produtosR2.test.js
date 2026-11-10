@@ -1,5 +1,10 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
+
+// db.js exige estas variáveis ao ser carregado; nenhum teste abre conexão real.
+for (const nome of ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'JWT_SECRET']) {
+    process.env[nome] = process.env[nome] || 'test';
+}
 const produtosModel = require('../Models/produtosModel');
 const r2Storage = require('../Services/r2Storage');
 const controller = require('../Controllers/produtosController');
