@@ -23,9 +23,16 @@
 --     AND email_verificacao_token_hash IS NULL;
 --
 -- 2) Migração:
+--
+-- "id > 0" não muda quais linhas são atualizadas: só inclui a chave
+-- primária no filtro, exigência do safe update mode do MySQL Workbench
+-- (Error Code 1175), sem precisar desligá-lo.
 
 UPDATE usuarios
 SET email_verificado = 1
-WHERE tipo = 'lojista'
+WHERE id > 0
+  AND tipo = 'lojista'
   AND email_verificado = 0
   AND email_verificacao_token_hash IS NULL;
+--
+-- 3) Conferir: a consulta do passo 1 deve retornar 0 linhas.
