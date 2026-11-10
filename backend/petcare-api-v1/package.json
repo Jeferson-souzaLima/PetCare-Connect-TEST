@@ -2,6 +2,9 @@
     "name": "petcare-api-v1",
     "version": "1.0.0",
     "main": "app.js",
+    "engines": {
+        "node": "22.x"
+    },
     "scripts": {
         "start": "node app.js",
         "dev": "nodemon app.js",
@@ -18,7 +21,7 @@
     "dependencies": {
         "@aws-sdk/client-s3": "^3.1156.0",
         "axios": "^1.19.0",
-        "bcrypt": "^5.1.1",
+        "bcrypt": "^6.0.0",
         "cors": "^2.8.6",
         "dotenv": "^16.4.7",
         "express": "^5.1.0",
@@ -28,6 +31,6 @@
         "mercadopago": "^3.3.0",
         "multer": "^1.4.5-lts.2",
         "mysql2": "^3.14.1",
-        "nodemailer": "^6.10.1"
+        "nodemailer": "^10.4.0"
     }
 }
