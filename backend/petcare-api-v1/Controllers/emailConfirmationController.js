@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const db = require('../db');
 const { enviarEmailConfirmacao } = require('../Services/emailService');
 const { responderErroInterno, registrarErroInterno } = require('../utils/erroInterno');
+const { MENSAGEM_ACEITE_OBRIGATORIO, aceitouTermos, COLUNAS_ACEITE, VALORES_ACEITE_SQL, valoresAceite } = require('../utils/aceiteTermos');
 
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
@@ -34,6 +35,10 @@ exports.register = (req, res) => {
         return res.status(400).json({ mensagem: 'A confirmação de senha não confere.' });
     }
 
+    if (!aceitouTermos(req.body)) {
+        return res.status(400).json({ mensagem: MENSAGEM_ACEITE_OBRIGATORIO });
+    }
+
     db.query('SELECT id FROM usuarios WHERE email = ?', [emailNormalizado], (selectErr, users) => {
         if (selectErr) return responderErroInterno(res, selectErr, "emailConfirmationController - consulta de usuário");
         if (users.length > 0) return res.status(409).json({ mensagem: 'E-mail já cadastrado.' });
@@ -43,10 +48,10 @@ exports.register = (req, res) => {
 
             const { token, tokenHash } = gerarTokenConfirmacao();
             const sql = `INSERT INTO usuarios
-                (nome, email, senha_hash, tipo, email_verificado, email_verificacao_token_hash, email_verificacao_expira_em)
-                VALUES (?, ?, ?, 'cliente', 0, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))`;
+                (nome, email, senha_hash, tipo, email_verificado, email_verificacao_token_hash, email_verificacao_expira_em, ${COLUNAS_ACEITE})
+                VALUES (?, ?, ?, 'cliente', 0, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR), ${VALORES_ACEITE_SQL})`;
 
-            db.query(sql, [nomeNormalizado, emailNormalizado, senhaHash, tokenHash], (insertErr) => {
+            db.query(sql, [nomeNormalizado, emailNormalizado, senhaHash, tokenHash, ...valoresAceite()], (insertErr) => {
                 if (insertErr) return responderErroInterno(res, insertErr, "emailConfirmationController.register - inserção do usuário");
 
                 enviarEmailConfirmacao(emailNormalizado, token)

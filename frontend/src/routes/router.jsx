@@ -12,6 +12,8 @@ import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import RegisterLojista from "../pages/RegisterLojista";
 import VerificarEmailPage from "../pages/VerificarEmailPage";
+import TermosUsoPage from "../pages/legal/TermosUsoPage";
+import PoliticaPrivacidadePage from "../pages/legal/PoliticaPrivacidadePage";
 
 // Cliente
 import PerfilPage from "../pages/cliente/PerfilPage";
@@ -57,6 +59,8 @@ export const router = createBrowserRouter([
   { path: "/register", element: <RegisterPage /> },
   { path: "/register-lojista", element: <RegisterLojista /> },
   { path: "/verificar-email", element: <VerificarEmailPage /> },
+  { path: "/termos", element: <TermosUsoPage /> },
+  { path: "/privacidade", element: <PoliticaPrivacidadePage /> },
 
   {
     element: <Layout />,

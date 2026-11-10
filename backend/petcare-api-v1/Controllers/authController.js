@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { secret } = require('../Config/jwt');
 const { responderErroInterno } = require('../utils/erroInterno');
+const { MENSAGEM_ACEITE_OBRIGATORIO, aceitouTermos, COLUNAS_ACEITE, VALORES_ACEITE_SQL, valoresAceite } = require('../utils/aceiteTermos');
 
 
 // =========================
@@ -225,6 +226,10 @@ exports.registerLojista = (req, res) => {
         });
     }
 
+    if (!aceitouTermos(req.body)) {
+        return res.status(400).json({ mensagem: MENSAGEM_ACEITE_OBRIGATORIO });
+    }
+
     // 1) verifica se email já existe
     db.query('SELECT * FROM usuarios WHERE email = ?', [email], (err, results) => {
         if (err) return responderErroInterno(res, err, "authController.registerLojista");
@@ -238,8 +243,9 @@ exports.registerLojista = (req, res) => {
             if (err) return responderErroInterno(res, err, "authController.registerLojista");
 
             db.query(
-                'INSERT INTO usuarios (nome, email, senha_hash, tipo) VALUES (?, ?, ?, ?)',
-                [nomeFantasia, email, hash, 'lojista'],
+                `INSERT INTO usuarios (nome, email, senha_hash, tipo, ${COLUNAS_ACEITE})
+                VALUES (?, ?, ?, ?, ${VALORES_ACEITE_SQL})`,
+                [nomeFantasia, email, hash, 'lojista', ...valoresAceite()],
                 (err, result) => {
                     if (err) return responderErroInterno(res, err, "authController.registerLojista");
 
