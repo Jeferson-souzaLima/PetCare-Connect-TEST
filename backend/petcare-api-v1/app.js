@@ -2,7 +2,6 @@ require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
-const cors = require('cors');
 const db = require('./db');
 
 // Rotas
@@ -23,6 +22,7 @@ const relatoriosRoutes = require('./Routes/relatorios');
 const pedidosModel = require('./Models/pedidosModel');
 const cepRoutes = require('./Routes/cep');
 const { registrarErroInterno } = require('./utils/erroInterno');
+const { aplicarSegurancaHttp } = require('./middlewares/segurancaHttp');
 
 const app = express();
 
@@ -31,19 +31,8 @@ const app = express();
 // CF-Connecting-IP (ver middlewares/rateLimitAuth.js).
 app.set('trust proxy', false);
 
-// Configurações
-const corsOrigins = [...new Set([
-    ...(process.env.CORS_ORIGIN || 'http://localhost:5173')
-        .split(',')
-        .map((origin) => origin.trim())
-        .filter(Boolean),
-    'https://mvp-beige-sigma.vercel.app'
-])];
-
-app.use(cors({
-    origin: corsOrigins,
-    credentials: true
-}));
+// Cabeçalhos de segurança e CORS
+aplicarSegurancaHttp(app);
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
