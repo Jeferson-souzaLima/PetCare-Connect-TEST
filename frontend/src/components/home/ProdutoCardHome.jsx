@@ -6,7 +6,7 @@ import { FavoriteButton } from "@/components/ui/FavoriteButton";
 import { getMediaUrl } from "@/services/mediaUrl";
 import { formatarMoeda } from "@/utils/formatadores";
 
-/** Card de produto da vitrine. Favorito só para quem está logado (evita 401 de visitante). */
+/** Card de produto da vitrine. O coração aparece só para quem está logado. */
 export function ProdutoCardHome({ produto, logado }) {
   const { adicionarItem } = useCarrinho();
   const [adicionado, setAdicionado] = useState(false);
@@ -23,7 +23,7 @@ export function ProdutoCardHome({ produto, logado }) {
   function adicionar() {
     if (!podeComprar) return;
     // Mesmo formato de item usado pelo ProductCard.
-    adicionarItem({
+    const entrou = adicionarItem({
       tipo: "produto",
       item_id: produto.id,
       nome_item: produto.nome,
@@ -33,7 +33,7 @@ export function ProdutoCardHome({ produto, logado }) {
       loja_nome: produto.loja.nome,
       imagem: produto.imagens?.[0]?.caminho || null,
     });
-    setAdicionado(true);
+    if (entrou) setAdicionado(true);
   }
 
   return (

@@ -1,76 +1,40 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { CARRINHO_VAZIO, calcularTotal, incluirItem } from "@/utils/carrinho";
 
 const CarrinhoContext = createContext();
 
 export function CarrinhoProvider({ children }) {
-  const [carrinho, setCarrinho] = useState({
-    loja_id: null,
-    itens: [],
-    total: 0,
-  });
+  const [carrinho, setCarrinhoEstado] = useState(CARRINHO_VAZIO);
+  // Cópia síncrona do carrinho: dois cliques antes de a tela atualizar partem do estado
+  // mais recente, e não do que estava desenhado.
+  const carrinhoRef = useRef(CARRINHO_VAZIO);
 
   const [ultimoItemAdicionado, setUltimoItemAdicionado] = useState(null);
 
-  function recalcularTotal(itens) {
-    return itens.reduce(
-      (acc, item) =>
-        acc + Number(item.preco_unitario || 0) * item.quantidade,
-      0
-    );
-  }
+  const setCarrinho = useCallback((atualizar) => {
+    const novo = typeof atualizar === "function" ? atualizar(carrinhoRef.current) : atualizar;
+    carrinhoRef.current = novo;
+    setCarrinhoEstado(novo);
+  }, []);
 
+  /** Devolve true só quando o item entrou no carrinho; quem chama mostra o aviso a partir disso. */
   function adicionarItem(novoItem) {
-    if (!novoItem?.loja_id || !novoItem?.item_id) {
-      return;
-    }
+    const resultado = incluirItem(carrinhoRef.current, novoItem);
 
-    if (
-      carrinho.loja_id &&
-      carrinho.loja_id !== novoItem.loja_id
-    ) {
-      alert("Você só pode comprar de uma loja por vez");
-      return;
-    }
-
-    setCarrinho((prev) => {
-      const itemExistente = prev.itens.find(
-        (item) => item.item_id === novoItem.item_id
-      );
-
-      let novosItens;
-
-      if (itemExistente) {
-        novosItens = prev.itens.map((item) =>
-          item.item_id === novoItem.item_id
-            ? {
-                ...item,
-                quantidade:
-                  item.quantidade + novoItem.quantidade,
-              }
-            : item
-        );
-      } else {
-        novosItens = [
-          ...prev.itens,
-          {
-            ...novoItem,
-            quantidade: novoItem.quantidade,
-          },
-        ];
+    if (!resultado.ok) {
+      if (resultado.motivo === "outra_loja") {
+        alert("Você só pode comprar de uma loja por vez");
       }
+      return false;
+    }
 
-      return {
-        loja_id: novoItem.loja_id,
-        itens: novosItens,
-        total: recalcularTotal(novosItens),
-      };
-    });
-
+    setCarrinho(resultado.carrinho);
     setUltimoItemAdicionado({
       id: novoItem.item_id,
-      nome: novoItem.nome,
+      nome: novoItem.nome_item,
       timestamp: Date.now(),
     });
+    return true;
   }
 
   function aumentarQuantidade(item_id) {
@@ -84,7 +48,7 @@ export function CarrinhoProvider({ children }) {
       return {
         ...prev,
         itens,
-        total: recalcularTotal(itens),
+        total: calcularTotal(itens),
       };
     });
   }
@@ -106,7 +70,7 @@ export function CarrinhoProvider({ children }) {
         ...prev,
         loja_id: itens.length ? prev.loja_id : null,
         itens,
-        total: recalcularTotal(itens),
+        total: calcularTotal(itens),
       };
     });
   }
@@ -120,17 +84,13 @@ export function CarrinhoProvider({ children }) {
       return {
         loja_id: itens.length ? prev.loja_id : null,
         itens,
-        total: recalcularTotal(itens),
+        total: calcularTotal(itens),
       };
     });
   }
 
   function limparCarrinho() {
-    setCarrinho({
-      loja_id: null,
-      itens: [],
-      total: 0,
-    });
+    setCarrinho(CARRINHO_VAZIO);
   }
 
   return (

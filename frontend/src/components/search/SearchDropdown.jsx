@@ -1,4 +1,4 @@
-import { getMediaUrl } from "@/services/mediaUrl";
+import { getMediaUrl, IMAGEM_PADRAO_LOJA, IMAGEM_PADRAO_PRODUTO } from "@/services/mediaUrl";
 import { Package, Store, Scissors } from "lucide-react";
 
 export function SearchDropdown({
@@ -119,7 +119,7 @@ export function SearchDropdown({
                 const indice = indiceAtual++;
                 const imagemProduto = getMediaUrl(
                   produto.imagens?.[0]?.caminho,
-                  "/images/produto-padrao.jpg"
+                  IMAGEM_PADRAO_PRODUTO
                 );
 
                 return (
@@ -173,7 +173,7 @@ export function SearchDropdown({
 
               {lojas.map((loja) => {
                 const indice = indiceAtual++;
-                const logoLoja = getMediaUrl(loja.imagem, "/images/loja-padrao.png");
+                const logoLoja = getMediaUrl(loja.imagem, IMAGEM_PADRAO_LOJA);
 
                 return (
                   <button
@@ -212,7 +212,7 @@ export function SearchDropdown({
 
               {servicos.map((servico) => {
                 const indice = indiceAtual++;
-                const logoLoja = getMediaUrl(servico.loja_logo, "/images/loja-padrao.png");
+                const logoLoja = getMediaUrl(servico.loja_logo, IMAGEM_PADRAO_LOJA);
 
                 return (
                   <button

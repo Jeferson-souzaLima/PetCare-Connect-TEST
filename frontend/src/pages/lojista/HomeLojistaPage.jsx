@@ -30,7 +30,7 @@ export default function HomeLojistaPage() {
 
         
 
-        <Carousel tipo="lojista" />
+        <Carousel />
 
         <CategoryTabs
           selected={selectedCategory}

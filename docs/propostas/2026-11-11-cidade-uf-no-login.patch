@@ -1,0 +1,84 @@
+diff --git a/backend/petcare-api-v1/Controllers/authController.js b/backend/petcare-api-v1/Controllers/authController.js
+index 5cd8260..48ec792 100644
+--- a/backend/petcare-api-v1/Controllers/authController.js
++++ b/backend/petcare-api-v1/Controllers/authController.js
+@@ -127,7 +127,10 @@ exports.login = (req, res) => {
+                         id: usuario.id,
+                         nome: usuario.nome,
+                         email: usuario.email,
+-                        tipo: tipoUsuario
++                        tipo: tipoUsuario,
++                        // Só cidade e UF: a home mostra a cidade sem depender do perfil.
++                        cidade: usuario.cidade ?? null,
++                        uf: usuario.uf ?? null
+                     }
+                 });
+             }
+diff --git a/backend/petcare-api-v1/Tests/loginCidadeUf.test.js b/backend/petcare-api-v1/Tests/loginCidadeUf.test.js
+new file mode 100644
+index 0000000..df0fcf8
+--- /dev/null
++++ b/backend/petcare-api-v1/Tests/loginCidadeUf.test.js
+@@ -0,0 +1,62 @@
++const assert = require('node:assert/strict');
++const test = require('node:test');
++const bcrypt = require('bcrypt');
++const { simularBanco } = require('./apoioAcesso');
++
++const db = require('../db');
++const authController = require('../Controllers/authController');
++
++/*
++ * A home mostra a cidade do cliente: o login devolve cidade e UF (só esses dois
++ * campos do endereço), para não depender de abrir o perfil antes.
++ */
++const SENHA = 'senha-certa-123';
++const HASH = bcrypt.hashSync(SENHA, 4);
++const CONTAS = {
++    'cliente@exemplo.com': { id: 3, nome: 'C', email: 'cliente@exemplo.com', senha_hash: HASH, tipo: 'cliente', email_verificado: 1, cidade: 'Cotia', uf: 'SP', cep: '06700000', logradouro: 'Rua X', numero: '10', latitude: -23.6, longitude: -46.9, telefone: '11999999999' },
++    'semendereco@exemplo.com': { id: 4, nome: 'S', email: 'semendereco@exemplo.com', senha_hash: HASH, tipo: 'cliente', email_verificado: 1, cidade: null, uf: null },
++    'loja@exemplo.com': { id: 5, nome: 'L', email: 'loja@exemplo.com', senha_hash: HASH, tipo: 'lojista', email_verificado: 1, cidade: 'Cotia', uf: 'SP' }
++};
++
++function banco(t) {
++    return simularBanco(t, db, [
++        [/FROM usuarios WHERE email = \?/, (v) => (CONTAS[v[0]] ? [CONTAS[v[0]]] : [])],
++        [/FROM lojas WHERE usuario_id/, [{ id: 9 }]],
++        [/^\s*UPDATE usuarios/, { affectedRows: 1 }]
++    ]);
++}
++
++function login(email) {
++    return new Promise((resolve) => {
++        const res = {
++            statusCode: 200,
++            status(code) { this.statusCode = code; return this; },
++            json(corpo) { resolve({ status: this.statusCode, body: corpo }); return this; }
++        };
++        authController.login({ body: { email, senha: SENHA } }, res);
++    });
++}
++
++test('login do cliente devolve cidade e UF, sem o resto do endereço', async (t) => {
++    banco(t);
++    const r = await login('cliente@exemplo.com');
++    assert.equal(r.status, 200);
++    assert.equal(r.body.usuario.cidade, 'Cotia');
++    assert.equal(r.body.usuario.uf, 'SP');
++    for (const campo of ['cep', 'logradouro', 'numero', 'latitude', 'longitude', 'telefone', 'senha_hash']) {
++        assert.equal(r.body.usuario[campo], undefined, campo);
++    }
++});
++
++test('cliente sem endereço recebe cidade e UF nulas', async (t) => {
++    banco(t);
++    const r = await login('semendereco@exemplo.com');
++    assert.equal(r.body.usuario.cidade, null);
++    assert.equal(r.body.usuario.uf, null);
++});
++
++test('login do lojista não muda', async (t) => {
++    banco(t);
++    const r = await login('loja@exemplo.com');
++    assert.deepEqual(Object.keys(r.body.usuario).sort(), ['email', 'id', 'loja_id', 'nome', 'tipo']);
++});

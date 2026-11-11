@@ -1,4 +1,4 @@
-import { getMediaUrl } from "@/services/mediaUrl";
+import { getMediaUrl, IMAGEM_PADRAO_PRODUTO } from "@/services/mediaUrl";
 
 export default function CarrinhoItem({
   item,
@@ -19,7 +19,7 @@ export default function CarrinhoItem({
     currency: "BRL",
   });
 
-  const imagemProduto = getMediaUrl(item.imagem, "/images/produto-padrao.jpg");
+  const imagemProduto = getMediaUrl(item.imagem, IMAGEM_PADRAO_PRODUTO);
 
   return (
     <div className="flex gap-4 p-4 bg-white rounded-xl shadow-sm border">
