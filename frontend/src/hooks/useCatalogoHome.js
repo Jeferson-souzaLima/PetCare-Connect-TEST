@@ -474,6 +474,7 @@ export function useCatalogoHome() {
         lojas,
         servicos,
         modoBusca,
+        modoBuscaProdutos,
         temMaisProdutos,
         carregandoMaisProdutos,
         carregarMaisProdutos,

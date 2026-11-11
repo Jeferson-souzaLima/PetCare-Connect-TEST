@@ -19,7 +19,11 @@ function resultado(promessa, transformar) {
 export function useResumoCliente() {
   const { usuario } = useAuth();
   const ehCliente = usuario?.tipo === "cliente";
-  const [resumo, setResumo] = useState({ pets: INATIVO, agendamentos: INATIVO, pedidos: INATIVO });
+  const [resumo, setResumo] = useState(() =>
+    ehCliente
+      ? { pets: CARREGANDO, agendamentos: CARREGANDO, pedidos: CARREGANDO }
+      : { pets: INATIVO, agendamentos: INATIVO, pedidos: INATIVO }
+  );
 
   useEffect(() => {
     if (!ehCliente) {

@@ -8,7 +8,8 @@ test("proximosAgendamentos: só futuros e ativos, em ordem de data, até 3", () 
   const lista = [
     { id: 1, status: "confirmado", data_inicio: "2026-11-15T10:00:00" },
     { id: 2, status: "confirmado", data_inicio: "2026-11-10T10:00:00" }, // passado
-    { id: 3, status: "cancelado", data_inicio: "2026-11-12T10:00:00" },
+    { id: 3, status: "cancelado_cliente", data_inicio: "2026-11-12T10:00:00" },
+    { id: 10, status: "cancelado_loja", data_inicio: "2026-11-12T11:00:00" },
     { id: 4, status: "concluido", data_inicio: "2026-11-13T10:00:00" },
     { id: 5, status: "aguardando_pagamento", data_inicio: "2026-11-12T09:00:00" },
     { id: 6, status: "confirmado", data_inicio: null },

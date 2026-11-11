@@ -21,7 +21,8 @@ export default function NovaHomePage() {
     catalogo.latitude && catalogo.longitude ? { latitude: catalogo.latitude, longitude: catalogo.longitude } : null;
 
   return (
-    <div className="min-h-screen bg-pc-fundo text-pc-texto">
+    // pb-24 no celular: o rodapé não fica atrás da barra inferior fixa.
+    <div className="min-h-screen bg-pc-fundo pb-24 text-pc-texto md:pb-0">
       <a
         href="#conteudo-home"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-pc-pill focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-pc-verde-900 focus:shadow-pc-card"
@@ -31,28 +32,33 @@ export default function NovaHomePage() {
 
       <HomeHeader usuario={usuario} logout={logout} coords={coords} carregandoLocalizacao={catalogo.geoLoading} />
 
-      <div className="mx-auto flex max-w-[1440px] gap-6 px-4 pb-4 pt-4 md:px-6">
-        <HomeSidebar />
+      <main id="conteudo-home">
+        <h1 className="sr-only">PetCare Connect: produtos e serviços para o seu pet</h1>
 
-        <main id="conteudo-home" className="min-w-0 flex-1 space-y-5">
-          <HeroCarousel />
-          <AtalhosCategorias />
-          <CardsDestaque />
-          <VitrineProdutos
-            produtos={catalogo.produtos}
-            carregando={catalogo.loadingDados && catalogo.selectedCategory === "produtos"}
-            logado={Boolean(usuario)}
-          />
-        </main>
+        <div className="mx-auto flex max-w-[1440px] gap-6 px-4 pb-4 pt-4 md:px-6">
+          <HomeSidebar />
 
-        <HomeAside resumo={resumo} logado={usuario?.tipo === "cliente"} />
-      </div>
+          <div className="min-w-0 flex-1 space-y-5">
+            <HeroCarousel />
+            <AtalhosCategorias />
+            <CardsDestaque />
+            <VitrineProdutos
+              produtos={catalogo.produtos}
+              carregando={catalogo.loadingDados && catalogo.selectedCategory === "produtos"}
+              logado={Boolean(usuario)}
+              porProximidade={catalogo.modoBuscaProdutos === "proximidade"}
+            />
+          </div>
 
-      {/* Catálogo na largura total, no mesmo contêiner da home anterior (max-w-7xl),
-          para os cards compartilhados manterem o tamanho original. */}
-      <div className="mx-auto w-full max-w-7xl pb-28 md:pb-10">
-        <ExplorarCatalogo catalogo={catalogo} />
-      </div>
+          <HomeAside resumo={resumo} logado={usuario?.tipo === "cliente"} />
+        </div>
+
+        {/* Catálogo na largura total, no mesmo contêiner da home anterior (max-w-7xl),
+            para os cards compartilhados manterem o tamanho original. */}
+        <div className="mx-auto w-full max-w-7xl md:pb-10">
+          <ExplorarCatalogo catalogo={catalogo} />
+        </div>
+      </main>
 
       <Footer />
       <HomeBottomNav />

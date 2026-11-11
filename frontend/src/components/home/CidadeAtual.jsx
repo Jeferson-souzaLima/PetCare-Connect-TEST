@@ -23,7 +23,8 @@ export function CidadeAtual({ usuario, coords, carregando }) {
       {conteudo}
     </Link>
   ) : (
-    <span className={classes} aria-label={`Localização: ${texto}`}>
+    <span className={classes}>
+      <span className="sr-only">Localização: </span>
       {conteudo}
     </span>
   );

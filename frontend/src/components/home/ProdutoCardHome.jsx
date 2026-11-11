@@ -57,7 +57,7 @@ export function ProdutoCardHome({ produto, logado }) {
           onClick={adicionar}
           disabled={!podeComprar}
           aria-label={adicionado ? `${produto.nome} adicionado ao carrinho` : `Adicionar ${produto.nome} ao carrinho`}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-pc-verde-700 text-white disabled:opacity-40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-pc-verde-700 text-white disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pc-verde-900 focus-visible:ring-offset-2"
         >
           {adicionado ? <Check size={20} aria-hidden="true" /> : <ShoppingCart size={20} aria-hidden="true" />}
         </button>

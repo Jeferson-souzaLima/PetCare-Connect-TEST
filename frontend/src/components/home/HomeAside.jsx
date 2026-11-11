@@ -18,7 +18,7 @@ export function HomeAside({ resumo, logado }) {
         <section className="rounded-pc-card bg-white p-5 text-center shadow-pc-card">
           <UserRound size={32} aria-hidden="true" className="mx-auto text-pc-verde-700" />
           <h2 className="mt-2 text-base font-bold text-pc-texto">Entre para ver seus pets, pedidos e agendamentos</h2>
-          <Link to="/login" className="mt-3 inline-flex min-h-[44px] items-center rounded-pc-pill bg-pc-verde-700 px-5 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima">
+          <Link to="/login" className="mt-3 inline-flex min-h-[44px] items-center rounded-pc-pill bg-pc-verde-700 px-5 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pc-verde-900 focus-visible:ring-offset-2">
             Entrar
           </Link>
         </section>

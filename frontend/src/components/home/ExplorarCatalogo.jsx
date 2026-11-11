@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { CategoryTabs } from "@/components/navigation/CategoryTabs";
 import { ProductSection } from "@/components/sections/ProductSection";
 import { LojaSection } from "@/components/sections/LojaSection";
@@ -10,6 +10,8 @@ import { Alert } from "@/components/ui/Alert";
  * Catálogo por localização (abas Produtos, Lojas e Serviços), o mesmo da
  * home anterior. O JSX abaixo foi movido sem alteração de pages/HomePage.jsx.
  */
+const CATEGORIAS = ["produtos", "lojas", "servicos"];
+
 export function ExplorarCatalogo({ catalogo }) {
     const {
         selectedCategory,
@@ -32,14 +34,20 @@ export function ExplorarCatalogo({ catalogo }) {
     } = catalogo;
 
     const location = useLocation();
+    const [searchParams] = useSearchParams();
     const secaoRef = useRef(null);
+    const categoriaUrl = searchParams.get("categoria");
 
-    // Atalhos, banner e "Ver mais" levam a /?categoria=...#explorar.
+    // Atalhos, banner, menu e "Ver mais" levam a /?categoria=...#explorar.
+    // A cada navegação (location.key), a aba segue a URL, mesmo que a categoria
+    // seja a mesma de antes e o usuário tenha trocado de aba à mão.
     useEffect(() => {
+        if (CATEGORIAS.includes(categoriaUrl)) handleCategoryChange(categoriaUrl);
         if (location.hash === "#explorar") {
-            secaoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+            secaoRef.current?.scrollIntoView({ behavior: reduzir ? "auto" : "smooth", block: "start" });
         }
-    }, [location.key, location.hash]);
+    }, [location.key, location.hash, categoriaUrl, handleCategoryChange]);
 
     return (
         <section id="explorar" ref={secaoRef} aria-labelledby="titulo-explorar" className="scroll-mt-4">

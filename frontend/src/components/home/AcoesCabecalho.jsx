@@ -15,11 +15,18 @@ const BOTAO_ICONE =
 function MenuUsuario({ usuario, aoSair }) {
   const [aberto, setAberto] = useState(false);
   const ref = useRef(null);
+  const botaoRef = useRef(null);
 
   useEffect(() => {
     if (!aberto) return undefined;
     const fechar = (e) => {
-      if (e.type === "keydown" ? e.key === "Escape" : !ref.current?.contains(e.target)) setAberto(false);
+      if (e.type === "keydown") {
+        if (e.key !== "Escape") return;
+        setAberto(false);
+        botaoRef.current?.focus();
+      } else if (!ref.current?.contains(e.target)) {
+        setAberto(false);
+      }
     };
     document.addEventListener("mousedown", fechar);
     document.addEventListener("keydown", fechar);
@@ -34,9 +41,10 @@ function MenuUsuario({ usuario, aoSair }) {
   return (
     <div ref={ref} className="relative hidden md:block">
       <button
+        ref={botaoRef}
         type="button"
-        aria-haspopup="menu"
         aria-expanded={aberto}
+        aria-controls="menu-usuario-home"
         onClick={() => setAberto((a) => !a)}
         className="flex min-h-[44px] items-center gap-2 rounded-pc-pill px-3 text-sm font-medium text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/60"
       >
@@ -47,11 +55,11 @@ function MenuUsuario({ usuario, aoSair }) {
         <ChevronDown size={16} aria-hidden="true" />
       </button>
       {aberto && (
-        <ul role="menu" className="absolute right-0 z-40 mt-2 w-48 overflow-hidden rounded-pc-card bg-white py-1 text-sm text-pc-texto shadow-pc-card">
-          <li role="none"><Link role="menuitem" to="/perfil" className="block px-4 py-2.5 hover:bg-pc-fundo focus-visible:bg-pc-fundo focus-visible:outline-none">Meu perfil</Link></li>
-          <li role="none"><Link role="menuitem" to="/meus-pedidos" className="block px-4 py-2.5 hover:bg-pc-fundo focus-visible:bg-pc-fundo focus-visible:outline-none">Meus pedidos</Link></li>
-          <li role="none">
-            <button role="menuitem" type="button" onClick={aoSair} className="block w-full px-4 py-2.5 text-left hover:bg-pc-fundo focus-visible:bg-pc-fundo focus-visible:outline-none">
+        <ul id="menu-usuario-home" className="absolute right-0 z-40 mt-2 w-48 overflow-hidden rounded-pc-card bg-white py-1 text-sm text-pc-texto shadow-pc-card">
+          <li><Link to="/perfil" className="block px-4 py-2.5 hover:bg-pc-fundo focus-visible:bg-pc-fundo focus-visible:outline-none">Meu perfil</Link></li>
+          <li><Link to="/meus-pedidos" className="block px-4 py-2.5 hover:bg-pc-fundo focus-visible:bg-pc-fundo focus-visible:outline-none">Meus pedidos</Link></li>
+          <li>
+            <button type="button" onClick={aoSair} className="block w-full px-4 py-2.5 text-left hover:bg-pc-fundo focus-visible:bg-pc-fundo focus-visible:outline-none">
               Sair
             </button>
           </li>

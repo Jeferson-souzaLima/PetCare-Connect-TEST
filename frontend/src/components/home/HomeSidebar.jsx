@@ -17,7 +17,7 @@ const ITEM = "flex min-h-[44px] items-center gap-3 rounded-xl px-3 text-sm font-
 /** Menu lateral da home no desktop (a partir de 1024 px). */
 export function HomeSidebar() {
   return (
-    <aside className="hidden w-60 shrink-0 lg:block">
+    <div className="hidden w-60 shrink-0 lg:block">
       <nav aria-label="Menu da home" className="sticky top-4 rounded-pc-card bg-white p-3 shadow-pc-card">
         <ul className="space-y-1">
           {LINKS.map(({ rotulo, destino, icone: Icone, fim }) => (
@@ -46,6 +46,6 @@ export function HomeSidebar() {
           </ul>
         </div>
       </nav>
-    </aside>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 // Regras puras da nova home (sem React), testadas em home.test.js.
 
-const STATUS_ENCERRADOS = new Set(["cancelado", "concluido"]);
+// Status reais do backend (agendamentosController): cancelado_cliente, cancelado_loja, concluido.
+const STATUS_ENCERRADOS = new Set(["cancelado_cliente", "cancelado_loja", "concluido"]);
 
 function tempo(valor) {
   const ms = Date.parse(valor ?? "");
