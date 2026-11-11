@@ -11,13 +11,19 @@ const ITENS = [
 ];
 
 const ITEM =
-  "my-1.5 flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-pc-card text-[11px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pc-verde-700 focus-visible:ring-offset-2";
+  "flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-pc-pill px-1 text-[11px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pc-verde-700 focus-visible:ring-offset-2";
 
-/** Barra inferior exclusiva da home (abaixo de 768 px). O carrinho fica no cabeçalho. */
+/**
+ * Barra inferior exclusiva da home (abaixo de 768 px): pílula flutuante, com o item
+ * ativo também em pílula, como no mockup. O carrinho fica no cabeçalho.
+ */
 export function HomeBottomNav() {
   return (
-    <nav aria-label="Navegação principal" className="fixed inset-x-0 bottom-0 z-30 border-t border-black/5 bg-white/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-      <ul className="mx-auto flex max-w-md items-stretch justify-between">
+    <nav
+      aria-label="Navegação principal"
+      className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-md rounded-pc-pill border border-black/5 bg-white/95 p-1.5 shadow-[0_8px_24px_rgba(2,63,30,0.18)] backdrop-blur md:hidden"
+    >
+      <ul className="flex items-stretch justify-between gap-0.5">
         {ITENS.map(({ rotulo, destino, icone: Icone, fim, semAtivo }) => (
           <li key={rotulo} className="flex-1">
             {semAtivo ? (

@@ -21,8 +21,8 @@ export default function NovaHomePage() {
     catalogo.latitude && catalogo.longitude ? { latitude: catalogo.latitude, longitude: catalogo.longitude } : null;
 
   return (
-    // pb-24 no celular: o rodapé não fica atrás da barra inferior fixa.
-    <div className="min-h-screen bg-pc-fundo pb-24 text-pc-texto md:pb-0">
+    // pb-28 no celular: o rodapé não fica atrás da barra inferior flutuante.
+    <div className="min-h-screen bg-pc-fundo pb-28 text-pc-texto md:pb-0">
       <a
         href="#conteudo-home"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-pc-pill focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-pc-verde-900 focus:shadow-pc-card"
@@ -39,7 +39,10 @@ export default function NovaHomePage() {
           <HomeSidebar />
 
           <div className="min-w-0 flex-1 space-y-5">
-            <HeroCarousel />
+            {/* Celular: banner numa moldura branca que sobe sobre o verde do cabeçalho. */}
+            <div className="relative -mt-16 rounded-[22px] bg-white p-1.5 shadow-pc-card md:mt-0 md:rounded-none md:bg-transparent md:p-0 md:shadow-none">
+              <HeroCarousel />
+            </div>
             <AtalhosCategorias />
             <CardsDestaque />
             <VitrineProdutos
