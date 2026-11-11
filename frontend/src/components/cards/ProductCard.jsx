@@ -33,7 +33,7 @@ export function ProductCard({
       return;
     }
 
-    adicionarItem({
+    const entrou = adicionarItem({
       tipo: "produto",
       item_id: produto.id,
       nome_item: produto.nome,
@@ -43,6 +43,8 @@ export function ProductCard({
       loja_nome: produto.loja.nome,
       imagem: produto.imagens?.[0]?.caminho || null,
     });
+
+    if (!entrou) return;
 
     setAdicionado(true);
 

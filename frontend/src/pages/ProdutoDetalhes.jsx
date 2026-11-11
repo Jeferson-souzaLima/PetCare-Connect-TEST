@@ -150,7 +150,7 @@ export default function ProdutoDetalhes() {
   }
 
   function handleAdicionarAoCarrinho() {
-    adicionarItem({
+    const entrou = adicionarItem({
       tipo: "produto",
       item_id: produto.id,
       nome_item: produto.nome,
@@ -160,6 +160,8 @@ export default function ProdutoDetalhes() {
       loja_nome: produto.loja.nome,
       imagem: produto.imagens?.[0]?.caminho || null,
     });
+
+    if (!entrou) return;
 
     setToast(true);
 
@@ -169,7 +171,7 @@ export default function ProdutoDetalhes() {
   }
 
   function handleComprarAgora() {
-    adicionarItem({
+    const entrou = adicionarItem({
       tipo: "produto",
       item_id: produto.id,
       nome_item: produto.nome,
@@ -180,7 +182,7 @@ export default function ProdutoDetalhes() {
       imagem: produto.imagens?.[0]?.caminho || null,
     });
 
-    navigate("/carrinho");
+    if (entrou) navigate("/carrinho");
   }
 
   return (

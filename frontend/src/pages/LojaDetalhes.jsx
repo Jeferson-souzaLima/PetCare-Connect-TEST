@@ -159,7 +159,7 @@ export default function LojaDetalhes() {
       return;
     }
 
-    adicionarItem({
+    const entrou = adicionarItem({
       tipo: "produto",
       item_id: item.id,
       nome_item: item.nome,
@@ -169,6 +169,8 @@ export default function LojaDetalhes() {
       loja_nome: loja.nome_fantasia,
       imagem: item.imagens?.[0]?.caminho || null,
     });
+
+    if (!entrou) return;
 
     setNotificacao(`${item.nome} adicionado ao carrinho`);
 
