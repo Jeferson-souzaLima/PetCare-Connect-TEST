@@ -5,13 +5,13 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { urlBanner } from "@/utils/home";
 import { INTERVALO_SLIDES_MS, SLIDES_HOME } from "./slidesHome";
 
-function SlideHtml({ slide, fotoFalhou, aoFalharImagem }) {
+function SlideHtml({ slide, fotoFalhou, aoFalharImagem, comControles }) {
   const usarFoto = Boolean(slide.imagem) && !fotoFalhou;
   const fotoMobile = usarFoto && urlBanner(slide.imagem.mobile);
   const fotoDesktop = usarFoto && urlBanner(slide.imagem.desktop);
 
   return (
-    <div className="relative flex h-full min-h-[220px] items-center overflow-hidden bg-gradient-to-br from-pc-verde-900 to-pc-verde-700 px-5 py-6 sm:px-8 md:min-h-[300px]">
+    <div className={`relative flex h-full min-h-[220px] items-center overflow-hidden bg-gradient-to-br from-pc-verde-900 to-pc-verde-700 px-4 py-5 sm:px-8 md:min-h-[300px] md:py-6 ${comControles ? "pb-16 md:pb-16" : ""}`}>
       {fotoMobile && fotoDesktop && (
         <picture className="pointer-events-none absolute inset-y-0 right-0 w-1/2">
           <source media="(min-width: 768px)" srcSet={fotoDesktop} />
@@ -24,20 +24,20 @@ function SlideHtml({ slide, fotoFalhou, aoFalharImagem }) {
         </picture>
       )}
 
-      <div className="relative z-10 max-w-[62%] md:max-w-[55%]">
+      <div className={`relative z-10 ${fotoMobile && fotoDesktop ? "max-w-[62%] md:max-w-[55%]" : "max-w-xl"}`}>
         <span className="inline-block rounded-pc-pill bg-pc-lima/20 px-3 py-1 text-xs font-semibold text-pc-lima">
           {slide.chip}
         </span>
-        <h2 className="mt-3 text-xl font-bold leading-tight text-white sm:text-2xl md:text-4xl">
+        <h2 className="mt-2 text-xl font-bold leading-tight text-white sm:text-2xl md:text-4xl">
           {slide.titulo} <span className="text-pc-lima">{slide.destaque}</span>
         </h2>
         <p className="mt-2 text-sm text-white/90 md:text-base">{slide.texto}</p>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           {slide.acoes.map((acao) => (
             <Link
               key={acao.rotulo}
               to={acao.destino}
-              className={`inline-flex min-h-[44px] items-center rounded-pc-pill px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/60 ${
+              className={`inline-flex min-h-[44px] items-center justify-center whitespace-nowrap rounded-pc-pill px-2 text-sm font-semibold sm:px-5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/60 ${
                 acao.principal ? "bg-pc-lima text-pc-verde-900" : "bg-white text-pc-verde-900"
               }`}
             >
@@ -121,6 +121,7 @@ export function HeroCarousel() {
           <SlideHtml
             slide={slide}
             fotoFalhou={falhas.has(`${slide.id}-foto`)}
+            comControles={varios}
             aoFalharImagem={() => registrarFalha(`${slide.id}-foto`)}
           />
         ) : (

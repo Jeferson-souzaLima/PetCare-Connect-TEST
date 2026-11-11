@@ -31,7 +31,7 @@ export default function NovaHomePage() {
 
       <HomeHeader usuario={usuario} logout={logout} coords={coords} carregandoLocalizacao={catalogo.geoLoading} />
 
-      <div className="mx-auto flex max-w-[1440px] gap-6 px-4 pb-28 pt-4 md:px-6 md:pb-10">
+      <div className="mx-auto flex max-w-[1440px] gap-6 px-4 pb-4 pt-4 md:px-6">
         <HomeSidebar />
 
         <main id="conteudo-home" className="min-w-0 flex-1 space-y-5">
@@ -43,10 +43,15 @@ export default function NovaHomePage() {
             carregando={catalogo.loadingDados && catalogo.selectedCategory === "produtos"}
             logado={Boolean(usuario)}
           />
-          <ExplorarCatalogo catalogo={catalogo} />
         </main>
 
         <HomeAside resumo={resumo} logado={usuario?.tipo === "cliente"} />
+      </div>
+
+      {/* Catálogo na largura total, no mesmo contêiner da home anterior (max-w-7xl),
+          para os cards compartilhados manterem o tamanho original. */}
+      <div className="mx-auto w-full max-w-7xl pb-28 md:pb-10">
+        <ExplorarCatalogo catalogo={catalogo} />
       </div>
 
       <Footer />

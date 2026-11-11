@@ -9,7 +9,7 @@ export function BlocoResumo({ titulo, icone: Icone, estado, link, vazio, childre
           <Icone size={20} aria-hidden="true" className="text-pc-verde-700" />
           {titulo}
         </h2>
-        <Link to={link.destino} className="text-sm font-semibold text-pc-verde-700 hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-verde-700/40">
+        <Link to={link.destino} className="shrink-0 whitespace-nowrap text-sm font-semibold text-pc-verde-700 hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-verde-700/40">
           {link.rotulo}
         </Link>
       </div>

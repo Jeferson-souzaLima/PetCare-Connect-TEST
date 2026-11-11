@@ -46,6 +46,9 @@ export function ExplorarCatalogo({ catalogo }) {
             <h2 id="titulo-explorar" className="px-4 pt-2 text-lg font-bold text-pc-texto md:text-xl">
                 Explorar
             </h2>
+            {/* As abas (CategoryTabs, compartilhado) passam 4 px da borda em 375 px;
+                aqui elas rolam no próprio contêiner em vez de empurrar a página. */}
+            <div className="max-w-full overflow-x-auto">
                 <CategoryTabs
                     selected={selectedCategory}
                     onChange={handleCategoryChange}
@@ -154,6 +157,7 @@ export function ExplorarCatalogo({ catalogo }) {
                         )}
 
                 </div>
+            </div>
         </section>
     );
 }
