@@ -1,4 +1,4 @@
-import { getMediaUrl } from "@/services/mediaUrl";
+import { getMediaUrl, IMAGEM_PADRAO_PRODUTO } from "@/services/mediaUrl";
 import {
   ArrowRight,
   Minus,
@@ -65,7 +65,7 @@ export default function MiniCarrinho({
               (item) => {
                 const imagem = getMediaUrl(
                   item.imagem,
-                  "/images/produto-padrao.jpg"
+                  IMAGEM_PADRAO_PRODUTO
                 );
 
                 return (

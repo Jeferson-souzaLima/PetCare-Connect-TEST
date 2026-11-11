@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 import {
     verificarFavorito,
@@ -11,10 +13,21 @@ export function useFavorito(
     referenciaId
 ) {
 
+    const { usuario } = useAuth();
+    const navigate = useNavigate();
+    // Favoritos são da conta: sem sessão não há o que consultar (evita 401 de visitante).
+    const logado = Boolean(usuario);
+
     const [favoritado, setFavoritado] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(logado);
 
     useEffect(() => {
+
+        if (!logado) {
+            setFavoritado(false);
+            setLoading(false);
+            return;
+        }
 
         async function carregarStatus() {
 
@@ -41,11 +54,16 @@ export function useFavorito(
 
         carregarStatus();
 
-    }, [tipo, referenciaId]);
+    }, [tipo, referenciaId, logado]);
 
     
 
     async function toggleFavorito() {
+
+        if (!logado) {
+            navigate("/login");
+            return;
+        }
 
         try {
 

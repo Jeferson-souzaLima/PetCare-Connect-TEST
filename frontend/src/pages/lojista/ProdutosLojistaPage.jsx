@@ -1,4 +1,4 @@
-import { getMediaUrl } from "@/services/mediaUrl";
+import { getMediaUrl, IMAGEM_PADRAO_PRODUTO } from "@/services/mediaUrl";
 import { useEffect, useState } from "react";
 import api from "@/services/api";
 import { useAuth } from "../../hooks/useAuth";
@@ -253,7 +253,7 @@ export default function ProdutosLojistaPage() {
             >
               <div className="flex gap-4 items-center">
                 <img
-                  src={getMediaUrl(produto.imagens?.[0]?.caminho, "/images/produto-padrao.jpg")}
+                  src={getMediaUrl(produto.imagens?.[0]?.caminho, IMAGEM_PADRAO_PRODUTO)}
                   alt={produto.nome}
                   className="w-24 h-24 rounded-xl object-cover flex-shrink-0"
                 />
@@ -373,7 +373,7 @@ export default function ProdutosLojistaPage() {
                           className="relative"
                         >
                           <img
-                            src={getMediaUrl(imagem.caminho, "/images/produto-padrao.jpg")}
+                            src={getMediaUrl(imagem.caminho, IMAGEM_PADRAO_PRODUTO)}
                             alt="Imagem do produto"
                             className="w-full h-24 rounded-xl object-cover"
                           />

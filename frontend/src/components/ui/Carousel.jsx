@@ -1,40 +1,11 @@
-// src/components/Carousel.jsx
-
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-const bannersCliente = [
-  {
-    id: 1,
-    image: "/banners/banner1.png",
-    alt: "Banner 1",
-  },
-  {
-    id: 2,
-    image: "/banners/banner2.png",
-    alt: "Banner 2",
-  },
-  {
-    id: 3,
-    image: "/banners/banner3.png",
-    alt: "Banner 3",
-  },
-  {
-    id: 4,
-    image: "/banners/banner4.png",
-    alt: "Banner 4",
-  },
-];
-
 /*
- * Banners internos para lojistas.
- *
- * Os arquivos serão adicionados posteriormente em:
- * /public/banners/lojista/
- *
- * Por enquanto deixamos a estrutura preparada.
+ * Carrossel de banners da home do lojista (arquivos em public/banners/ban_loj*.jpg).
+ * A home do cliente usa o HeroCarousel, em components/home.
  */
-const bannersLojista = [
+const BANNERS = [
   {
     id: 1,
     image: "/banners/ban_loj1.jpg",
@@ -60,25 +31,14 @@ const bannersLojista = [
 const AUTO_PLAY_TIME = 4000;
 const MIN_SWIPE_DISTANCE = 50;
 
-export function Carousel({ tipo = "cliente" }) {
-  const banners =
-    tipo === "lojista"
-      ? bannersLojista
-      : bannersCliente;
+export function Carousel() {
+  const banners = BANNERS;
 
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
 
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
-
-  /*
-   * Garante que o índice atual continue válido
-   * caso a quantidade de banners mude.
-   */
-  useEffect(() => {
-    setCurrent(0);
-  }, [tipo]);
 
   const nextSlide = useCallback(() => {
     setCurrent((prev) => (prev + 1) % banners.length);
