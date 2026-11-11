@@ -3,7 +3,7 @@ import Layout from "../layout/Layout";
 import { useAuth } from "../hooks/useAuth";
 
 // Páginas públicas
-import HomePage from "../pages/HomePage";
+import NovaHomePage from "../pages/NovaHomePage";
 import HomeLojistaPage from "../pages/lojista/HomeLojistaPage";
 import ProdutoDetalhes from "../pages/ProdutoDetalhes";
 import LojaDetalhes from "../pages/LojaDetalhes";
@@ -43,11 +43,17 @@ import ServicosLojistaPage from "../pages/lojista/ServicosLojistaPage";
 function HomeRoute() {
   const { usuario } = useAuth();
 
+  // O lojista mantém a home e o Layout atuais; cliente e visitante usam a nova home,
+  // que tem cabeçalho e barra inferior próprios.
   if (usuario?.tipo === "lojista") {
-    return <HomeLojistaPage />;
+    return (
+      <Layout>
+        <HomeLojistaPage />
+      </Layout>
+    );
   }
 
-  return <HomePage />;
+  return <NovaHomePage />;
 }
 
 
@@ -61,11 +67,11 @@ export const router = createBrowserRouter([
   { path: "/verificar-email", element: <VerificarEmailPage /> },
   { path: "/termos", element: <TermosUsoPage /> },
   { path: "/privacidade", element: <PoliticaPrivacidadePage /> },
+  { path: "/", element: <HomeRoute /> },
 
   {
     element: <Layout />,
     children: [
-      { path: "/", element: <HomeRoute /> },
       { path: "/busca", element: <ResultadosBuscaPage /> },
       { path: "/produtos/:id", element: <ProdutoDetalhes /> },
       { path: "/lojas/:id", element: <LojaDetalhes /> },
