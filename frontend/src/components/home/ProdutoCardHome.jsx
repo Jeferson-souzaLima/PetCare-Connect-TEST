@@ -6,7 +6,7 @@ import { FavoriteButton } from "@/components/ui/FavoriteButton";
 import { getMediaUrl } from "@/services/mediaUrl";
 import { formatarMoeda } from "@/utils/formatadores";
 
-/** Card de produto da vitrine. Favorito só para quem está logado (evita 401 de visitante). */
+/** Card de produto da vitrine. O coração aparece só para quem está logado. */
 export function ProdutoCardHome({ produto, logado }) {
   const { adicionarItem } = useCarrinho();
   const [adicionado, setAdicionado] = useState(false);
