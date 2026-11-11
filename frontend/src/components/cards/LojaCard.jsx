@@ -1,4 +1,4 @@
-import { getMediaUrl } from "@/services/mediaUrl";
+import { getMediaUrl, IMAGEM_PADRAO_LOJA } from "@/services/mediaUrl";
 import { Link } from "react-router-dom";
 import { FavoriteButton } from "../ui/FavoriteButton";
 import { formatarDistancia } from "@/utils/formatarDistancia";
@@ -8,7 +8,7 @@ export function LojaCard({
   className = "",
 }) {
 
-  const imagemUrl = getMediaUrl(loja.imagem, "/images/loja-padrao.jpg");
+  const imagemUrl = getMediaUrl(loja.imagem, IMAGEM_PADRAO_LOJA);
 
   return (
     <Link
@@ -39,7 +39,8 @@ export function LojaCard({
         alt={loja.nome_fantasia}
         className="w-16 h-16 rounded-full object-cover mr-4"
         onError={(e) => {
-          e.target.src = "/images/loja-padrao.jpg";
+          // Troca uma vez só: se a imagem padrão também falhar, não entra em loop.
+          if (!e.currentTarget.src.endsWith(IMAGEM_PADRAO_LOJA)) e.currentTarget.src = IMAGEM_PADRAO_LOJA;
         }}
       />
 

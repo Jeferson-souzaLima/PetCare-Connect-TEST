@@ -1,4 +1,4 @@
-import { getMediaUrl } from "@/services/mediaUrl";
+import { getMediaUrl, IMAGEM_PADRAO_LOJA } from "@/services/mediaUrl";
 import { useState } from "react";
 import { Clock3, CreditCard, MapPin, Store } from "lucide-react";
 
@@ -20,7 +20,7 @@ export default function AgendamentoCabecalho({ loja, servico }) {
           {/* LOGO */}
           <div className="w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-2xl bg-gray-50 border border-gray-200 overflow-hidden flex items-center justify-center">
             <img
-              src={getMediaUrl(loja?.imagem, "/images/loja-padrao.png")}
+              src={getMediaUrl(loja?.imagem, IMAGEM_PADRAO_LOJA)}
               alt={loja?.nome_fantasia || "Loja"}
               className="w-full h-full object-contain p-2"
             />

@@ -1,5 +1,5 @@
 import { API_URL } from "@/services/apiUrl";
-import { getMediaUrl } from "@/services/mediaUrl";
+import { getMediaUrl, IMAGEM_PADRAO_LOJA, IMAGEM_PADRAO_PRODUTO } from "@/services/mediaUrl";
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -290,7 +290,7 @@ export default function LojaDetalhes() {
               <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-white border border-gray-200 shadow-sm overflow-hidden flex items-center justify-center">
                 <img
                   src={
-                    getMediaUrl(loja.imagem, "/images/loja-padrao.png")
+                    getMediaUrl(loja.imagem, IMAGEM_PADRAO_LOJA)
                   }
                   alt={loja.nome_fantasia}
                   className="w-full h-full object-cover"
@@ -455,7 +455,7 @@ export default function LojaDetalhes() {
 
                   const imagem = getMediaUrl(
                     item.imagens?.[0]?.caminho,
-                    "/images/produto-padrao.jpg"
+                    IMAGEM_PADRAO_PRODUTO
                   );
 
                   return (

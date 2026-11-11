@@ -1,4 +1,4 @@
-import { getMediaUrl } from "@/services/mediaUrl";
+import { getMediaUrl, IMAGEM_PADRAO_LOJA, IMAGEM_PADRAO_PRODUTO } from "@/services/mediaUrl";
 import { API_URL } from "@/services/apiUrl";
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -100,7 +100,7 @@ export default function ProdutoDetalhes() {
 
   const imagens = produto.imagens?.length
     ? produto.imagens
-    : [{ caminho: "/images/produto-padrao.jpg" }];
+    : [{ caminho: IMAGEM_PADRAO_PRODUTO }];
 
   const imagemAtual = imagens[imagemAtiva] || imagens[0];
 
@@ -207,7 +207,7 @@ export default function ProdutoDetalhes() {
                 <div className="relative">
                   <div className="w-full aspect-square md:aspect-[4/3] lg:aspect-square bg-gray-50 rounded-2xl flex items-center justify-center overflow-hidden">
                     <img
-                      src={getMediaUrl(imagemAtual.caminho, "/images/produto-padrao.jpg")}
+                      src={getMediaUrl(imagemAtual.caminho, IMAGEM_PADRAO_PRODUTO)}
                       alt={produto.nome}
                       className="w-full h-full object-contain p-5 md:p-8"
                     />
@@ -255,7 +255,7 @@ export default function ProdutoDetalhes() {
                           `}
                         >
                           <img
-                            src={getMediaUrl(img.caminho, "/images/produto-padrao.jpg")}
+                            src={getMediaUrl(img.caminho, IMAGEM_PADRAO_PRODUTO)}
                             alt={`${produto.nome} - imagem ${index + 1}`}
                             className="w-full h-full object-cover"
                           />
@@ -413,7 +413,7 @@ export default function ProdutoDetalhes() {
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-11 h-11 rounded-full bg-white border border-gray-200 overflow-hidden flex items-center justify-center shrink-0">
                         <img
-                          src={getMediaUrl(produto.loja?.logo, "/images/loja-padrao.png")}
+                          src={getMediaUrl(produto.loja?.logo, IMAGEM_PADRAO_LOJA)}
                           alt={`Logo da ${produto.loja.nome}`}
                           className="w-full h-full object-cover"
                         />

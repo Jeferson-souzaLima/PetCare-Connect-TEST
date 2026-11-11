@@ -1,4 +1,4 @@
-import { getMediaUrl } from "@/services/mediaUrl";
+import { getMediaUrl, IMAGEM_PADRAO_LOJA, IMAGEM_PADRAO_PRODUTO } from "@/services/mediaUrl";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingCart, Check } from "lucide-react";
@@ -15,10 +15,10 @@ export function ProductCard({
 
   const imagemProduto = getMediaUrl(
     produto.imagens?.[0]?.caminho,
-    "/images/produto-padrao.jpg"
+    IMAGEM_PADRAO_PRODUTO
   );
 
-  const logoLoja = getMediaUrl(produto.loja?.logo, "/images/loja-padrao.png");
+  const logoLoja = getMediaUrl(produto.loja?.logo, IMAGEM_PADRAO_LOJA);
 
   const precoFormatado = Number(produto.preco || 0).toLocaleString(
     "pt-BR",
