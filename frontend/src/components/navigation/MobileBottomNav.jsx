@@ -41,7 +41,9 @@ export function MobileBottomNav() {
   const longPressRef = useRef(false);
   const ignorarProximoClickRef = useRef(false);
   const startPositionRef = useRef({ x: 0, y: 0 });
-  const ultimoToastTimestampRef = useRef(null);
+  // Começa com o último item já existente: ao montar a barra (por exemplo, ao sair da
+  // nova home, que não usa esta barra), o aviso de um item antigo não reaparece.
+  const ultimoToastTimestampRef = useRef(ultimoItemAdicionado?.timestamp ?? null);
 
   const [menuAberto, setMenuAberto] = useState(null);
   const [pressionando, setPressionando] = useState(null);

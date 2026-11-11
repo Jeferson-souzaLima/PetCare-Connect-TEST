@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Imagens otimizadas da home: servidas pelo R2, nunca versionadas
+public/banners/home/
