@@ -6,6 +6,7 @@
 const TAMANHO_MAXIMO_TERMO = 80;
 
 // Tipos de serviço pelo nome (o banco não tem categoria de serviço; ver proposta de categorias).
+// As mesmas palavras escolhem a imagem padrão do serviço no site (frontend/src/utils/servicos.js).
 const PALAVRAS_POR_TIPO = {
     banho_tosa: ['banho', 'tosa', 'hidrata', 'escova'],
     saude: ['vacin', 'veterin', 'consulta', 'microchip', 'exame', 'castra', 'vermif']
@@ -72,3 +73,5 @@ exports.filtrosServicos = (query) => {
     if (tipo.erro) return { erro: tipo.erro };
     return { tipo: condicaoTipoServico(tipo.valor), termo: condicaoTermo('s.nome', termo) };
 };
+
+exports.PALAVRAS_POR_TIPO = PALAVRAS_POR_TIPO;

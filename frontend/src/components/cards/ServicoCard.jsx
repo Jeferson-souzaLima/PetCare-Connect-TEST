@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { getMediaUrl, IMAGEM_PADRAO_LOJA } from "@/services/mediaUrl";
 import { useNavigate } from "react-router-dom";
 import { FavoriteButton } from "../ui/FavoriteButton";
+import { ImagemSite } from "../ui/ImagemSite";
+import { imagemPadraoServico } from "@/utils/servicos";
 
 export function ServicoCard({
   servico,
@@ -8,6 +11,9 @@ export function ServicoCard({
 }) {
 
   const navigate = useNavigate();
+  // O serviço não tem foto própria: a faixa usa a imagem padrão do tipo (banho, tosa ou veterinário).
+  const foto = imagemPadraoServico(servico.nome);
+  const [fotoFalhou, setFotoFalhou] = useState(false);
 
   return (
     <div
@@ -35,6 +41,18 @@ export function ServicoCard({
         referenciaId={servico.id}
         className="absolute top-3 right-3 z-10"
       />
+
+      {foto && !fotoFalhou && (
+        <ImagemSite
+          celular={foto.celular}
+          desktop={foto.desktop}
+          larguras={[720, 1200]}
+          sizes="(min-width: 1024px) 50vw, (min-width: 768px) 60vw, 100vw"
+          alt={foto.alt}
+          aoFalhar={() => setFotoFalhou(true)}
+          className={`-mx-4 -mt-4 mb-4 block aspect-[12/5] w-[calc(100%+2rem)] max-w-none rounded-t-2xl object-cover lg:aspect-[3/1] ${foto.foco}`}
+        />
+      )}
 
       {/* Cabeçalho */}
 
