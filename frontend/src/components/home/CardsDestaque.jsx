@@ -5,14 +5,14 @@ const CARDS = [
   {
     titulo: "Agende Serviços",
     texto: "Banho · Tosa · Vet · Vacinas · Exames",
-    destino: "/?categoria=servicos#explorar",
+    destino: "/servicos",
     icone: CalendarHeart,
     fundo: "bg-pc-pessego",
   },
   {
     titulo: "Lojas perto de você",
     texto: "Veja as opções na sua região.",
-    destino: "/?categoria=lojas#explorar",
+    destino: "/lojas",
     icone: MapPin,
     fundo: "bg-pc-verde-100",
   },

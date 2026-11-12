@@ -11,8 +11,8 @@ export const SLIDES_HOME = [
     destaque: "no mesmo lugar!",
     texto: "Compre o que seu pet precisa e agende serviços com as melhores lojas da sua região.",
     acoes: [
-      { rotulo: "Comprar Produtos", destino: "/?categoria=produtos#explorar", principal: true },
-      { rotulo: "Agendar Serviços", destino: "/?categoria=servicos#explorar", principal: false },
+      { rotulo: "Comprar Produtos", destino: "/produtos", principal: true },
+      { rotulo: "Agendar Serviços", destino: "/servicos", principal: false },
     ],
     imagem: null, // ex.: { mobile: "hero-pets-mobile.webp", desktop: "hero-pets-desktop.webp", alt: "" }
   },
