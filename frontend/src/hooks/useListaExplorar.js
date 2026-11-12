@@ -11,12 +11,19 @@ const LISTA_GERAL = { lojas: buscarLojas, produtos: buscarProdutos, servicos: bu
 /** Uma página da lista do tipo pedido, conforme a fonte (filtrada na API, proximidade ou geral). */
 async function carregarPagina({ tipo, fonte, parametros, localizacao, pagina }) {
   if (fonte === "proximidade") {
-    const dados = await buscarConteudoPorLocalizacao(localizacao.latitude, localizacao.longitude, pagina, POR_PAGINA);
-    const resultado = dados?.[tipo];
-    // Nada perto na primeira página: mostra a lista geral em vez de uma tela vazia.
+    let resultado = null;
+    try {
+      const dados = await buscarConteudoPorLocalizacao(localizacao.latitude, localizacao.longitude, pagina, POR_PAGINA);
+      resultado = dados?.[tipo];
+    } catch (erro) {
+      // Na primeira página, a falha da proximidade cai na lista geral (abaixo); depois, sobe.
+      if (pagina > 1) throw erro;
+      console.error("Erro ao buscar perto da localização:", erro?.response?.status ?? erro?.message);
+    }
     if (pagina > 1 || resultado?.dados?.length) {
       return { itens: resultado?.dados ?? [], temMais: Boolean(resultado?.temMais), fonte };
     }
+    // Nada perto (ou a busca por proximidade falhou): lista geral em vez de tela vazia ou erro.
     return carregarPagina({ tipo, fonte: "geral", parametros, localizacao, pagina });
   }
   const resultado = await LISTA_GERAL[tipo](pagina, POR_PAGINA, fonte === "filtrada" ? parametros : {});
