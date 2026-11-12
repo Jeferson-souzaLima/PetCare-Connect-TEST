@@ -374,15 +374,25 @@ export function Header() {
                 </>
               ) : (
                 <>
-                  <ShoppingCart
-                    className="w-7 h-7 text-white cursor-pointer"
+                  {/* Botões de verdade (teclado e leitor de tela): sem a barra antiga,
+                      este é o acesso ao carrinho no celular. */}
+                  <button
+                    type="button"
                     onClick={() => navigate("/carrinho")}
-                  />
+                    aria-label="Carrinho"
+                    className="rounded-full text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  >
+                    <ShoppingCart className="w-7 h-7" aria-hidden="true" />
+                  </button>
 
-                  <User
-                    className="w-7 h-7 text-white cursor-pointer"
+                  <button
+                    type="button"
                     onClick={handlePerfil}
-                  />
+                    aria-label="Minha conta"
+                    className="rounded-full text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  >
+                    <User className="w-7 h-7" aria-hidden="true" />
+                  </button>
                 </>
               )}
 

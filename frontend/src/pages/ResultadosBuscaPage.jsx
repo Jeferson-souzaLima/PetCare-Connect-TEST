@@ -66,27 +66,6 @@ export default function ResultadosBuscaPage() {
       setLojas(data.lojas ?? []);
       setServicos(data.servicos ?? []);
 
-      if (disponivel) {
-        const termo = busca.trim();
-
-        if (termo) {
-          const historicoAtual = JSON.parse(
-            localStorage.getItem("petcare_historico_busca") || "[]"
-          );
-
-          const historicoAtualizado = [
-            termo,
-            ...historicoAtual.filter(
-              (item) => item.toLowerCase() !== termo.toLowerCase()
-            ),
-          ].slice(0, 8);
-
-          localStorage.setItem(
-            "petcare_historico_busca",
-            JSON.stringify(historicoAtualizado)
-          );
-        }
-      }
       } catch (error) {
         if (
           error.name !== "AbortError" &&

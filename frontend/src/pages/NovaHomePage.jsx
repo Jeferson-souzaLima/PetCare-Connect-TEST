@@ -4,8 +4,8 @@ import { CardsDestaque } from "@/components/home/CardsDestaque";
 import { ExplorarCatalogo } from "@/components/home/ExplorarCatalogo";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { HomeAside } from "@/components/home/HomeAside";
-import { HomeBottomNav } from "@/components/home/HomeBottomNav";
 import { HomeHeader } from "@/components/home/HomeHeader";
+import { BarraInferiorCliente } from "@/components/navigation/BarraInferiorCliente";
 import { HomeSidebar } from "@/components/home/HomeSidebar";
 import { VitrineProdutos } from "@/components/home/VitrineProdutos";
 import { useAuth } from "@/hooks/useAuth";
@@ -71,7 +71,7 @@ export default function NovaHomePage() {
       </main>
 
       <Footer />
-      <HomeBottomNav />
+      <BarraInferiorCliente />
     </div>
   );
 }
