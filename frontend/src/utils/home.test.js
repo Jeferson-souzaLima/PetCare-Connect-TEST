@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { pedidosRecentes, proximosAgendamentos, urlBanner } from "./home.js";
+import { pedidosRecentes, proximosAgendamentos, urlBanner, urlMidiaSite } from "./home.js";
 
 const AGORA = new Date("2026-11-11T12:00:00");
 
@@ -43,4 +43,11 @@ test("urlBanner: monta a URL do R2 e devolve null sem VITE_MEDIA_URL", () => {
   assert.equal(urlBanner("hero-pets-mobile.webp", undefined), null);
   assert.equal(urlBanner("hero-pets-mobile.webp", "   "), null);
   assert.equal(urlBanner("", "https://cdn.x"), null);
+});
+
+test("urlMidiaSite: caminho dentro do R2 do site", () => {
+  assert.equal(urlMidiaSite("site/home/lojas-perto-celular.webp", "https://cdn.x/"), "https://cdn.x/site/home/lojas-perto-celular.webp");
+  assert.equal(urlMidiaSite("/site/home/a.webp", "https://cdn.x"), "https://cdn.x/site/home/a.webp");
+  assert.equal(urlMidiaSite("site/home/a.webp", ""), null);
+  assert.equal(urlMidiaSite("", "https://cdn.x"), null);
 });

@@ -31,11 +31,16 @@ export function pedidosRecentes(lista, limite = 3) {
 }
 
 /**
- * URL pública de uma imagem da home no R2 (VITE_MEDIA_URL = R2_PUBLIC_URL).
- * Sem a variável, devolve null e a home mostra o fallback sem imagem.
+ * URL pública de um arquivo do site no R2 (VITE_MEDIA_URL = R2_PUBLIC_URL).
+ * Sem a variável, devolve null e a tela mostra o fallback sem imagem.
  */
-export function urlBanner(arquivo, base = import.meta.env?.VITE_MEDIA_URL) {
+export function urlMidiaSite(caminho, base = import.meta.env?.VITE_MEDIA_URL) {
   const raiz = typeof base === "string" ? base.trim().replace(/\/+$/, "") : "";
-  if (!raiz || !arquivo) return null;
-  return `${raiz}/banners/home/${arquivo}`;
+  if (!raiz || !caminho) return null;
+  return `${raiz}/${caminho.replace(/^\/+/, "")}`;
+}
+
+/** URL de um banner da home no R2 (ou null sem VITE_MEDIA_URL). */
+export function urlBanner(arquivo, base = import.meta.env?.VITE_MEDIA_URL) {
+  return arquivo ? urlMidiaSite(`banners/home/${arquivo}`, base) : null;
 }
