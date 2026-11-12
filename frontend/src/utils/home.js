@@ -30,15 +30,6 @@ export function pedidosRecentes(lista, limite = 3) {
     .slice(0, limite);
 }
 
-/** Texto do seletor de cidade e, quando não há localização, para onde levar a pessoa. */
-export function rotuloLocalizacao({ usuario, coords }) {
-  if (usuario?.cidade && usuario?.uf) {
-    return { texto: `${usuario.cidade} - ${usuario.uf}`, destino: null };
-  }
-  if (coords) return { texto: "Perto de você", destino: null };
-  return { texto: "Definir localização", destino: usuario ? "/perfil" : "/login" };
-}
-
 /**
  * URL pública de uma imagem da home no R2 (VITE_MEDIA_URL = R2_PUBLIC_URL).
  * Sem a variável, devolve null e a home mostra o fallback sem imagem.

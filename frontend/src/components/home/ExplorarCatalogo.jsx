@@ -30,7 +30,6 @@ export function ExplorarCatalogo({ catalogo }) {
         carregandoMaisServicos,
         carregarMaisServicos,
         loadingDados,
-        geoLoading,
     } = catalogo;
 
     const location = useLocation();
@@ -64,14 +63,6 @@ export function ExplorarCatalogo({ catalogo }) {
 
                 <div className="px-4 pt-4 pb-8">
 
-                    {geoLoading && (
-
-                        <p className="text-center text-sm text-gray-500">
-                            Obtendo sua localização...
-                        </p>
-
-                    )}
-                    
                     {loadingDados && (
 
                         <p className="text-center text-sm text-gray-500">

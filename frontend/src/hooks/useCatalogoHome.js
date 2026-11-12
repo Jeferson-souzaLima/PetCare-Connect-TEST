@@ -4,7 +4,7 @@ import { buscarProdutos } from "@/services/produtoService";
 import { buscarLojas } from "@/services/lojaService";
 import { buscarServicos } from "@/services/servicoService";
 import { buscarConteudoPorLocalizacao } from "@/services/geolocalizacaoService";
-import { useGeolocation } from "./useGeolocation";
+import { useLocalizacao } from "./useLocalizacao";
 
 const CATEGORIAS_VALIDAS = ["produtos", "lojas", "servicos"];
 
@@ -50,14 +50,10 @@ export function useCatalogoHome() {
 
     const [loadingDados, setLoadingDados] = useState(false);
 
-    const {
-
-        latitude,
-        longitude,
-
-        loading: geoLoading
-
-    } = useGeolocation();
+    // Localização escolhida pela pessoa no cabeçalho (sem ela, as listas gerais).
+    const { localizacao } = useLocalizacao();
+    const latitude = localizacao?.latitude ?? null;
+    const longitude = localizacao?.longitude ?? null;
 
     const handleCategoryChange = useCallback((categoria) => {
 
@@ -314,10 +310,6 @@ export function useCatalogoHome() {
             }
                 if (selectedCategory === "lojas") {
 
-                    if (geoLoading) {
-                        return;
-                    }
-
                     if (latitude && longitude) {
 
                         const data =
@@ -463,8 +455,7 @@ export function useCatalogoHome() {
     }, [
         selectedCategory,
         latitude,
-        longitude,
-        geoLoading
+        longitude
     ]);
 
     return {
@@ -485,7 +476,6 @@ export function useCatalogoHome() {
         carregandoMaisServicos,
         carregarMaisServicos,
         loadingDados,
-        geoLoading,
         latitude,
         longitude,
     };

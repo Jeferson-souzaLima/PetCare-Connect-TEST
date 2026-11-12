@@ -17,8 +17,6 @@ export default function NovaHomePage() {
   const { usuario, logout } = useAuth();
   const catalogo = useCatalogoHome();
   const resumo = useResumoCliente();
-  const coords =
-    catalogo.latitude && catalogo.longitude ? { latitude: catalogo.latitude, longitude: catalogo.longitude } : null;
 
   return (
     // Celular: espaço no fim da página = altura da barra inferior flutuante (~66 px), a distância
@@ -32,7 +30,7 @@ export default function NovaHomePage() {
         Pular para o conteúdo
       </a>
 
-      <HomeHeader usuario={usuario} logout={logout} coords={coords} carregandoLocalizacao={catalogo.geoLoading} />
+      <HomeHeader usuario={usuario} logout={logout} />
 
       {/* Celular: a página é uma folha clara de cantos arredondados que sobe sobre o verde do
           cabeçalho ao abrir (sem animação com "reduzir movimento"). O banner fica no topo da

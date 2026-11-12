@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { pedidosRecentes, proximosAgendamentos, rotuloLocalizacao, urlBanner } from "./home.js";
+import { pedidosRecentes, proximosAgendamentos, urlBanner } from "./home.js";
 
 const AGORA = new Date("2026-11-11T12:00:00");
 
@@ -35,25 +35,6 @@ test("pedidosRecentes: mais recentes primeiro, até 3", () => {
   ];
   assert.deepEqual(pedidosRecentes(lista).map((p) => p.id), [2, 4, 3]);
   assert.deepEqual(pedidosRecentes(null), []);
-});
-
-test("rotuloLocalizacao: cidade do perfil, perto de você ou definir localização", () => {
-  assert.deepEqual(rotuloLocalizacao({ usuario: { tipo: "cliente", cidade: "Cotia", uf: "SP" }, coords: null }), {
-    texto: "Cotia - SP",
-    destino: null,
-  });
-  assert.deepEqual(rotuloLocalizacao({ usuario: null, coords: { latitude: -23.6, longitude: -46.9 } }), {
-    texto: "Perto de você",
-    destino: null,
-  });
-  assert.deepEqual(rotuloLocalizacao({ usuario: { tipo: "cliente" }, coords: null }), {
-    texto: "Definir localização",
-    destino: "/perfil",
-  });
-  assert.deepEqual(rotuloLocalizacao({ usuario: null, coords: null }), {
-    texto: "Definir localização",
-    destino: "/login",
-  });
 });
 
 test("urlBanner: monta a URL do R2 e devolve null sem VITE_MEDIA_URL", () => {

@@ -4,7 +4,7 @@ import { BuscaHome } from "./BuscaHome";
 import { CidadeAtual } from "./CidadeAtual";
 
 /** Cabeçalho exclusivo da nova home (o Header das outras páginas não muda). */
-export function HomeHeader({ usuario, logout, coords, carregandoLocalizacao }) {
+export function HomeHeader({ usuario, logout }) {
   return (
     // No celular o verde vai de ponta a ponta, inclusive sob a barra de status (safe-area),
     // e continua abaixo da busca, onde a folha clara da página e o banner sobem sobre ele.
@@ -13,7 +13,7 @@ export function HomeHeader({ usuario, logout, coords, carregandoLocalizacao }) {
         <Link to="/" className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/60" aria-label="PetCare Connect, página inicial">
           <img src="/logo.png" alt="" className="h-10 w-auto md:h-12" />
         </Link>
-        <CidadeAtual usuario={usuario} coords={coords} carregando={carregandoLocalizacao} />
+        <CidadeAtual usuario={usuario} />
         <div className="order-last w-full md:order-none md:w-auto md:flex-1 md:px-4">
           <BuscaHome />
         </div>
