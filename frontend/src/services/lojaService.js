@@ -4,11 +4,12 @@ function authConfig(token) {
   return { headers: { Authorization: `Bearer ${token}` } };
 }
 
-export async function buscarLojas(page = 1, limit = 20) {
+export async function buscarLojas(page = 1, limit = 20, filtros = {}) {
   const response = await api.get('/lojas', {
     params: {
       page,
-      limit
+      limit,
+      ...filtros
     }
   });
 

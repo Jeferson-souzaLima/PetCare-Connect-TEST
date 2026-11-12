@@ -6,11 +6,53 @@ export const TIPOS_EXPLORAR = {
   servicos: { titulo: "Serviços", rota: "/servicos", placeholder: "Buscar serviços", vazio: "Nenhum serviço encontrado." },
 };
 
+// Um filtro por página, aplicado na API (a paginação continua certa).
+export const FILTROS_EXPLORAR = {
+  lojas: { parametro: "entrega", rotulo: "Entrega", opcoes: [{ valor: "", rotulo: "Todas" }, { valor: "1", rotulo: "Só as que entregam" }] },
+  produtos: {
+    parametro: "ordem",
+    rotulo: "Ordenar",
+    opcoes: [
+      { valor: "", rotulo: "Destaques" },
+      { valor: "preco_asc", rotulo: "Menor preço" },
+      { valor: "preco_desc", rotulo: "Maior preço" },
+    ],
+  },
+  servicos: {
+    parametro: "tipo",
+    rotulo: "Tipo",
+    opcoes: [
+      { valor: "", rotulo: "Todos" },
+      { valor: "banho_tosa", rotulo: "Banho e tosa" },
+      { valor: "saude", rotulo: "Saúde e vacinas" },
+      { valor: "outros", rotulo: "Outros" },
+    ],
+  },
+};
+
 const TAMANHO_MINIMO_BUSCA = 2;
 
-/** De onde vem a lista: texto buscado, lugares perto da localização escolhida ou lista geral. */
-export function fonteDaLista({ termo, localizacao }) {
-  if ((termo ?? "").trim().length >= TAMANHO_MINIMO_BUSCA) return "busca";
+function termoValido(termo) {
+  const limpo = (termo ?? "").trim();
+  return limpo.length >= TAMANHO_MINIMO_BUSCA ? limpo : null;
+}
+
+/** Filtro da página lido da URL, só com valores conhecidos. */
+export function filtrosDaUrl(tipo, searchParams) {
+  const { parametro, opcoes } = FILTROS_EXPLORAR[tipo];
+  const valor = searchParams.get(parametro);
+  return valor && opcoes.some((o) => o.valor === valor) ? { [parametro]: valor } : {};
+}
+
+/** Parâmetros da lista na API: texto buscado (2 letras ou mais) e o filtro. */
+export function parametrosDaLista({ termo, filtros }) {
+  const q = termoValido(termo);
+  return { ...(q ? { q } : {}), ...filtros };
+}
+
+/** De onde vem a lista: busca/filtro na API, lugares perto da localização escolhida ou lista geral. */
+export function fonteDaLista({ termo, filtros, localizacao }) {
+  if (Object.keys(parametrosDaLista({ termo, filtros })).length) return "filtrada";
   if (localizacao?.latitude != null && localizacao?.longitude != null) return "proximidade";
   return "geral";
 }

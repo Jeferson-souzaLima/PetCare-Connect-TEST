@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { NavLink, useSearchParams } from "react-router-dom";
 import { RotateCcw, Search, X } from "lucide-react";
 import { Footer } from "@/components/layout/Footer";
@@ -10,7 +10,7 @@ import { ServicosSection } from "@/components/sections/ServicosSection";
 import { useAuth } from "@/hooks/useAuth";
 import { useListaExplorar } from "@/hooks/useListaExplorar";
 import { useLocalizacao } from "@/hooks/useLocalizacao";
-import { TIPOS_EXPLORAR } from "@/utils/explorar";
+import { FILTROS_EXPLORAR, TIPOS_EXPLORAR, filtrosDaUrl } from "@/utils/explorar";
 import { rotuloLocalizacao } from "@/utils/localizacao";
 
 const ESPERA_DIGITACAO_MS = 350;
@@ -42,7 +42,26 @@ export default function ExplorarPage({ tipo }) {
   const [texto, setTexto] = useState(termoUrl);
   const campoRef = useRef(null);
   const config = TIPOS_EXPLORAR[tipo];
-  const lista = useListaExplorar(tipo, { termo: termoUrl, localizacao });
+  const filtros = filtrosDaUrl(tipo, searchParams);
+  const filtro = FILTROS_EXPLORAR[tipo];
+  const valorFiltro = filtros[filtro.parametro] ?? "";
+  const lista = useListaExplorar(tipo, { termo: termoUrl, filtros, localizacao });
+
+  // Atualiza um parâmetro da URL mantendo os outros (busca e filtro andam juntos).
+  const trocarParametro = useCallback(
+    (nome, valor) =>
+      setSearchParams(
+        (atuais) => {
+          const proximos = new URLSearchParams(atuais);
+          proximos.delete("buscar");
+          if (valor) proximos.set(nome, valor);
+          else proximos.delete(nome);
+          return proximos;
+        },
+        { replace: true }
+      ),
+    [setSearchParams]
+  );
 
   // Vindo do "Explorar" da barra (?buscar=1): o campo de busca já abre com o foco.
   useEffect(() => {
@@ -52,11 +71,9 @@ export default function ExplorarPage({ tipo }) {
   // A busca vai para a URL depois de uma pausa na digitação (dá para voltar e compartilhar o link).
   useEffect(() => {
     if (texto.trim() === termoUrl) return undefined;
-    const id = setTimeout(() => {
-      setSearchParams(texto.trim() ? { q: texto.trim() } : {}, { replace: true });
-    }, ESPERA_DIGITACAO_MS);
+    const id = setTimeout(() => trocarParametro("q", texto.trim()), ESPERA_DIGITACAO_MS);
     return () => clearTimeout(id);
-  }, [texto, termoUrl, setSearchParams]);
+  }, [texto, termoUrl, trocarParametro]);
 
   const perto = lista.fonte === "proximidade" ? rotuloLocalizacao({ localizacao, usuario }) : null;
 
@@ -110,9 +127,31 @@ export default function ExplorarPage({ tipo }) {
           )}
         </form>
 
-        <p aria-live="polite" className="mt-3 min-h-[1.25rem] text-sm text-pc-texto-suave">
+        <fieldset className="mt-3">
+          <legend className="sr-only">{filtro.rotulo}</legend>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {filtro.opcoes.map(({ valor, rotulo }) => {
+              const ativo = valorFiltro === valor;
+              return (
+                <button
+                  key={valor || "todos"}
+                  type="button"
+                  aria-pressed={ativo}
+                  onClick={() => trocarParametro(filtro.parametro, valor)}
+                  className={`inline-flex min-h-[36px] shrink-0 items-center rounded-pc-pill border px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pc-verde-700 focus-visible:ring-offset-2 ${
+                    ativo ? "border-pc-verde-700 bg-pc-verde-100 text-pc-verde-900" : "border-black/10 bg-white text-pc-texto-suave hover:bg-pc-verde-100"
+                  }`}
+                >
+                  {rotulo}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+
+        <p aria-live="polite" className="mt-2 min-h-[1.25rem] text-sm text-pc-texto-suave">
           {lista.estado === "carregando" && "Carregando…"}
-          {lista.estado !== "carregando" && lista.fonte === "busca" && `Resultados para "${termoUrl}"`}
+          {lista.estado !== "carregando" && termoUrl.trim().length >= 2 && `Resultados para "${termoUrl}"`}
           {lista.estado !== "carregando" && perto && `Perto de: ${perto}`}
         </p>
 

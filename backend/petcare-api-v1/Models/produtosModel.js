@@ -41,9 +41,24 @@ exports.getAll = (callback) => {
 // LISTAR PRODUTOS PAGINADOS (HOME)
 // DISTRIBUÍDOS ENTRE LOJAS
 // ===============================
-exports.getPaginados = (page, limit, callback) => {
+// filtros (opcional): { ordem: 'preco_asc' | 'preco_desc' | null, termo: { sql, valores } }
+exports.getPaginados = (page, limit, filtros, callback) => {
+
+    if (typeof filtros === 'function') {
+        callback = filtros;
+        filtros = {};
+    }
 
     const offset = (page - 1) * limit;
+    const termo = filtros.termo ?? { sql: '', valores: [] };
+    const ordemPreco = { preco_asc: 'ASC', preco_desc: 'DESC' }[filtros.ordem];
+    // Sem ordem pedida: produtos intercalados entre as lojas (como antes).
+    const ordemPaginacao = ordemPreco
+        ? `preco ${ordemPreco}, produto_id DESC`
+        : 'ordem_na_loja ASC, loja_id ASC, produto_id DESC';
+    const ordemFinal = ordemPreco
+        ? `pp.preco ${ordemPreco}, pp.produto_id DESC`
+        : 'pp.ordem_na_loja ASC, pp.loja_id ASC, pp.produto_id DESC';
 
     // 1. Conta os produtos válidos do catálogo público
     const queryTotal = `
@@ -53,10 +68,10 @@ exports.getPaginados = (page, limit, callback) => {
             ON l.id = p.loja_id
         WHERE
             p.ativo = 1
-            AND l.ativo = 1
+            AND l.ativo = 1${termo.sql}
     `;
 
-    db.query(queryTotal, (err, totalResults) => {
+    db.query(queryTotal, termo.valores, (err, totalResults) => {
 
         if (err) {
             return callback(err);
@@ -93,7 +108,7 @@ exports.getPaginados = (page, limit, callback) => {
 
                 WHERE
                     p.ativo = 1
-                    AND l.ativo = 1
+                    AND l.ativo = 1${termo.sql}
             ),
 
             produtos_paginados AS (
@@ -102,9 +117,7 @@ exports.getPaginados = (page, limit, callback) => {
                 FROM produtos_ordenados
 
                 ORDER BY
-                    ordem_na_loja ASC,
-                    loja_id ASC,
-                    produto_id DESC
+                    ${ordemPaginacao}
 
                 LIMIT ? OFFSET ?
             )
@@ -131,14 +144,12 @@ exports.getPaginados = (page, limit, callback) => {
                 ON pi.produto_id = pp.produto_id
 
             ORDER BY
-                pp.ordem_na_loja ASC,
-                pp.loja_id ASC,
-                pp.produto_id DESC
+                ${ordemFinal}
         `;
 
         db.query(
             queryProdutos,
-            [limit, offset],
+            [...termo.valores, limit, offset],
             (err, results) => {
 
                 if (err) {

@@ -1,5 +1,6 @@
 const Servicos = require('../Models/servicosModel');
 const { responderErroInterno } = require('../utils/erroInterno');
+const { filtrosServicos } = require('../utils/filtrosCatalogo');
 
 //
 // ===============================
@@ -13,7 +14,12 @@ exports.listarServicos = (req, res) => {
         return res.status(400).json({ message: 'Parâmetros de paginação inválidos.' });
     }
 
-    Servicos.getPaginados(page, limit, (err, resultado) => {
+    const filtros = filtrosServicos(req.query);
+    if (filtros.erro) {
+        return res.status(400).json({ mensagem: filtros.erro });
+    }
+
+    Servicos.getPaginados(page, limit, filtros, (err, resultado) => {
         if (err) return res.status(500).json({ message: 'Erro ao listar serviços.' });
         res.json(resultado);
     });

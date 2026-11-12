@@ -30,10 +30,20 @@ exports.getAll = (callback) => {
     db.query(sql, callback);
 };
 
-exports.getPaginados = (page, limit, callback) => {
+// filtros (opcional): { tipo: { sql, valores }, termo: { sql, valores } }
+exports.getPaginados = (page, limit, filtros, callback) => {
+    if (typeof filtros === 'function') {
+        callback = filtros;
+        filtros = {};
+    }
     const offset = (page - 1) * limit;
+    const vazio = { sql: '', valores: [] };
+    const tipo = filtros.tipo ?? vazio;
+    const termo = filtros.termo ?? vazio;
+    const condicoes = `s.ativo = 1 AND l.ativo = 1${tipo.sql}${termo.sql}`;
+    const valores = [...tipo.valores, ...termo.valores];
 
-    db.query('SELECT COUNT(*) AS total FROM servicos s INNER JOIN lojas l ON l.id = s.loja_id WHERE s.ativo = 1 AND l.ativo = 1', (countErr, countResults) => {
+    db.query(`SELECT COUNT(*) AS total FROM servicos s INNER JOIN lojas l ON l.id = s.loja_id WHERE ${condicoes}`, valores, (countErr, countResults) => {
         if (countErr) return callback(countErr);
 
         const total = Number(countResults[0].total);
@@ -42,12 +52,12 @@ exports.getPaginados = (page, limit, callback) => {
                    l.nome_fantasia AS loja_nome, l.imagem AS loja_imagem
             FROM servicos s
             INNER JOIN lojas l ON l.id = s.loja_id
-            WHERE s.ativo = 1 AND l.ativo = 1
+            WHERE ${condicoes}
             ORDER BY s.id DESC
             LIMIT ? OFFSET ?
         `;
 
-        db.query(sql, [limit, offset], (err, results) => {
+        db.query(sql, [...valores, limit, offset], (err, results) => {
             if (err) return callback(err);
             callback(null, {
                 dados: results,
