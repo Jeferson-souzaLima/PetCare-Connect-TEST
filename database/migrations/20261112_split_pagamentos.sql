@@ -43,7 +43,23 @@ ALTER TABLE pagamentos
   ADD COLUMN valor_comissao DECIMAL(10,2) NULL AFTER comissao_percentual,
   ADD COLUMN tarifa_gateway DECIMAL(10,2) NULL AFTER valor_comissao;
 
--- 3) Conferir:
+-- 3) Um pagamento do Mercado Pago só pode estar ligado a um registro.
+--    Protege o estorno e o webhook contra registros duplicados.
+--
+--    Antes, conferir se já existe duplicidade (deve retornar 0 linhas):
+--
+--      SELECT gateway_payment_id, COUNT(*) AS n
+--      FROM pagamentos
+--      WHERE gateway_payment_id IS NOT NULL
+--      GROUP BY gateway_payment_id
+--      HAVING n > 1;
+--
+--    Se retornar linhas, NÃO rode o comando abaixo: me envie o resultado.
+
+ALTER TABLE pagamentos
+  ADD UNIQUE KEY uq_pagamentos_gateway_payment_id (gateway_payment_id);
+
+-- 4) Conferir:
 --
 --   SHOW COLUMNS FROM lojas_mercadopago;
 --   SHOW COLUMNS FROM pagamentos;
