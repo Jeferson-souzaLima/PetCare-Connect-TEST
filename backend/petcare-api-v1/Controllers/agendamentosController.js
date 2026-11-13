@@ -50,8 +50,10 @@ function responderErroDeRecebimento(res, erro) {
  * da própria loja; serviço de outra loja é tratado como inexistente (null).
  */
 function buscarServicoParaAgendar(usuario, servicoId, callback) {
+    if (usuario.tipo === "cliente") return Servicos.getAgendavel(servicoId, callback);
+
     Servicos.getById(servicoId, (err, servico) => {
-        if (err || !servico || usuario.tipo !== "lojista") return callback(err, servico);
+        if (err || !servico) return callback(err, servico);
 
         podeAcessar(usuario, { donoId: null, lojaId: servico.loja_id }, (erroAcesso, pode) => {
             if (erroAcesso) return callback(erroAcesso);

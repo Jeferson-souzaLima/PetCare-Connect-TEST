@@ -12,22 +12,6 @@ const PRAZO_RESERVA_PEDIDO_MIN = 10;
 const { responderErroInterno, responderErroDoServico, registrarErroInterno } = require('../utils/erroInterno');
 
 // ===============================
-// ADMIN — ver todos pedidos
-// ===============================
-exports.getAll = (req, res) => {
-    const usuario = req.usuario;
-
-    if (usuario.tipo !== 'admin') {
-        return res.status(403).json({ mensagem: 'Acesso restrito ao administrador.' });
-    }
-
-    pedidosModel.getAll((err, results) => {
-        if (err) return responderErroInterno(res, err, "pedidosController.getAll");
-        res.json(results);
-    });
-};
-
-// ===============================
 // CLIENTE — ver apenas seus pedidos
 // ===============================
 exports.getMeusPedidos = (req, res) => {
@@ -184,55 +168,28 @@ exports.updateStatus = (req, res) => {
             return res.status(404).json({ mensagem: 'Pedido não encontrado.' });
         }
 
-        // ADMIN pode tudo
-        if (usuario.tipo === 'admin') {
-            return atualizar();
+        // A rota é só de lojista (o admin cancela por /admin/pedidos/:id/cancelar).
+        if (pedido.loja_id !== usuario.loja_id) {
+            return res.status(403).json({ mensagem: 'Você não pode alterar pedidos de outra loja.' });
         }
 
-        // LOJISTA só altera pedidos da própria loja
-        if (usuario.tipo === 'lojista') {
-            if (pedido.loja_id !== usuario.loja_id) {
-                return res.status(403).json({ mensagem: 'Você não pode alterar pedidos de outra loja.' });
-            }
-            return atualizar();
+        if (pedido.status === 'cancelado' || pedido.status === 'entregue') {
+            return res.status(400).json({ mensagem: 'Pedido já finalizado e não pode ser alterado.' });
+        }
+        const transicoes = {
+            pago: ['em_preparo'],
+            em_preparo: ['pronto_para_retirada', 'em_entrega'],
+            pronto_para_retirada: ['entregue'],
+            em_entrega: ['entregue']
+        };
+        if (!transicoes[pedido.status]?.includes(status)) {
+            return res.status(400).json({ mensagem: 'Transição de status inválida para este pedido.' });
         }
 
-        // Cliente nunca altera status
-        return res.status(403).json({ mensagem: 'Apenas lojistas podem alterar o status.' });
-
-        function atualizar() {
-
-            // ?? Proteção opcional: impedir alteração se já finalizado
-            if (pedido.status === 'cancelado' || pedido.status === 'entregue') {
-                return res.status(400).json({ mensagem: 'Pedido já finalizado e não pode ser alterado.' });
-            }
-            const transicoes = {
-                pago: ['em_preparo'],
-                em_preparo: ['pronto_para_retirada', 'em_entrega'],
-                pronto_para_retirada: ['entregue'],
-                em_entrega: ['entregue']
-            };
-            if (usuario.tipo === 'lojista' && !transicoes[pedido.status]?.includes(status)) {
-                return res.status(400).json({ mensagem: 'Transição de status inválida para este pedido.' });
-            }
-
-            const gravarStatus = (mensagem) => pedidosModel.updateStatus(id, status, (err) => {
-                if (err) return responderErroInterno(res, err, "pedidosController.atualizar");
-
-                res.json({ mensagem });
-            });
-
-            // Cancelamento (só o admin pode) de pedido pago: estorna antes de cancelar.
-            if (status === 'cancelado') {
-                return estornarVendaSePaga('pedido', Number(id))
-                    .then((estornou) => gravarStatus(estornou
-                        ? 'Pedido cancelado e pagamento estornado.'
-                        : 'Status atualizado com sucesso!'))
-                    .catch((erro) => responderErroDoServico(res, erro, 'pedidosController.atualizar', 'Não foi possível cancelar o pedido.'));
-            }
-
-            gravarStatus('Status atualizado com sucesso!');
-        }
+        pedidosModel.updateStatus(id, status, (updateErr) => {
+            if (updateErr) return responderErroInterno(res, updateErr, "pedidosController.updateStatus");
+            res.json({ mensagem: 'Status atualizado com sucesso!' });
+        });
     });
 };
 

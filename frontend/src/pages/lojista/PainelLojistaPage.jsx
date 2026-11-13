@@ -2,7 +2,6 @@ import {
   FaBoxOpen,
   FaClipboardList,
   FaChartLine,
-  FaBullhorn,
   FaUserEdit,
   FaRegCalendarAlt,
   FaHeadset,
@@ -11,6 +10,7 @@ import {
 } from "react-icons/fa";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import AvisoLojaPendente from "../../components/perfil/AvisoLojaPendente";
 
 export default function PainelLojistaPage() {
   const { usuario, logout } = useAuth();
@@ -41,6 +41,8 @@ export default function PainelLojistaPage() {
           </div>
         </div>
       </header>
+
+      <AvisoLojaPendente />
 
       {/* ================= MÉTRICAS ================= */}
       {/* <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 px-4 mb-12">
@@ -84,13 +86,6 @@ export default function PainelLojistaPage() {
           title="Relatórios"
           description="Visualizar vendas e desempenho"
           onClick={() => navigate("/lojista/relatorios")}
-        />
-
-        <ActionCard
-          icon={<FaBullhorn />}
-          title="Anúncios"
-          description="Promover produtos e serviços"
-          onClick={() => navigate("/lojista/anuncios")}
         />
 
         <ActionCard

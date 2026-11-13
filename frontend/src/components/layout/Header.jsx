@@ -64,11 +64,8 @@ export function Header() {
       return;
     }
 
-    navigate(
-      usuario.tipo === "lojista"
-        ? "/perfil-lojista"
-        : "/perfil"
-    );
+    const destinos = { lojista: "/perfil-lojista", admin: "/admin" };
+    navigate(destinos[usuario.tipo] || "/perfil");
   }
 
   function handlePainel() {

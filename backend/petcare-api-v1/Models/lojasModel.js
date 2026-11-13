@@ -10,7 +10,7 @@ const CAMPOS_PUBLICOS = `
 `;
 
 exports.getPublicaPorId = (id, callback) => {
-    db.query(`SELECT ${CAMPOS_PUBLICOS} FROM lojas WHERE id = ? LIMIT 1`, [id], (err, results) => {
+    db.query(`SELECT ${CAMPOS_PUBLICOS} FROM lojas WHERE id = ? AND ativo = 1 LIMIT 1`, [id], (err, results) => {
         if (err) return callback(err);
         callback(null, results[0] || null);
     });
@@ -67,13 +67,14 @@ exports.getPaginados = (page, limit, callback) => {
 };
 
 exports.update = (id, dados, callback) => {
-    const { nome_fantasia, cnpj, descricao, cidade, uf, endereco, ativo, imagem } = dados;
+    // "ativo" (aprovação da loja) só muda pelo painel do admin.
+    const { nome_fantasia, cnpj, descricao, cidade, uf, endereco, imagem } = dados;
     const sql = `
         UPDATE lojas
-        SET nome_fantasia = ?, cnpj = ?, descricao = ?, cidade = ?, uf = ?, endereco = ?, ativo = ?, imagem = ?
+        SET nome_fantasia = ?, cnpj = ?, descricao = ?, cidade = ?, uf = ?, endereco = ?, imagem = ?
         WHERE id = ?
     `;
-    db.query(sql, [nome_fantasia, cnpj, descricao, cidade, uf, endereco, ativo, imagem, id], callback);
+    db.query(sql, [nome_fantasia, cnpj, descricao, cidade, uf, endereco, imagem, id], callback);
 };
 
 exports.delete = (id, callback) => {
