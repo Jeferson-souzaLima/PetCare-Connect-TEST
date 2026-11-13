@@ -138,16 +138,22 @@ export function HeroCarousel() {
           <SlideHtml slide={slide} fotoFalhou={falhas.has(`${slide.id}-foto`)} aoFalharImagem={() => registrarFalha(`${slide.id}-foto`)} />
         ) : (
           slide && (
-            <picture>
-              <source media="(min-width: 640px)" srcSet={urlBanner(slide.arquivo.desktop)} />
-              <img
-                src={urlBanner(slide.arquivo.mobile)}
-                alt={slide.alt}
-                draggable={false}
-                className="block h-full w-full select-none object-cover"
-                onError={() => registrarFalha(slide.id)}
-              />
-            </picture>
+            <Link
+              to={slide.destino}
+              draggable={false}
+              className="block h-full w-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-pc-verde-700"
+            >
+              <picture>
+                <source media="(min-width: 640px)" srcSet={urlBanner(slide.arquivo.desktop)} />
+                <img
+                  src={urlBanner(slide.arquivo.mobile)}
+                  alt={slide.alt}
+                  draggable={false}
+                  className="block h-full w-full select-none object-cover"
+                  onError={() => registrarFalha(slide.id)}
+                />
+              </picture>
+            </Link>
           )
         )}
       </div>
