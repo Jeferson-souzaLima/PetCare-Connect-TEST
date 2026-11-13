@@ -1,6 +1,6 @@
 # Proposta: Termos de Uso — pagamentos, comissão, cancelamento e reembolso
 
-Status: **rascunho para revisão jurídica**. Nada aqui está publicado no site.
+Status: **texto aplicado** nos Termos e na Política (versão 2026-11-13). A revisão por advogado continua recomendada, principalmente para as perguntas da seção 3.
 
 Para: advogado(a) e sócios da PetCare Connect.
 

@@ -24,6 +24,7 @@ export default function PoliticaPrivacidadePage() {
         <li><strong>Pets:</strong> nome, espécie, raça, idade e foto que você cadastrar.</li>
         <li><strong>Uso da plataforma:</strong> pedidos, agendamentos, favoritos e histórico de buscas (este último fica só no seu navegador).</li>
         <li><strong>Pagamentos:</strong> valor e situação do pagamento. Os dados do cartão ou do Pix são informados diretamente no Mercado Pago; o PetCare Connect não recebe nem guarda esses dados.</li>
+        <li><strong>Conta Mercado Pago da loja:</strong> quando o lojista conecta a conta, guardamos a identificação da conta e a autorização de acesso concedida pelo Mercado Pago, sempre cifradas. Ela é usada só para criar as cobranças da loja e fazer reembolsos, e é apagada quando a loja desconecta a conta.</li>
         <li><strong>Lojistas:</strong> nome fantasia, razão social, CNPJ, telefone, endereço e descrição da loja, além das imagens publicadas.</li>
         <li><strong>Clientes atendidos fora da plataforma:</strong> quando a loja registra um agendamento manual, ela informa o nome e o telefone do cliente e o nome do pet. A loja é responsável por ter o direito de usar esses dados.</li>
         <li><strong>Dados técnicos:</strong> endereço IP, usado temporariamente para segurança (por exemplo, para limitar tentativas de login).</li>
@@ -32,9 +33,9 @@ export default function PoliticaPrivacidadePage() {
       <h2>3. Para que usamos e com base em quê</h2>
       <ul>
         <li><strong>Criar e manter sua conta, processar pedidos, agendamentos, entregas e pagamentos:</strong> execução do contrato com você (art. 7º, V, da LGPD).</li>
-        <li><strong>Enviar e-mails necessários ao serviço</strong>, como a confirmação de cadastro: execução do contrato.</li>
+        <li><strong>Enviar e-mails necessários ao serviço</strong>, como a confirmação de cadastro e a redefinição de senha: execução do contrato.</li>
         <li><strong>Segurança e prevenção de fraudes e abusos:</strong> legítimo interesse (art. 7º, IX).</li>
-        <li><strong>Cumprir obrigações legais e regulatórias:</strong> obrigação legal (art. 7º, II). [DEFINIR com o jurídico, incluindo a guarda de registros de acesso do Marco Civil da Internet, que ainda não está implementada.]</li>
+        <li><strong>Cumprir obrigações legais e regulatórias:</strong> obrigação legal (art. 7º, II), por exemplo a guarda de registros de pedidos e pagamentos e de registros de acesso exigida pelo Marco Civil da Internet.</li>
         <li><strong>Usar a localização do aparelho:</strong> sua autorização no navegador, que pode ser retirada a qualquer momento nas configurações dele. Ao alterar o endereço do perfil, as coordenadas gravadas são substituídas pelas do novo endereço; para excluí-las, use os direitos do item 7.</li>
       </ul>
       <p>Não vendemos seus dados pessoais.</p>
@@ -43,7 +44,7 @@ export default function PoliticaPrivacidadePage() {
       <ul>
         <li><strong>A loja que você escolher:</strong> recebe os dados necessários para atender seu pedido ou agendamento (nome, contato, endereço de entrega e dados do pet, quando for o caso).</li>
         <li><strong>Mercado Pago:</strong> processa os pagamentos.</li>
-        <li><strong>Provedores de infraestrutura</strong> que hospedam e operam a plataforma: Vercel (site), Render (servidor), Aiven (banco de dados), Cloudflare (rede e armazenamento de imagens) e o provedor de envio de e-mails [A DEFINIR].</li>
+        <li><strong>Provedores de infraestrutura</strong> que hospedam e operam a plataforma: Vercel (site), Render (servidor), Aiven (banco de dados), Cloudflare (rede e armazenamento de imagens) e Brevo (envio de e-mails).</li>
         <li><strong>OpenStreetMap (Nominatim) e ViaCEP:</strong> recebem o endereço ou o CEP informado para encontrar as coordenadas e completar o endereço.</li>
         <li><strong>Google Fonts:</strong> fornece as fontes do site; ao carregar a página, seu navegador se conecta ao Google, que recebe seu endereço IP.</li>
         <li><strong>Autoridades públicas</strong>, quando houver obrigação legal ou ordem judicial.</li>
@@ -52,15 +53,23 @@ export default function PoliticaPrivacidadePage() {
       <h2>5. Transferência para outros países</h2>
       <p>
         Alguns desses provedores podem armazenar ou processar dados fora do Brasil. Nesses casos, a
-        transferência segue o art. 33 da LGPD e as regras da ANPD. [CONFIRMAR as regiões dos servidores e
-        as garantias contratuais de cada provedor.]
+        transferência segue o art. 33 da LGPD e as regras da ANPD, com base nas garantias contratuais de
+        proteção de dados oferecidas por esses provedores.
       </p>
 
       <h2>6. Por quanto tempo guardamos</h2>
       <p>
-        Guardamos os dados enquanto sua conta estiver ativa e, depois disso, pelo tempo exigido por lei ou
-        necessário para o exercício de direitos (por exemplo, registros de pedidos e pagamentos).
-        [DEFINIR os prazos de cada tipo de dado com o jurídico.]
+        Guardamos os dados enquanto sua conta estiver ativa. Quando você exclui a conta, seus dados de
+        cadastro são anonimizados. Ficam guardados só os registros que a lei exige ou que são necessários
+        para o exercício de direitos:
+      </p>
+      <ul>
+        <li>pedidos, agendamentos e pagamentos: 5 anos, por obrigações fiscais e para atender reclamações de consumo;</li>
+        <li>registros de acesso à plataforma: 6 meses, conforme o Marco Civil da Internet;</li>
+        <li>dados técnicos de segurança, como o endereço IP usado para limitar tentativas de login: só pelo tempo da verificação, no máximo algumas horas.</li>
+      </ul>
+      <p>
+        Depois desses prazos, os dados são excluídos ou anonimizados.
       </p>
 
       <h2>7. Seus direitos</h2>
@@ -95,7 +104,7 @@ export default function PoliticaPrivacidadePage() {
       </p>
 
       <h2>10. Menores de idade</h2>
-      <p>O cadastro é destinado a maiores de 18 anos. [CONFIRMAR com o jurídico.]</p>
+      <p>O cadastro é destinado a maiores de 18 anos. Não coletamos intencionalmente dados de crianças e adolescentes.</p>
 
       <h2>11. Alterações desta política</h2>
       <p>
