@@ -29,6 +29,16 @@ function calcularComissao(tipoReferencia, base) {
     };
 }
 
+/**
+ * Quanto fica com a loja: total pago menos comissão e tarifa do Mercado Pago.
+ * Comissão/tarifa ausentes (vendas antigas ou tarifa ainda não informada) contam como zero.
+ */
+function calcularLiquido(valor, comissao, tarifa) {
+    const centavos = (numero) => Math.round(Number(numero || 0) * 100);
+    return (centavos(valor) - centavos(comissao) - centavos(tarifa)) / 100;
+}
+
 module.exports = {
-    calcularComissao
+    calcularComissao,
+    calcularLiquido
 };
