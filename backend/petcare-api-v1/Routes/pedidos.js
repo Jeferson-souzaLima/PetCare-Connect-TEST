@@ -30,10 +30,9 @@ router.put('/:id/status', authMiddleware, authorizeRoles('lojista'), pedidosCont
 router.get('/relatorio', authMiddleware, authorizeRoles('lojista'), pedidosController.relatorioPedidos);
 
 // ===============================
-// ADMIN (opcional)
+// ADMIN (o painel usa /admin/pedidos)
 // ===============================
 
-router.get('/admin', authMiddleware, authorizeRoles('admin'), pedidosController.getAll);
 router.delete('/:id', authMiddleware, authorizeRoles('admin'), pedidosController.deletarPedido);
 
 module.exports = router;

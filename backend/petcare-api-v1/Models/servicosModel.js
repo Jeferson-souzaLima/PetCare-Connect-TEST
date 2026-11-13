@@ -67,6 +67,15 @@ exports.getById = (id, callback) => {
     });
 };
 
+/** Serviço que um cliente pode agendar: de loja aprovada (ativa). */
+exports.getAgendavel = (id, callback) => {
+    db.query(
+        'SELECT s.* FROM servicos s INNER JOIN lojas l ON l.id = s.loja_id AND l.ativo = 1 WHERE s.id = ?',
+        [id],
+        (err, results) => (err ? callback(err) : callback(null, results[0]))
+    );
+};
+
 exports.getByLojaId = (lojaId, callback) => {
     db.query('SELECT * FROM servicos WHERE loja_id = ?', [lojaId], callback);
 };

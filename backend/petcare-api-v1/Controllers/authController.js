@@ -245,8 +245,8 @@ exports.registerLojista = (req, res) => {
 
             await consultar(
                 `INSERT INTO lojas
-                    (usuario_id, nome_fantasia, razao_social, cnpj, telefone, cidade, uf, descricao)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                    (usuario_id, nome_fantasia, razao_social, cnpj, telefone, cidade, uf, descricao, ativo)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)`,
                 [usuario.insertId, loja.nome_fantasia, loja.razao_social, loja.cnpj, loja.telefone, loja.cidade, loja.uf, loja.descricao]
             );
         }, (erroCadastro, resultado) => {

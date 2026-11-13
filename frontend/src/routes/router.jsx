@@ -12,6 +12,8 @@ import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import RegisterLojista from "../pages/RegisterLojista";
 import VerificarEmailPage from "../pages/VerificarEmailPage";
+import EsqueciSenhaPage from "../pages/EsqueciSenhaPage";
+import RedefinirSenhaPage from "../pages/RedefinirSenhaPage";
 import TermosUsoPage from "../pages/legal/TermosUsoPage";
 import PoliticaPrivacidadePage from "../pages/legal/PoliticaPrivacidadePage";
 
@@ -31,13 +33,15 @@ import AgendaLojistaPage from "../pages/lojista/AgendaLojistaPage";
 import ConfiguracoesAgendaPage from "../pages/lojista/ConfiguracoesAgendaPage";
 import DadosLojaPage from "../pages/lojista/DadosLojaPage";
 import AjudaSuportePage from "../pages/lojista/AjudaSuportePage";
-import AnunciosPage from "../pages/lojista/AnunciosPage";
 import RelatoriosPage from "../pages/lojista/RelatoriosPage";
 import MeusPedidosLojistaPage from "../pages/lojista/MeusPedidosPage";
 
 // Proteção
 import PrivateRoute from "../components/navigation/PrivateRoute";
 import ServicosLojistaPage from "../pages/lojista/ServicosLojistaPage";
+
+// Admin
+import AdminPage from "../pages/admin/AdminPage";
 
 
 function HomeRoute() {
@@ -65,6 +69,8 @@ export const router = createBrowserRouter([
   { path: "/register", element: <RegisterPage /> },
   { path: "/register-lojista", element: <RegisterLojista /> },
   { path: "/verificar-email", element: <VerificarEmailPage /> },
+  { path: "/esqueci-senha", element: <EsqueciSenhaPage /> },
+  { path: "/redefinir-senha", element: <RedefinirSenhaPage /> },
   { path: "/termos", element: <TermosUsoPage /> },
   { path: "/privacidade", element: <PoliticaPrivacidadePage /> },
   { path: "/", element: <HomeRoute /> },
@@ -197,18 +203,22 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/lojista/anuncios",
-        element: (
-          <PrivateRoute role="lojista">
-            <AnunciosPage />
-          </PrivateRoute>
-        ),
-      },
-      {
         path: "/lojista/relatorios",
         element: (
           <PrivateRoute role="lojista">
             <RelatoriosPage />
+          </PrivateRoute>
+        ),
+      },
+
+      // ===============================
+      // ADMIN
+      // ===============================
+      {
+        path: "/admin",
+        element: (
+          <PrivateRoute role="admin">
+            <AdminPage />
           </PrivateRoute>
         ),
       }

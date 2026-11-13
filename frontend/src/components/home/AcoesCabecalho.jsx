@@ -56,6 +56,9 @@ function MenuUsuario({ usuario, aoSair }) {
       </button>
       {aberto && (
         <ul id="menu-usuario-home" className="absolute right-0 z-40 mt-2 w-48 overflow-hidden rounded-pc-card bg-white py-1 text-sm text-pc-texto shadow-pc-card">
+          {usuario.tipo === "admin" && (
+            <li><Link to="/admin" className="block px-4 py-2.5 hover:bg-pc-fundo focus-visible:bg-pc-fundo focus-visible:outline-none">Administração</Link></li>
+          )}
           <li><Link to="/perfil" className="block px-4 py-2.5 hover:bg-pc-fundo focus-visible:bg-pc-fundo focus-visible:outline-none">Meu perfil</Link></li>
           <li><Link to="/meus-pedidos" className="block px-4 py-2.5 hover:bg-pc-fundo focus-visible:bg-pc-fundo focus-visible:outline-none">Meus pedidos</Link></li>
           <li>
