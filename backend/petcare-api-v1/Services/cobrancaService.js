@@ -3,7 +3,7 @@ const MercadoPagoService = require('./mercadoPagoService');
 const MercadoPagoOAuthService = require('./mercadoPagoOAuthService');
 const { calcularComissao } = require('./comissaoService');
 const { consultar, emTransacao } = require('../utils/transacao');
-const { registrarErroInterno } = require('../utils/erroInterno');
+const { registrarErroInterno, erroParaUsuario } = require('../utils/erroInterno');
 
 /*
  * Cria a cobrança de um pedido ou agendamento na conta Mercado Pago da loja,
@@ -55,7 +55,8 @@ async function iniciarCobranca({ tipoReferencia, referenciaId, lojaId, valor, ba
         // A tentativa não chegou ao cliente: não deve ficar pendente.
         await consultar("UPDATE pagamentos SET status = 'cancelado' WHERE id = ?", [pagamentoId])
             .catch(falha => registrarErroInterno('cobrancaService: cancelar tentativa sem preferência', falha));
-        throw erro;
+        // Erros do Mercado Pago trazem status 4xx e mensagens técnicas: não repassar ao cliente.
+        throw erroParaUsuario(502, 'Não foi possível iniciar o pagamento no Mercado Pago. Tente novamente em instantes.', erro);
     }
 }
 

@@ -12,6 +12,7 @@ const PedidosModel = require('../Models/pedidosModel');
 const AgendamentosModel = require('../Models/agendamentosModel');
 const MercadoPagoService = require('../Services/mercadoPagoService');
 const MercadoPagoOAuthService = require('../Services/mercadoPagoOAuthService');
+const EstornoService = require('../Services/estornoService');
 const servico = require('../Services/pagamentoStatusService');
 const controller = require('../Controllers/pagamentosController');
 
@@ -71,7 +72,8 @@ test('mapeia os status do Mercado Pago para os status internos', () => {
     for (const s of ['pending', 'in_process', 'in_mediation']) {
         assert.equal(servico.mapearStatusMercadoPago(s), 'pendente');
     }
-    assert.equal(servico.mapearStatusMercadoPago('refunded'), null);
+    assert.equal(servico.mapearStatusMercadoPago('refunded'), 'estornado');
+    assert.equal(servico.mapearStatusMercadoPago('charged_back'), null);
     assert.equal(servico.mapearStatusMercadoPago('constructor'), null);
 });
 
@@ -128,16 +130,37 @@ test('pagamento aprovado de agendamento confirma o agendamento', (t, done) => {
     );
 });
 
-test('pagamento aprovado depois do prazo não reconfirma o agendamento e avisa no log', (t, done) => {
+test('pagamento aprovado depois do prazo não reconfirma o agendamento e é estornado', (t, done) => {
     silenciarLogs(t);
     simularModelos(t, { agendamentoAfetado: 0 });
+    const estornar = t.mock.method(EstornoService, 'estornarPagamento', async () => {});
 
     servico.registrarResultadoPagamento(
-        { id: 3, tipo_referencia: 'agendamento', referencia_id: 9 },
+        { id: 3, tipo_referencia: 'agendamento', referencia_id: 9, valor_comissao: '8.00', loja_id: 4 },
         555,
         'aprovado',
         () => {
-            assert.match(console.warn.mock.calls[0].arguments[0], /Verificar estorno/);
+            const { pagamento } = estornar.mock.calls[0].arguments[0];
+            assert.equal(pagamento.id, 3);
+            assert.equal(pagamento.gateway_payment_id, '555');
+            done();
+        }
+    );
+});
+
+test('pedido aprovado com reserva vencida é estornado; falha no estorno fica no log', (t, done) => {
+    silenciarLogs(t);
+    simularModelos(t);
+    t.mock.method(PedidosModel, 'confirmarPagamento', (id, cb) => cb(null, { affectedRows: 0 }));
+    t.mock.method(EstornoService, 'estornarPagamento', async () => { throw new Error('mp fora'); });
+
+    servico.registrarResultadoPagamento(
+        { id: 7, tipo_referencia: 'pedido', referencia_id: 42 },
+        123,
+        'aprovado',
+        () => {
+            const logs = console.error.mock.calls.map(c => String(c.arguments[0]));
+            assert.ok(logs.some(l => /ESTORNO MANUAL NECESSÁRIO/.test(l)));
             done();
         }
     );
@@ -284,6 +307,22 @@ test('webhook de pagamento antigo (conta da plataforma) continua funcionando', a
         ['updateStatus', 11, 'aprovado'],
         ['confirmarPagamento', 5]
     ]);
+});
+
+test('aviso repetido de pagamento já aprovado é ignorado (não vira estorno)', async (t) => {
+    silenciarLogs(t);
+    process.env.MP_WEBHOOK_SECRET = SEGREDO;
+    simularContas(t);
+    const chamadas = simularModelos(t, { pagamentoComLoja: { ...PAGAMENTO_SPLIT, status: 'aprovado' } });
+    const estornar = t.mock.method(EstornoService, 'estornarPagamento', async () => {});
+    t.mock.method(MercadoPagoService, 'buscarPagamento', async () => ({
+        id: 999, status: 'approved', external_reference: 'pagamento:11', transaction_amount: 59.9
+    }));
+
+    await chamarWebhook(requisicaoAssinada('999', 777));
+
+    assert.deepEqual(chamadas, [['getComLoja', 11]]);
+    assert.equal(estornar.mock.callCount(), 0);
 });
 
 test('webhook com valor divergente não altera nada', async (t) => {

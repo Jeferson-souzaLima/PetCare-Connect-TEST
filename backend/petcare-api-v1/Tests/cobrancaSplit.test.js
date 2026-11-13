@@ -138,7 +138,7 @@ test('falha ao criar a preferência cancela a tentativa', async (t) => {
 
     await assert.rejects(iniciarCobranca({
         tipoReferencia: 'agendamento', referenciaId: 3, lojaId: 4, valor: 80, baseComissao: 80, itens: ITENS
-    }), /mp fora do ar/);
+    }), (erro) => erro.status === 502 && erro.paraUsuario === true && !/mp fora do ar/.test(erro.message));
 
     assert.deepEqual(consultas.at(-1).values, [56]);
 });

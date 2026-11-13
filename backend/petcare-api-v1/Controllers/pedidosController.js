@@ -5,6 +5,7 @@ const {
     calcularFrete
 } = require('../Services/pedidoCheckoutService');
 const { garantirLojaRecebeOnline, iniciarCobranca } = require('../Services/cobrancaService');
+const { estornarVendaSePaga } = require('../Services/estornoService');
 
 // Mesmo prazo da reserva de estoque (pedidos.reserva_expira_em).
 const PRAZO_RESERVA_PEDIDO_MIN = 10;
@@ -215,11 +216,22 @@ exports.updateStatus = (req, res) => {
                 return res.status(400).json({ mensagem: 'Transição de status inválida para este pedido.' });
             }
 
-            pedidosModel.updateStatus(id, status, (err, result) => {
+            const gravarStatus = (mensagem) => pedidosModel.updateStatus(id, status, (err) => {
                 if (err) return responderErroInterno(res, err, "pedidosController.atualizar");
 
-                res.json({ mensagem: 'Status atualizado com sucesso!' });
+                res.json({ mensagem });
             });
+
+            // Cancelamento (só o admin pode) de pedido pago: estorna antes de cancelar.
+            if (status === 'cancelado') {
+                return estornarVendaSePaga('pedido', Number(id))
+                    .then((estornou) => gravarStatus(estornou
+                        ? 'Pedido cancelado e pagamento estornado.'
+                        : 'Status atualizado com sucesso!'))
+                    .catch((erro) => responderErroDoServico(res, erro, 'pedidosController.atualizar', 'Não foi possível cancelar o pedido.'));
+            }
+
+            gravarStatus('Status atualizado com sucesso!');
         }
     });
 };
@@ -289,13 +301,20 @@ exports.cancelarPeloCliente = (req, res) => {
                 return res.json({ mensagem: 'Pedido cancelado e estoque liberado.' });
             });
         }
-        db.query("UPDATE pedidos SET status = 'cancelado', cancelado_em = NOW() WHERE id = ?", [pedidoId], (updateErr) => {
-            if (updateErr) return res.status(500).json({ mensagem: 'Erro ao cancelar pedido.' });
-            db.query("INSERT INTO historico_status (tipo, referencia_id, status) VALUES ('pedido', ?, 'cancelado')", [pedidoId], (histErr) => {
-                if (histErr) return res.status(500).json({ mensagem: 'Pedido cancelado, mas o histórico não pôde ser registrado.' });
-                return res.json({ mensagem: 'Pedido cancelado. Caso o pagamento tenha sido aprovado, o reembolso será tratado manualmente.' });
-            });
-        });
+        // Pedido pago e ainda não preparado: estorna primeiro, depois cancela e devolve o estoque.
+        estornarVendaSePaga('pedido', pedidoId)
+            .then((estornou) => pedidosModel.cancelarPago(pedidoId, (cancelErr, cancelou) => {
+                if (cancelErr || !cancelou) {
+                    registrarErroInterno(`pedidosController.cancelarPeloCliente: pedido ${pedidoId} estornado mas não cancelado`, cancelErr || new Error('status mudou durante o cancelamento'));
+                    return res.status(500).json({ mensagem: 'O pagamento foi estornado, mas não foi possível concluir o cancelamento. Nossa equipe vai verificar.' });
+                }
+                return res.json({
+                    mensagem: estornou
+                        ? 'Pedido cancelado. O valor será devolvido pelo Mercado Pago na mesma forma de pagamento.'
+                        : 'Pedido cancelado.'
+                });
+            }))
+            .catch((erro) => responderErroDoServico(res, erro, 'pedidosController.cancelarPeloCliente', 'Não foi possível cancelar o pedido.'));
     });
 };
 

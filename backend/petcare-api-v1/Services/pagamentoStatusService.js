@@ -3,6 +3,7 @@ const PedidosModel = require('../Models/pedidosModel');
 const AgendamentosModel = require('../Models/agendamentosModel');
 const MercadoPagoService = require('./mercadoPagoService');
 const MercadoPagoOAuthService = require('./mercadoPagoOAuthService');
+const EstornoService = require('./estornoService');
 const { registrarErroInterno } = require('../utils/erroInterno');
 
 /*
@@ -16,7 +17,8 @@ const STATUS_MERCADO_PAGO = {
     expired: 'expirado',
     pending: 'pendente',
     in_process: 'pendente',
-    in_mediation: 'pendente'
+    in_mediation: 'pendente',
+    refunded: 'estornado'
 };
 
 /** Retorna o status interno equivalente, ou null quando o status não é mapeado. */
@@ -39,14 +41,35 @@ function valorConfere(valorPago, valorEsperado) {
  * Reflete o novo status do pagamento no pedido ou agendamento de origem.
  * Sempre chama `concluir()` ao final, com ou sem erro (os erros são registrados em log).
  */
+/*
+ * Pagamento aprovado que não confirmou a venda (prazo vencido, ou o cliente
+ * pagou duas tentativas): o dinheiro não pode ficar com a loja sem a venda.
+ * Estorna automaticamente; se falhar, fica registrado para ação manual.
+ */
+function estornarPagamentoSemVenda(pagamentoInterno, motivo, concluir) {
+    console.warn(`${motivo} Estornando pagamento.`, {
+        pagamento_id: pagamentoInterno.id,
+        referencia_id: pagamentoInterno.referencia_id
+    });
+
+    EstornoService.estornarPagamento({ pagamento: pagamentoInterno })
+        .catch(erro => registrarErroInterno(`pagamentoStatusService: ESTORNO MANUAL NECESSÁRIO (pagamento ${pagamentoInterno.id})`, erro))
+        .finally(concluir);
+}
+
 function aplicarStatusNaReferencia(pagamentoInterno, novoStatus, concluir) {
 
     if (pagamentoInterno.tipo_referencia === 'pedido') {
 
         if (novoStatus === 'aprovado') {
             return PedidosModel.confirmarPagamento(pagamentoInterno.referencia_id, (erro, resultado) => {
-                if (erro) registrarErroInterno('pagamentoStatusService: confirmar pedido após pagamento', erro);
-                if (!erro && resultado.affectedRows === 0) console.warn('Pedido não confirmado: reserva expirada ou status incompatível.', pagamentoInterno.referencia_id);
+                if (erro) {
+                    registrarErroInterno('pagamentoStatusService: confirmar pedido após pagamento', erro);
+                    return concluir();
+                }
+                if (resultado.affectedRows === 0) {
+                    return estornarPagamentoSemVenda(pagamentoInterno, 'Pedido não confirmado: reserva expirada ou pedido já pago/cancelado.', concluir);
+                }
                 return concluir();
             });
         }
@@ -67,8 +90,7 @@ function aplicarStatusNaReferencia(pagamentoInterno, novoStatus, concluir) {
                     }
 
                     if (resultado.affectedRows === 0) {
-                        console.warn('Agendamento não confirmado: prazo de pagamento vencido ou status incompatível. Verificar estorno.', pagamentoInterno.referencia_id);
-                        return concluir();
+                        return estornarPagamentoSemVenda(pagamentoInterno, 'Agendamento não confirmado: prazo de pagamento vencido ou agendamento já pago/cancelado.', concluir);
                     }
 
                     console.log('Agendamento confirmado após pagamento:', pagamentoInterno.referencia_id);
@@ -151,7 +173,11 @@ function registrarResultadoPagamento(pagamentoInterno, gatewayPaymentId, novoSta
                         status: novoStatus
                     });
 
-                    return aplicarStatusNaReferencia(pagamentoInterno, novoStatus, concluir);
+                    return aplicarStatusNaReferencia(
+                        { ...pagamentoInterno, gateway_payment_id: String(gatewayPaymentId) },
+                        novoStatus,
+                        concluir
+                    );
                 }
             );
         }
@@ -243,6 +269,15 @@ async function processarNotificacaoPagamento({ paymentId, mpUserId }) {
 
     if (!novoStatus) {
         console.warn('Status Mercado Pago não mapeado:', pagamentoMercadoPago.status);
+        return;
+    }
+
+    /*
+     * O Mercado Pago avisa o mesmo pagamento mais de uma vez. Aviso repetido
+     * não é reprocessado (senão um aprovado repetido seria tratado como
+     * pagamento sem venda), e estornado é definitivo.
+     */
+    if (pagamentoInterno.status === novoStatus || pagamentoInterno.status === 'estornado') {
         return;
     }
 

@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const { MercadoPagoConfig, OAuth } = require('mercadopago');
 const LojasMercadoPagoModel = require('../Models/lojasMercadoPagoModel');
 const { cifrar, decifrar } = require('../utils/criptografiaToken');
-const { registrarErroInterno } = require('../utils/erroInterno');
+const { registrarErroInterno, erroParaUsuario } = require('../utils/erroInterno');
 const { erroDeNegocio } = require('../utils/transacao');
 const { COMISSAO_PERCENTUAL } = require('../Config/financeiro');
 
@@ -25,7 +25,7 @@ function configuracaoOAuth() {
     };
 
     if (!config.clientId || !config.clientSecret || !config.redirectUri) {
-        throw erroDeNegocio(503, 'A conexão com o Mercado Pago ainda não está disponível.');
+        throw erroParaUsuario(503, 'A conexão com o Mercado Pago ainda não está disponível.');
     }
 
     return config;

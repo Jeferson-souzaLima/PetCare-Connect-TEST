@@ -119,32 +119,14 @@ exports.cancelarReservasExpiradas = (callback) => {
     });
 };
 
-exports.cancelarReservaExpirada = (id, callback) => {
+/*
+ * Cancela o pedido e devolve o estoque, numa transação, se ele ainda estiver
+ * na situação de "condicao" (SQL fixo, definido abaixo). callback(err, cancelou).
+ */
+function cancelarComDevolucao(id, condicao, callback) {
     db.beginTransaction((erro) => {
         if (erro) return callback(erro);
-        db.query("SELECT id FROM pedidos WHERE id = ? AND status = 'aguardando_pagamento' AND reserva_expira_em < NOW() FOR UPDATE", [id], (err, pedidos) => {
-            if (err || !pedidos.length) return db.rollback(() => callback(err, false));
-            db.query('SELECT item_id, quantidade FROM itenspedido WHERE pedido_id = ? AND tipo = \'produto\'', [id], (itensErr, itens) => {
-                if (itensErr) return db.rollback(() => callback(itensErr));
-                const devolver = itens.reduce((promessa, item) => promessa.then(() => new Promise((resolve, reject) => db.query('UPDATE produtos SET estoque = estoque + ? WHERE id = ?', [item.quantidade, item.item_id], erroAtualizacao => erroAtualizacao ? reject(erroAtualizacao) : resolve()))), Promise.resolve());
-                devolver.then(() => {
-                    db.query("UPDATE pedidos SET status = 'cancelado', cancelado_em = NOW() WHERE id = ?", [id], updateErr => {
-                        if (updateErr) return db.rollback(() => callback(updateErr));
-                        db.query("INSERT INTO historico_status (tipo, referencia_id, status) VALUES ('pedido', ?, 'cancelado')", [id], historicoErr => {
-                            if (historicoErr) return db.rollback(() => callback(historicoErr));
-                            db.commit(commitErr => commitErr ? db.rollback(() => callback(commitErr)) : callback(null, true));
-                        });
-                    });
-                }).catch(falha => db.rollback(() => callback(falha)));
-            });
-        });
-    });
-};
-
-exports.cancelarReserva = (id, callback) => {
-    db.beginTransaction((erro) => {
-        if (erro) return callback(erro);
-        db.query("SELECT id FROM pedidos WHERE id = ? AND status = 'aguardando_pagamento' FOR UPDATE", [id], (err, pedidos) => {
+        db.query(`SELECT id FROM pedidos WHERE id = ? AND ${condicao} FOR UPDATE`, [id], (err, pedidos) => {
             if (err || !pedidos.length) return db.rollback(() => callback(err, false));
             db.query("SELECT item_id, quantidade FROM itenspedido WHERE pedido_id = ? AND tipo = 'produto'", [id], (itensErr, itens) => {
                 if (itensErr) return db.rollback(() => callback(itensErr));
@@ -161,7 +143,17 @@ exports.cancelarReserva = (id, callback) => {
             });
         });
     });
-};
+}
+
+exports.cancelarReservaExpirada = (id, callback) =>
+    cancelarComDevolucao(id, "status = 'aguardando_pagamento' AND reserva_expira_em < NOW()", callback);
+
+exports.cancelarReserva = (id, callback) =>
+    cancelarComDevolucao(id, "status = 'aguardando_pagamento'", callback);
+
+/** Pedido pago e ainda não preparado (o pagamento já deve ter sido estornado). */
+exports.cancelarPago = (id, callback) =>
+    cancelarComDevolucao(id, "status = 'pago'", callback);
 
 exports.getMeusPedidosCompletos = (usuario_id, callback) => {
     const query = `

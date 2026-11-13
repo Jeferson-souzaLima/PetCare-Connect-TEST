@@ -40,10 +40,6 @@ exports.conectar = (req, res) => {
         const url = MercadoPagoOAuthService.gerarUrlConexao({ lojaId, usuarioId: req.usuario.id });
         return res.json({ url });
     } catch (erro) {
-        // Credenciais OAuth ainda não configuradas no servidor
-        if (erro.status === 503) {
-            return res.status(503).json({ mensagem: 'A conexão com o Mercado Pago ainda não está disponível.' });
-        }
         return responderErroDoServico(res, erro, 'mercadoPagoContaController.conectar', 'Não foi possível iniciar a conexão com o Mercado Pago.');
     }
 };

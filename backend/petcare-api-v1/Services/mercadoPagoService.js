@@ -1,7 +1,8 @@
 const {
     MercadoPagoConfig,
     Preference,
-    Payment
+    Payment,
+    PaymentRefund
 } = require('mercadopago');
 const {
     buildWebhookNotificationUrl
@@ -58,6 +59,19 @@ const MercadoPagoService = {
 
     buscarPagamento: async (paymentId, accessToken) => (
         new Payment(configuracao(accessToken)).get({ id: paymentId })
+    ),
+
+    /*
+     * Estorno total. No split, o Mercado Pago devolve ao cliente o valor
+     * inteiro, tirando da conta da loja e a comissão da PetCare.
+     * A chave de idempotência evita estorno duplicado em pedidos repetidos.
+     */
+    estornarPagamento: async (paymentId, accessToken, idempotencyKey) => (
+        new PaymentRefund(configuracao(accessToken)).create({
+            payment_id: paymentId,
+            body: {},
+            requestOptions: { idempotencyKey }
+        })
     )
 
 };
