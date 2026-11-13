@@ -56,7 +56,11 @@ ALTER TABLE pagamentos
 --
 --    Se retornar linhas, NÃO rode o comando abaixo: me envie o resultado.
 
+--    O índice comum idx_gateway_payment, que já existe nessa coluna, é
+--    substituído pelo único (que também serve para as buscas).
+
 ALTER TABLE pagamentos
+  DROP INDEX idx_gateway_payment,
   ADD UNIQUE KEY uq_pagamentos_gateway_payment_id (gateway_payment_id);
 
 -- 4) Conferir:
