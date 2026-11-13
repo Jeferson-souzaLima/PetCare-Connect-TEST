@@ -27,6 +27,14 @@ services:
         sync: false
       - key: MP_WEBHOOK_SECRET
         sync: false
+      - key: MP_CLIENT_ID
+        sync: false
+      - key: MP_CLIENT_SECRET
+        sync: false
+      - key: MP_OAUTH_REDIRECT_URI
+        sync: false
+      - key: MP_TOKEN_KEY
+        sync: false
       - key: CORS_ORIGIN
         sync: false
       - key: APP_URL

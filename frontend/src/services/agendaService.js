@@ -1,5 +1,6 @@
 import { API_URL } from "@/services/apiUrl";
 import axios from "axios";
+import api from "@/services/api";
 
 // ===============================
 // Buscar agendamentos do lojista por data
@@ -65,4 +66,12 @@ export const deletarAgendamento = async (id, token) => {
     console.error("Erro ao deletar agendamento:", error?.response?.status ?? error?.message);
     throw error;
   }
+};
+
+// ===============================
+// Cliente cancela o próprio agendamento (se pago, o backend estorna)
+// ===============================
+export const cancelarMeuAgendamento = async (id) => {
+  const response = await api.put(`/agendamentos/${id}/cancelar`);
+  return response.data;
 };

@@ -1,5 +1,6 @@
 const relatoriosModel = require('../Models/relatoriosModel');
 const { registrarErroInterno } = require('../utils/erroInterno');
+const { calcularLiquido } = require('../Services/comissaoService');
 
 const FORMATO_DATA = /^\d{4}-\d{2}-\d{2}$/;
 const LIMITE_DIAS_PERIODO = 366;
@@ -66,6 +67,7 @@ exports.obterRelatorio = async (req, res) => {
 
         const pedidosPagos = Number(relatorio.resumo.pedidos_pagos);
         const receitaProdutos = Number(relatorio.resumo.receita_produtos);
+        const { receita_total: receitaTotal, comissao_total: comissaoTotal, tarifa_total: tarifaTotal } = relatorio.resumo;
 
         return res.json({
             periodo: {
@@ -78,8 +80,23 @@ exports.obterRelatorio = async (req, res) => {
                 receita_servicos: Number(relatorio.resumo.receita_servicos),
                 pedidos_pagos: pedidosPagos,
                 agendamentos_pagos: Number(relatorio.resumo.agendamentos_pagos),
-                ticket_medio_pedido: pedidosPagos ? Number((receitaProdutos / pedidosPagos).toFixed(2)) : 0
+                ticket_medio_pedido: pedidosPagos ? Number((receitaProdutos / pedidosPagos).toFixed(2)) : 0,
+                comissao_total: Number(comissaoTotal),
+                tarifa_total: Number(tarifaTotal),
+                valor_liquido: calcularLiquido(receitaTotal, comissaoTotal, tarifaTotal)
             },
+            // Divisão de cada venda: total pago, tarifa do Mercado Pago, comissão e líquido da loja.
+            vendas: relatorio.vendas.map((venda) => ({
+                pagamento_id: venda.pagamento_id,
+                tipo: venda.tipo_referencia,
+                referencia_id: venda.referencia_id,
+                status: venda.status,
+                data: venda.data,
+                valor: Number(venda.valor),
+                comissao: venda.valor_comissao === null ? null : Number(venda.valor_comissao),
+                tarifa_gateway: venda.tarifa_gateway === null ? null : Number(venda.tarifa_gateway),
+                valor_liquido: calcularLiquido(venda.valor, venda.valor_comissao, venda.tarifa_gateway)
+            })),
             vendas_por_periodo: relatorio.vendasPorPeriodo,
             produtos_mais_vendidos: relatorio.produtosMaisVendidos,
             agendamentos_servicos: relatorio.agendamentos

@@ -1,11 +1,43 @@
 import { API_URL } from "@/services/apiUrl";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { cancelarMeuAgendamento } from "@/services/agendaService";
+import MensagemStatus from "@/components/ui/MensagemStatus";
+
+// O cliente cancela antes do horário começar (regra validada no backend).
+const podeCancelar = (agendamento) =>
+  ["aguardando_pagamento", "confirmado"].includes(agendamento.status) &&
+  new Date(agendamento.data_inicio) > new Date();
 
 export default function MeusAgendamentosPage() {
   const [agendamentos, setAgendamentos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cancelando, setCancelando] = useState(null);
+  const [aviso, setAviso] = useState(null);
   const navigate = useNavigate();
+
+  const cancelar = async (agendamento) => {
+    const confirmacao = agendamento.status === "confirmado"
+      ? "Cancelar este agendamento? O valor pago será devolvido pelo Mercado Pago na mesma forma de pagamento."
+      : "Cancelar este agendamento?";
+
+    if (!window.confirm(confirmacao)) return;
+
+    setCancelando(agendamento.id);
+    setAviso(null);
+    try {
+      const resposta = await cancelarMeuAgendamento(agendamento.id);
+      setAgendamentos((atuais) => atuais.map((a) => (a.id === agendamento.id ? { ...a, status: "cancelado_cliente" } : a)));
+      setAviso({ tipo: "sucesso", texto: resposta.mensagem || resposta.message || "Agendamento cancelado." });
+    } catch (error) {
+      setAviso({
+        tipo: "erro",
+        texto: error.response?.data?.mensagem || error.response?.data?.message || "Não foi possível cancelar o agendamento."
+      });
+    } finally {
+      setCancelando(null);
+    }
+  };
 
   const location = useLocation();
   const novoAgendamento = location.state?.novoAgendamento;
@@ -77,6 +109,8 @@ export default function MeusAgendamentosPage() {
         ) : (
 
           <div className="space-y-4">
+
+            <MensagemStatus mensagem={aviso} />
 
             {agendamentos.map((agendamento) => {
 
@@ -166,6 +200,24 @@ export default function MeusAgendamentosPage() {
                     </button>
 
                     </div>
+
+                    {podeCancelar(agendamento) && (
+                      <div className="mt-4 border-t pt-4">
+                        <button
+                          type="button"
+                          onClick={() => cancelar(agendamento)}
+                          disabled={cancelando === agendamento.id}
+                          className="w-full rounded-xl border border-red-200 py-2 font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-60 sm:w-auto sm:px-6"
+                        >
+                          {cancelando === agendamento.id ? "Cancelando..." : "Cancelar agendamento"}
+                        </button>
+                        {agendamento.status === "confirmado" && (
+                          <p className="mt-2 text-xs text-gray-500">
+                            O valor pago é devolvido pelo Mercado Pago.
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     </div>
 

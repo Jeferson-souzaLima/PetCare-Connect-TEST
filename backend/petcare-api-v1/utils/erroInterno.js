@@ -45,18 +45,40 @@ function responderErroInterno(res, err, contexto) {
  * mensagem de negócio pensada para o usuário e são repassados; os demais
  * viram 500 com a mensagem padrão informada.
  */
-function responderErroDoServico(res, erro, contexto, mensagemPadrao) {
+function responderErroDoServico(res, erro, contexto, mensagemPadrao, { comMessage = false } = {}) {
+    // Rotas antigas (ex.: agendamentos) leem "message"; as demais, "mensagem".
+    const corpo = (texto) => (comMessage ? { mensagem: texto, message: texto } : { mensagem: texto });
+
     if (Number.isInteger(erro?.status) && erro.status >= 400 && erro.status < 500) {
-        return res.status(erro.status).json({ mensagem: erro.message });
+        return res.status(erro.status).json(corpo(erro.message));
+    }
+
+    // Falha de serviço externo com mensagem própria para o usuário (ex.: 502, 503).
+    if (erro?.paraUsuario === true && Number.isInteger(erro.status)) {
+        registrarErroInterno(contexto, erro.causa || erro);
+        return res.status(erro.status).json(corpo(erro.message));
     }
 
     registrarErroInterno(contexto, erro);
 
-    return res.status(500).json({ mensagem: mensagemPadrao });
+    return res.status(500).json(corpo(mensagemPadrao));
+}
+
+/**
+ * Erro de serviço externo (5xx) com mensagem pensada para o usuário.
+ * `causa` é o erro original, que vai só para o log.
+ */
+function erroParaUsuario(status, mensagem, causa) {
+    const erro = new Error(mensagem);
+    erro.status = status;
+    erro.paraUsuario = true;
+    erro.causa = causa;
+    return erro;
 }
 
 module.exports = {
     MENSAGEM_ERRO_INTERNO,
+    erroParaUsuario,
     resumirErro,
     registrarErroInterno,
     responderErroInterno,

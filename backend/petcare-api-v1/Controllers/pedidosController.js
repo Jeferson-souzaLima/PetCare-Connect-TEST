@@ -4,8 +4,11 @@ const {
     criarPedidoReservado,
     calcularFrete
 } = require('../Services/pedidoCheckoutService');
-const MercadoPagoService = require('../Services/mercadoPagoService');
-const PagamentosModel = require('../Models/pagamentosModel');
+const { garantirLojaRecebeOnline, iniciarCobranca } = require('../Services/cobrancaService');
+const { estornarVendaSePaga } = require('../Services/estornoService');
+
+// Mesmo prazo da reserva de estoque (pedidos.reserva_expira_em).
+const PRAZO_RESERVA_PEDIDO_MIN = 10;
 const { responderErroInterno, responderErroDoServico, registrarErroInterno } = require('../utils/erroInterno');
 
 // ===============================
@@ -213,11 +216,22 @@ exports.updateStatus = (req, res) => {
                 return res.status(400).json({ mensagem: 'Transição de status inválida para este pedido.' });
             }
 
-            pedidosModel.updateStatus(id, status, (err, result) => {
+            const gravarStatus = (mensagem) => pedidosModel.updateStatus(id, status, (err) => {
                 if (err) return responderErroInterno(res, err, "pedidosController.atualizar");
 
-                res.json({ mensagem: 'Status atualizado com sucesso!' });
+                res.json({ mensagem });
             });
+
+            // Cancelamento (só o admin pode) de pedido pago: estorna antes de cancelar.
+            if (status === 'cancelado') {
+                return estornarVendaSePaga('pedido', Number(id))
+                    .then((estornou) => gravarStatus(estornou
+                        ? 'Pedido cancelado e pagamento estornado.'
+                        : 'Status atualizado com sucesso!'))
+                    .catch((erro) => responderErroDoServico(res, erro, 'pedidosController.atualizar', 'Não foi possível cancelar o pedido.'));
+            }
+
+            gravarStatus('Status atualizado com sucesso!');
         }
     });
 };
@@ -287,13 +301,20 @@ exports.cancelarPeloCliente = (req, res) => {
                 return res.json({ mensagem: 'Pedido cancelado e estoque liberado.' });
             });
         }
-        db.query("UPDATE pedidos SET status = 'cancelado', cancelado_em = NOW() WHERE id = ?", [pedidoId], (updateErr) => {
-            if (updateErr) return res.status(500).json({ mensagem: 'Erro ao cancelar pedido.' });
-            db.query("INSERT INTO historico_status (tipo, referencia_id, status) VALUES ('pedido', ?, 'cancelado')", [pedidoId], (histErr) => {
-                if (histErr) return res.status(500).json({ mensagem: 'Pedido cancelado, mas o histórico não pôde ser registrado.' });
-                return res.json({ mensagem: 'Pedido cancelado. Caso o pagamento tenha sido aprovado, o reembolso será tratado manualmente.' });
-            });
-        });
+        // Pedido pago e ainda não preparado: estorna primeiro, depois cancela e devolve o estoque.
+        estornarVendaSePaga('pedido', pedidoId)
+            .then((estornou) => pedidosModel.cancelarPago(pedidoId, (cancelErr, cancelou) => {
+                if (cancelErr || !cancelou) {
+                    registrarErroInterno(`pedidosController.cancelarPeloCliente: pedido ${pedidoId} estornado mas não cancelado`, cancelErr || new Error('status mudou durante o cancelamento'));
+                    return res.status(500).json({ mensagem: 'O pagamento foi estornado, mas não foi possível concluir o cancelamento. Nossa equipe vai verificar.' });
+                }
+                return res.json({
+                    mensagem: estornou
+                        ? 'Pedido cancelado. O valor será devolvido pelo Mercado Pago na mesma forma de pagamento.'
+                        : 'Pedido cancelado.'
+                });
+            }))
+            .catch((erro) => responderErroDoServico(res, erro, 'pedidosController.cancelarPeloCliente', 'Não foi possível cancelar o pedido.'));
     });
 };
 
@@ -316,7 +337,14 @@ exports.calcularFrete = async (req, res) => {
 
 exports.checkout = async (req, res) => {
     try {
+        // Antes de reservar estoque: a loja precisa conseguir receber online.
+        // (loja inválida é recusada com 400 por criarPedidoReservado)
+        if (Number.isInteger(Number(req.body?.loja_id))) {
+            await garantirLojaRecebeOnline(Number(req.body.loja_id));
+        }
+
         const pedido = await criarPedidoReservado({ usuarioId: req.usuario.id, dados: req.body });
+        const expiraEm = new Date(Date.now() + PRAZO_RESERVA_PEDIDO_MIN * 60 * 1000);
         const itensMercadoPago = pedido.itens.map(item => ({
             id: String(item.id),
             title: item.nome,
@@ -335,17 +363,18 @@ exports.checkout = async (req, res) => {
             });
         }
 
-        const preference = await MercadoPagoService.criarPreferencia({
-            titulo: `Pedido PetCare Connect #${pedido.pedidoId}`,
+        // Comissão só sobre os produtos: o frete fica todo com a loja.
+        const cobranca = await iniciarCobranca({
+            tipoReferencia: 'pedido',
+            referenciaId: pedido.pedidoId,
+            lojaId: Number(req.body.loja_id),
             valor: pedido.total,
-            referencia_id: pedido.pedidoId,
-            referencia_externa: `pedido:${pedido.pedidoId}`,
-            itens: itensMercadoPago
+            baseComissao: pedido.subtotal,
+            itens: itensMercadoPago,
+            expiraEm
         });
-        PagamentosModel.create({ tipo_referencia: 'pedido', referencia_id: pedido.pedidoId, gateway: 'mercado_pago', gateway_preference_id: preference.id, status: 'pendente', valor: pedido.total }, (erro, resultado) => {
-            if (erro) return res.status(500).json({ mensagem: 'Pedido reservado, mas não foi possível registrar o pagamento.' });
-            return res.status(201).json({ pedido_id: pedido.pedidoId, pagamento_id: resultado.insertId, total: pedido.total, valor_entrega: pedido.frete, checkout_url: preference.init_point, expira_em_minutos: 10 });
-        });
+
+        return res.status(201).json({ pedido_id: pedido.pedidoId, pagamento_id: cobranca.pagamentoId, total: pedido.total, valor_entrega: pedido.frete, checkout_url: cobranca.checkoutUrl, expira_em_minutos: PRAZO_RESERVA_PEDIDO_MIN });
     } catch (erro) {
         return responderErroDoServico(res, erro, 'pedidosController.checkout', 'Não foi possível iniciar o checkout.');
     }

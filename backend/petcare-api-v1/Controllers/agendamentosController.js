@@ -4,8 +4,46 @@ const Servicos = require('../Models/servicosModel');
 const AgendaConfig = require('../Models/agendaConfigModel');
 const AgendaDisponibilidade = require('../Models/agendaDisponibilidadeModel');
 const AgendaBloqueios = require('../Models/agendaBloqueiosModel');
-const { responderErroInterno } = require('../utils/erroInterno');
+const { responderErroInterno, registrarErroInterno, responderErroDoServico } = require('../utils/erroInterno');
+const { estornarVendaSePaga } = require('../Services/estornoService');
 const { podeAcessar, podeAcessarReferencia } = require('../utils/acessoRegistro');
+const { garantirLojaRecebeOnline } = require('../Services/cobrancaService');
+
+/** Agendamento feito pelo cliente exige que a loja receba pagamento online. */
+function exigirRecebimentoOnline(usuario, lojaId) {
+    return usuario.tipo === 'cliente' ? garantirLojaRecebeOnline(lojaId) : Promise.resolve();
+}
+
+/*
+ * Cancela o agendamento estornando antes o pagamento online, se houver
+ * (agendamento manual do lojista não tem pagamento). O UPDATE só vale se o
+ * status não mudou no meio do caminho.
+ */
+function cancelarComEstorno(res, { id, statusAtual, novoStatus, contexto, mensagem }) {
+    estornarVendaSePaga('agendamento', Number(id))
+        .then((estornou) => db.query(
+            'UPDATE agendamentos SET status = ? WHERE id = ? AND status = ?',
+            [novoStatus, id, statusAtual],
+            (err, resultado) => {
+                if (err || resultado.affectedRows === 0) {
+                    registrarErroInterno(`${contexto}: agendamento ${id} estornado=${estornou} mas não cancelado`, err || new Error('status mudou durante o cancelamento'));
+                    const falha = 'Não foi possível concluir o cancelamento. Nossa equipe vai verificar.';
+                    return res.status(500).json({ message: falha, mensagem: falha });
+                }
+                const texto = estornou ? `${mensagem} O valor será devolvido ao cliente pelo Mercado Pago.` : mensagem;
+                return res.json({ message: texto, mensagem: texto, estornado: estornou });
+            }
+        ))
+        .catch((erro) => responderErroDoServico(res, erro, contexto, 'Não foi possível cancelar o agendamento.', { comMessage: true }));
+}
+
+function responderErroDeRecebimento(res, erro) {
+    if (erro?.status === 409) {
+        const mensagem = 'Esta loja ainda não está recebendo agendamentos com pagamento online.';
+        return res.status(409).json({ message: mensagem, mensagem });
+    }
+    return responderErroInterno(res, erro, 'agendamentosController.criarAgendamento: verificar recebimento da loja');
+}
 
 /*
  * Busca o serviço a agendar. O lojista só agenda (já confirmado) em serviço
@@ -73,7 +111,8 @@ exports.criarAgendamento = (req, res) => {
         const fim = new Date(inicio.getTime() + duracao * 60000);
 
         // 2?? Buscar configuração da agenda
-        AgendaConfig.getByLojaId(loja_id, (err, config) => {
+        // Cliente só agenda em loja que recebe pagamento online (senão o horário fica preso).
+        exigirRecebimentoOnline(usuario, loja_id).then(() => AgendaConfig.getByLojaId(loja_id, (err, config) => {
 
             if (err) return responderErroInterno(res, err, "agendamentosController.criarAgendamento");
             if (!config) {
@@ -203,7 +242,7 @@ exports.criarAgendamento = (req, res) => {
 
             });
 
-        });
+        }), (erro) => responderErroDeRecebimento(res, erro));
 
     });
 
@@ -387,6 +426,17 @@ exports.atualizarStatus = (req, res) => {
                         });
                     }
 
+                    // A loja cancelando um agendamento pago: o cliente é reembolsado.
+                    if (status === 'cancelado_loja') {
+                        return cancelarComEstorno(res, {
+                            id,
+                            statusAtual,
+                            novoStatus: status,
+                            contexto: 'agendamentosController.atualizarStatus',
+                            mensagem: 'Status atualizado com sucesso.'
+                        });
+                    }
+
                     db.query(
                         'UPDATE agendamentos SET status = ? WHERE id = ?',
                         [status, id],
@@ -449,18 +499,35 @@ exports.deletarAgendamento = (req, res) => {
                         });
                     }
 
-                    // Deletar
+                    // Agendamento com pagamento online não é excluído: preserva o
+                    // histórico financeiro, e o cancelamento é que estorna o cliente.
                     db.query(
-                        'DELETE FROM agendamentos WHERE id = ?',
+                        `SELECT id FROM pagamentos
+                         WHERE tipo_referencia = 'agendamento' AND referencia_id = ?
+                         LIMIT 1`,
                         [id],
-                        (err) => {
+                        (err, pagamentos) => {
 
                             if (err) return responderErroInterno(res, err, "agendamentosController.deletarAgendamento");
 
-                            res.json({
-                                message: 'Agendamento deletado com sucesso.'
-                            });
+                            if (pagamentos.length) {
+                                const aviso = 'Este agendamento tem pagamento online e não pode ser excluído. Use "Cancelar" para cancelar e devolver o valor ao cliente.';
+                                return res.status(409).json({ message: aviso, mensagem: aviso });
+                            }
 
+                            db.query(
+                                'DELETE FROM agendamentos WHERE id = ?',
+                                [id],
+                                (err) => {
+
+                                    if (err) return responderErroInterno(res, err, "agendamentosController.deletarAgendamento");
+
+                                    res.json({
+                                        message: 'Agendamento deletado com sucesso.'
+                                    });
+
+                                }
+                            );
                         }
                     );
                 }
@@ -751,23 +818,14 @@ exports.cancelarAgendamentoCliente = (req, res) => {
             });
         }
 
-        db.query(
-            `UPDATE agendamentos
-             SET status = 'cancelado_cliente'
-             WHERE id = ?`,
-            [id],
-            (err) => {
-
-                if (err) {
-                    return responderErroInterno(res, err, "agendamentosController.cancelarAgendamentoCliente");
-                }
-
-                res.json({
-                    message: "Agendamento cancelado com sucesso."
-                });
-
-            }
-        );
+        // Agendamento pago: estorna primeiro, depois cancela.
+        cancelarComEstorno(res, {
+            id,
+            statusAtual: agendamento.status,
+            novoStatus: 'cancelado_cliente',
+            contexto: 'agendamentosController.cancelarAgendamentoCliente',
+            mensagem: 'Agendamento cancelado com sucesso.'
+        });
 
     });
 

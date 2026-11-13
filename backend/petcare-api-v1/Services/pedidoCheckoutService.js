@@ -381,6 +381,7 @@ async function criarPedidoReservado({ usuarioId, dados }) {
 
         return {
             pedidoId,
+            subtotal: Number(subtotal.toFixed(2)),
             total,
             itens: itensConfirmados.map(
                 ({ produto, quantidade }) => ({

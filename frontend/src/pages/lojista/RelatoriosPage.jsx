@@ -251,7 +251,90 @@ export default function RelatoriosPage() {
                   relatorio.resumo_financeiro.ticket_medio_pedido
                 ).toFixed(2)}`}
               />
+
+              <CardResumo
+                titulo="Comissão PetCare"
+                valor={formatarMoeda(relatorio.resumo_financeiro.comissao_total)}
+              />
+
+              <CardResumo
+                titulo="Tarifa Mercado Pago"
+                valor={formatarMoeda(relatorio.resumo_financeiro.tarifa_total)}
+              />
+
+              <CardResumo
+                titulo="Valor líquido (seu)"
+                valor={formatarMoeda(relatorio.resumo_financeiro.valor_liquido)}
+              />
             </div>
+          </section>
+
+          {/* DIVISÃO DE CADA VENDA */}
+          <section className="rounded-2xl bg-white p-6 shadow">
+            <h2 className="text-xl font-bold text-gray-800">
+              Vendas e valores recebidos
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              O pagamento cai na sua conta Mercado Pago já com a comissão da PetCare e a tarifa do Mercado Pago descontadas.
+            </p>
+
+            {!relatorio.vendas?.length ? (
+              <p className="mt-4 text-gray-500">
+                Nenhuma venda paga no período.
+              </p>
+            ) : (
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b text-gray-600">
+                      <th className="px-3 py-3">Data</th>
+                      <th className="px-3 py-3">Venda</th>
+                      <th className="px-3 py-3">Total pago</th>
+                      <th className="px-3 py-3">Tarifa MP</th>
+                      <th className="px-3 py-3">Comissão</th>
+                      <th className="px-3 py-3">Você recebe</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {relatorio.vendas.map((venda) => {
+                      const estornada = venda.status === "estornado";
+                      return (
+                        <tr
+                          key={venda.pagamento_id}
+                          className={`border-b last:border-0 ${estornada ? "text-gray-400" : ""}`}
+                        >
+                          <td className="px-3 py-3">
+                            {new Date(venda.data).toLocaleDateString("pt-BR")}
+                          </td>
+                          <td className="px-3 py-3">
+                            {venda.tipo === "pedido" ? "Pedido" : "Agendamento"} #{venda.referencia_id}
+                            {estornada && (
+                              <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                                Estornada
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3">{formatarMoeda(venda.valor)}</td>
+                          <td className="px-3 py-3">
+                            {venda.tarifa_gateway === null ? "—" : formatarMoeda(venda.tarifa_gateway)}
+                          </td>
+                          <td className="px-3 py-3">
+                            {venda.comissao === null ? "—" : formatarMoeda(venda.comissao)}
+                          </td>
+                          <td className="px-3 py-3 font-semibold">
+                            {estornada ? formatarMoeda(0) : formatarMoeda(venda.valor_liquido)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <p className="mt-3 text-xs text-gray-500">
+                  "—" indica valor ainda não informado pelo Mercado Pago ou venda anterior ao novo modelo de recebimento.
+                </p>
+              </div>
+            )}
           </section>
 
           {/* VENDAS POR PERÍODO */}
@@ -415,6 +498,10 @@ export default function RelatoriosPage() {
       )}
     </div>
   );
+}
+
+function formatarMoeda(valor) {
+  return Number(valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 function CardResumo({ titulo, valor }) {

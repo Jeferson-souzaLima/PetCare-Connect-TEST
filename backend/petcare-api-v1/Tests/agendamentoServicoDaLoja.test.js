@@ -4,6 +4,12 @@ const { comServidor, pedir, simularBanco, USUARIOS } = require('./apoioAcesso');
 
 const db = require('../db');
 const agendamentosRoutes = require('../Routes/agendamentos');
+const { cifrar } = require('../utils/criptografiaToken');
+
+process.env.MP_TOKEN_KEY = process.env.MP_TOKEN_KEY || require('node:crypto').randomBytes(32).toString('base64');
+
+// Loja 3 tem conta Mercado Pago conectada; a loja 2 não.
+const CONTA_MP = { 3: { loja_id: 3, access_token_cifrado: '', refresh_token_cifrado: '', token_expira_em: new Date(Date.now() + 90 * 86400000) } };
 
 /*
  * M1: o lojista criava pelo POST /agendamentos um agendamento já "confirmado"
@@ -22,6 +28,7 @@ function banco(t) {
     return simularBanco(t, db, [
         [/FROM servicos WHERE id = \?/, (v) => (SERVICOS[v[0]] ? [SERVICOS[v[0]]] : [])],
         [/FROM lojas\s+WHERE usuario_id = \?/, (v) => (LOJA_DO_LOJISTA[v[0]] ? [{ id: LOJA_DO_LOJISTA[v[0]] }] : [])],
+        [/FROM lojas_mercadopago/, (v) => (CONTA_MP[v[0]] ? [{ ...CONTA_MP[v[0]], access_token_cifrado: cifrar('APP_USR-teste') }] : [])],
         [/FROM agenda_config/, []],
         [/^\s*INSERT INTO agendamentos/, { insertId: 1 }]
     ]);
@@ -58,6 +65,15 @@ test('cliente continua agendando em serviço de qualquer loja', async (t) => {
         pedir(b, 'POST', '/agendamentos', USUARIOS.cliente, corpo(60)));
     assert.equal(r.status, 400);
     assert.match(r.body.message, /Agenda não configurada/);
+});
+
+test('cliente não agenda em loja sem pagamento online (409, nada gravado)', async (t) => {
+    const consultas = banco(t);
+    const r = await comServidor('/agendamentos', agendamentosRoutes, (b) =>
+        pedir(b, 'POST', '/agendamentos', USUARIOS.cliente, corpo(50)));
+    assert.equal(r.status, 409);
+    assert.match(r.body.message, /pagamento online/);
+    assert.equal(inseriu(consultas), false);
 });
 
 test('admin não cria agendamento sem cliente nem loja definidos (403)', async (t) => {

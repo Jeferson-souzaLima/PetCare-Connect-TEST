@@ -272,6 +272,11 @@ export default function AgendaLojistaPage() {
       classe: "text-yellow-600"
     },
 
+    em_atendimento: {
+      texto: "🟣 Em atendimento",
+      classe: "text-violet-600"
+    },
+
     confirmado: {
       texto: "🔵 Confirmado",
       classe: "text-blue-600"
@@ -287,7 +292,7 @@ export default function AgendaLojistaPage() {
       classe: "text-red-600"
     },
 
-    cancelado_lojista: {
+    cancelado_loja: {
       texto: "🔴 Cancelado pela loja",
       classe: "text-red-600"
     }
@@ -562,7 +567,24 @@ export default function AgendaLojistaPage() {
 
                 <div className="mt-5">
 
+                  {/* Fluxo do backend: confirmado → em_atendimento → concluido */}
                   {agendamentoSelecionado.status === "confirmado" && (
+
+                    <button
+                      onClick={() =>
+                        alterarStatus(
+                          agendamentoSelecionado.id,
+                          "em_atendimento"
+                        )
+                      }
+                      className="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700"
+                    >
+                      ▶ Iniciar Atendimento
+                    </button>
+
+                  )}
+
+                  {agendamentoSelecionado.status === "em_atendimento" && (
 
                     <button
                       onClick={() =>
@@ -574,6 +596,21 @@ export default function AgendaLojistaPage() {
                       className="w-full bg-green-600 text-white py-2 rounded-xl hover:bg-green-700"
                     >
                       ✔ Concluir Atendimento
+                    </button>
+
+                  )}
+
+                  {agendamentoSelecionado.status === "confirmado" && (
+
+                    <button
+                      onClick={() => {
+                        if (window.confirm("Cancelar este agendamento? Se o cliente pagou online, o valor é devolvido a ele pelo Mercado Pago (sai da sua conta, junto com a comissão).")) {
+                          alterarStatus(agendamentoSelecionado.id, "cancelado_loja");
+                        }
+                      }}
+                      className="mt-3 w-full rounded-xl border border-red-200 py-2 font-semibold text-red-700 hover:bg-red-50"
+                    >
+                      ✖ Cancelar agendamento
                     </button>
 
                   )}
@@ -594,7 +631,7 @@ export default function AgendaLojistaPage() {
 
                   )}
 
-                  {agendamentoSelecionado.status === "cancelado_lojista" && (
+                  {agendamentoSelecionado.status === "cancelado_loja" && (
 
                     <div className="bg-red-100 text-red-700 py-3 rounded-xl text-center font-semibold">
                       ❌ Cancelado pela loja
