@@ -3,6 +3,7 @@ const { MercadoPagoConfig, OAuth } = require('mercadopago');
 const LojasMercadoPagoModel = require('../Models/lojasMercadoPagoModel');
 const { cifrar } = require('../utils/criptografiaToken');
 const { erroDeNegocio } = require('../utils/transacao');
+const { COMISSAO_PERCENTUAL } = require('../Config/financeiro');
 
 /*
  * Conexão da conta Mercado Pago do lojista (OAuth), usada no split:
@@ -136,14 +137,15 @@ async function concluirConexao({ code, state }) {
     return { lojaId: dados.loja };
 }
 
-/** Situação da conexão, sem nenhum dado sensível. */
+/** Situação da conexão e taxas da PetCare, sem nenhum dado sensível. */
 async function obterStatus(lojaId) {
     const conta = await LojasMercadoPagoModel.getStatus(lojaId);
 
-    if (!conta) return { conectado: false };
+    if (!conta) return { conectado: false, comissao_percentual: COMISSAO_PERCENTUAL };
 
     return {
         conectado: true,
+        comissao_percentual: COMISSAO_PERCENTUAL,
         conectado_em: conta.conectado_em,
         expirado: new Date(conta.token_expira_em) <= new Date()
     };

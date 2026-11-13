@@ -4,6 +4,7 @@ import { FaArrowLeft, FaBuilding, FaImage, FaMapMarkerAlt, FaSave } from "react-
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { buscarMinhaLoja, salvarMinhaLoja, enviarImagemMinhaLoja } from "../../services/lojaService";
+import RecebimentosMercadoPago from "@/components/perfil/RecebimentosMercadoPago";
 
 const initialForm = {
   nome_fantasia: "",
@@ -351,6 +352,7 @@ export default function DadosLojaPage() {
       
       <button type="submit" disabled={salvando} className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-900 py-3 font-semibold text-white transition hover:bg-green-800 disabled:opacity-60"><FaSave /> {salvando ? "Salvando..." : "Salvar dados da loja"}</button>
     </form>
+    {lojaExiste && <div className="px-4 sm:px-6"><RecebimentosMercadoPago /></div>}
   </div>;
 }
 

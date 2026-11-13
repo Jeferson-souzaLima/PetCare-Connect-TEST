@@ -128,7 +128,7 @@ test('status de loja não conectada', async (t) => {
 
     await comServidor('/mercadopago', rotas, async (base) => {
         const resposta = await pedir(base, 'GET', '/mercadopago/conta', USUARIOS.lojista);
-        assert.deepEqual(resposta.body, { conectado: false });
+        assert.deepEqual(resposta.body, { conectado: false, comissao_percentual: { pedido: 8, agendamento: 10 } });
     });
 });
 
