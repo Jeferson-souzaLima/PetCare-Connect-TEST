@@ -10,21 +10,23 @@ const CONTROLE =
 const DISTANCIA_MINIMA_SWIPE = 40;
 
 function SlideHtml({ slide, fotoFalhou, aoFalharImagem }) {
-  const usarFoto = Boolean(slide.imagem) && !fotoFalhou;
-  const fotoMobile = usarFoto && urlBanner(slide.imagem.mobile);
-  const fotoDesktop = usarFoto && urlBanner(slide.imagem.desktop);
-  const comFoto = Boolean(fotoMobile && fotoDesktop);
+  // A foto só aparece do tablet para cima: no celular o texto e os dois botões ocupam a largura toda.
+  const foto = Boolean(slide.imagem) && !fotoFalhou ? urlBanner(slide.imagem.desktop) : null;
 
   return (
     <div className="relative flex h-full items-center overflow-hidden bg-gradient-to-br from-pc-verde-900 to-pc-verde-700 px-4 pb-8 pt-4 sm:px-8 md:py-4">
-      {comFoto && (
-        <picture className="pointer-events-none absolute inset-y-0 right-0 w-1/2">
-          <source media="(min-width: 768px)" srcSet={fotoDesktop} />
-          <img src={fotoMobile} alt={slide.imagem.alt ?? ""} className="h-full w-full object-cover object-left" onError={aoFalharImagem} />
-        </picture>
+      {foto && (
+        <img
+          src={foto}
+          alt={slide.imagem.alt ?? ""}
+          loading="lazy"
+          decoding="async"
+          onError={aoFalharImagem}
+          className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-1/2 object-cover object-left [mask-image:linear-gradient(to_right,transparent,#000_35%)] md:block"
+        />
       )}
 
-      <div className={`relative z-10 ${comFoto ? "max-w-[62%] md:max-w-[55%]" : "max-w-xl"}`}>
+      <div className={`relative z-10 max-w-xl ${foto ? "md:max-w-[62%]" : ""}`}>
         <span className="inline-block rounded-pc-pill bg-pc-lima/20 px-3 py-1 text-xs font-semibold text-pc-lima">{slide.chip}</span>
         <h2 className="mt-2 text-lg font-bold leading-tight text-white min-[360px]:text-xl sm:text-2xl lg:text-3xl xl:text-xl min-[1440px]:text-3xl">
           {slide.titulo} <span className="text-pc-lima">{slide.destaque}</span>

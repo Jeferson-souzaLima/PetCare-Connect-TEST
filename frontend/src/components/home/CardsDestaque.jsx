@@ -49,7 +49,7 @@ function CardDestaque({ titulo, texto, destino, icone: Icone, imagem, fundo }) {
           sizes="(min-width: 640px) 96px, 64px"
           alt=""
           aoFalhar={() => setFalhou(true)}
-          className="row-start-2 -mb-3 -ml-1 h-auto w-16 shrink-0 self-end sm:-mb-4 sm:w-24"
+          className="row-start-2 -mb-3 -ml-1 h-auto max-h-24 w-16 shrink-0 self-end object-contain object-bottom sm:-mb-4 sm:max-h-32 sm:w-24"
         />
       ) : (
         <Icone size={30} aria-hidden="true" className="hidden shrink-0 text-pc-verde-700 sm:block" />

@@ -1,7 +1,7 @@
 // Slides do banner da home. Imagens no R2 em banners/home/ (ver spec, seção 7):
 // versão mobile 750×500 (3:2) e desktop 1440×525.
-// O slide "html" aceita uma foto opcional: preencha `imagem` quando a foto
-// licenciada for enviada ao R2. Sem ela, mostra só o fundo verde e o texto.
+// O slide "html" aceita uma foto opcional (metade direita, só do tablet para cima;
+// arquivo ~1080×790 em banners/home/). Sem ela, mostra só o fundo verde e o texto.
 export const SLIDES_HOME = [
   {
     id: "principal",
@@ -14,7 +14,8 @@ export const SLIDES_HOME = [
       { rotulo: "Comprar Produtos", destino: "/produtos", principal: true },
       { rotulo: "Agendar Serviços", destino: "/servicos", principal: false },
     ],
-    imagem: null, // ex.: { mobile: "hero-pets-mobile.webp", desktop: "hero-pets-desktop.webp", alt: "" }
+    // Foto decorativa (alt vazio): o título e os botões já dizem tudo. Sem o arquivo, fica só o verde.
+    imagem: { desktop: "hero-passeio-desktop.webp", alt: "" },
   },
   {
     id: "promo-1",
