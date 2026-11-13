@@ -19,6 +19,7 @@ const favoritosRoutes = require('./Routes/favoritos');
 const geolocalizacaoRoutes = require("./Routes/geolocalizacao");
 const pagamentosRoutes = require('./Routes/pagamentos');
 const relatoriosRoutes = require('./Routes/relatorios');
+const mercadoPagoRoutes = require('./Routes/mercadoPago');
 const pedidosModel = require('./Models/pedidosModel');
 const cepRoutes = require('./Routes/cep');
 const { registrarErroInterno } = require('./utils/erroInterno');
@@ -64,6 +65,7 @@ app.use('/favoritos', favoritosRoutes);
 app.use('/geolocalizacao', geolocalizacaoRoutes);
 app.use('/pagamentos', pagamentosRoutes);
 app.use('/relatorios', relatoriosRoutes);
+app.use('/mercadopago', mercadoPagoRoutes);
 app.use('/cep', cepRoutes);
 
 // Erros que escapam das rotas (upload recusado, JSON malformado, etc.)
