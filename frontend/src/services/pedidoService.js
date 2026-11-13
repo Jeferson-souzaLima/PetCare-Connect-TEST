@@ -15,6 +15,12 @@ const pedidoService = {
         headers: { Authorization: `Bearer ${token}` }
       }
     );
+  },
+
+  /** Cliente cancela o próprio pedido; se já foi pago, o backend estorna. */
+  cancelarMeuPedido: async (id) => {
+    const response = await api.post(`/pedidos/${id}/cancelar`);
+    return response.data;
   }
 };
 

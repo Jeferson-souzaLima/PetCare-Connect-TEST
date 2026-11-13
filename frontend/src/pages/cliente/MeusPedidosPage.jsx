@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import pedidoService from "../../services/pedidoService";
+import MensagemStatus from "@/components/ui/MensagemStatus";
+
+// O cliente só cancela antes do preparo (regra validada no backend).
+const STATUS_CANCELAVEIS = ["aguardando_pagamento", "pago"];
 
 
 const statusLabels = {
@@ -41,8 +46,33 @@ export default function MeusPedidosPage() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const [pedidoAberto, setPedidoAberto] = useState(null);
+  const [cancelando, setCancelando] = useState(null);
+  const [aviso, setAviso] = useState(null);
 
   const navigate = useNavigate();
+
+  const cancelarPedido = async (pedido) => {
+    const confirmacao = pedido.status === "pago"
+      ? `Cancelar o pedido #${pedido.id}? O valor pago será devolvido pelo Mercado Pago na mesma forma de pagamento.`
+      : `Cancelar o pedido #${pedido.id}?`;
+
+    if (!window.confirm(confirmacao)) return;
+
+    setCancelando(pedido.id);
+    setAviso(null);
+    try {
+      const resposta = await pedidoService.cancelarMeuPedido(pedido.id);
+      setPedidos((atuais) => atuais.map((p) => (p.id === pedido.id ? { ...p, status: "cancelado" } : p)));
+      setAviso({ tipo: "sucesso", texto: resposta.mensagem || "Pedido cancelado." });
+    } catch (error) {
+      setAviso({
+        tipo: "erro",
+        texto: error.response?.data?.mensagem || "Não foi possível cancelar o pedido."
+      });
+    } finally {
+      setCancelando(null);
+    }
+  };
 
   useEffect(() => {
     let ativo = true;
@@ -108,6 +138,7 @@ export default function MeusPedidosPage() {
 
         {!carregando && !erro && pedidos.length > 0 && (
           <div className="space-y-4">
+            <MensagemStatus mensagem={aviso} />
             {pedidos.map((pedido) => {
   const aberto = pedidoAberto === pedido.id;
 
@@ -262,6 +293,24 @@ export default function MeusPedidosPage() {
               </span>
             </div>
           </div>
+
+          {STATUS_CANCELAVEIS.includes(pedido.status) && (
+            <div className="mt-5 border-t pt-4">
+              <button
+                type="button"
+                onClick={() => cancelarPedido(pedido)}
+                disabled={cancelando === pedido.id}
+                className="w-full rounded-xl border border-red-200 py-3 font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-60 sm:w-auto sm:px-6"
+              >
+                {cancelando === pedido.id ? "Cancelando..." : "Cancelar pedido"}
+              </button>
+              {pedido.status === "pago" && (
+                <p className="mt-2 text-xs text-gray-500">
+                  Pedidos pagos podem ser cancelados até a loja começar o preparo. O valor é devolvido pelo Mercado Pago.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
     </article>
