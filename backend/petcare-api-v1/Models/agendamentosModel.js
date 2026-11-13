@@ -1,4 +1,5 @@
 const db = require('../db');
+const { consultar, emTransacao } = require('../utils/transacao');
 
 const Agendamentos = {
 
@@ -89,7 +90,10 @@ const Agendamentos = {
                 a.id,
                 a.cliente_id,
                 a.servico_id,
+                a.loja_id,
                 a.status,
+                a.created_at,
+                s.nome AS servico_nome,
                 s.preco AS valor
             FROM agendamentos a
             INNER JOIN servicos s
@@ -108,19 +112,64 @@ const Agendamentos = {
         });
     },
         
-    atualizarStatus: (id, status, callback) => {
-
-        const sql = `
-            UPDATE agendamentos
-            SET status = ?
-            WHERE id = ?
-        `;
-
+    /*
+     * Resultado do pagamento no agendamento. Só altera agendamentos que ainda
+     * aguardam pagamento: um aviso atrasado não reabre horário já liberado
+     * nem cancela agendamento confirmado por outra tentativa.
+     */
+    confirmarPagamento: (id, callback) => {
         db.query(
-            sql,
-            [status, id],
+            `UPDATE agendamentos
+             SET status = 'confirmado'
+             WHERE id = ? AND status = 'aguardando_pagamento'`,
+            [id],
             callback
         );
+    },
+
+    cancelarPorFaltaDePagamento: (id, callback) => {
+        db.query(
+            `UPDATE agendamentos
+             SET status = 'cancelado_cliente'
+             WHERE id = ? AND status = 'aguardando_pagamento'`,
+            [id],
+            callback
+        );
+    },
+
+    /*
+     * Libera os horários de agendamentos feitos pelo cliente que não foram
+     * pagos no prazo, e expira as tentativas de pagamento pendentes deles.
+     */
+    liberarHorariosNaoPagos: (minutos, callback) => {
+        emTransacao(async () => {
+            const vencidos = await consultar(
+                `SELECT id FROM agendamentos
+                 WHERE status = 'aguardando_pagamento'
+                   AND criado_por = 'cliente'
+                   AND created_at < NOW() - INTERVAL ? MINUTE
+                 FOR UPDATE`,
+                [minutos]
+            );
+
+            if (!vencidos.length) return 0;
+
+            const ids = vencidos.map(({ id }) => id);
+
+            await consultar(
+                `UPDATE agendamentos SET status = 'cancelado_cliente'
+                 WHERE id IN (?) AND status = 'aguardando_pagamento'`,
+                [ids]
+            );
+
+            await consultar(
+                `UPDATE pagamentos SET status = 'expirado'
+                 WHERE tipo_referencia = 'agendamento' AND referencia_id IN (?) AND status = 'pendente'`,
+                [ids]
+            );
+
+            return ids.length;
+        }, callback);
     },
 
     getDatasComAgendamentosConfirmados: (loja_id, dataInicial, dataFinal, callback) => {

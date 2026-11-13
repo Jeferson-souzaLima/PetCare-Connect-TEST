@@ -1,7 +1,8 @@
 const crypto = require('crypto');
 const { MercadoPagoConfig, OAuth } = require('mercadopago');
 const LojasMercadoPagoModel = require('../Models/lojasMercadoPagoModel');
-const { cifrar } = require('../utils/criptografiaToken');
+const { cifrar, decifrar } = require('../utils/criptografiaToken');
+const { registrarErroInterno } = require('../utils/erroInterno');
 const { erroDeNegocio } = require('../utils/transacao');
 const { COMISSAO_PERCENTUAL } = require('../Config/financeiro');
 
@@ -137,6 +138,62 @@ async function concluirConexao({ code, state }) {
     return { lojaId: dados.loja };
 }
 
+const MARGEM_RENOVACAO_MS = 7 * 24 * 60 * 60 * 1000;
+
+const LOJA_SEM_PAGAMENTO_ONLINE = 'Esta loja ainda não está recebendo pagamentos online. Tente novamente mais tarde.';
+
+async function renovarToken(lojaId, conta) {
+    const { clientId, clientSecret } = configuracaoOAuth();
+
+    const resposta = await oauthClient.refresh({
+        body: {
+            client_id: clientId,
+            client_secret: clientSecret,
+            refresh_token: decifrar(conta.refresh_token_cifrado)
+        }
+    });
+
+    await LojasMercadoPagoModel.salvar(lojaId, montarRegistro(resposta));
+
+    return resposta.access_token;
+}
+
+/**
+ * Access token da loja para cobrar em nome dela. Renova quando faltam menos
+ * de 7 dias para expirar; se a renovação falhar, usa o atual enquanto valer.
+ * Loja sem conta conectada (ou com a autorização vencida) gera erro 409.
+ */
+async function obterAccessTokenDaLoja(lojaId) {
+    const conta = await LojasMercadoPagoModel.getByLojaId(lojaId);
+
+    if (!conta) throw erroDeNegocio(409, LOJA_SEM_PAGAMENTO_ONLINE);
+
+    const expiraEm = new Date(conta.token_expira_em).getTime();
+
+    if (expiraEm - Date.now() > MARGEM_RENOVACAO_MS) {
+        return decifrar(conta.access_token_cifrado);
+    }
+
+    try {
+        return await renovarToken(lojaId, conta);
+    } catch (erro) {
+        registrarErroInterno('mercadoPagoOAuthService: renovar token da loja', erro);
+
+        if (expiraEm > Date.now()) return decifrar(conta.access_token_cifrado);
+
+        throw erroDeNegocio(409, LOJA_SEM_PAGAMENTO_ONLINE);
+    }
+}
+
+/** Loja dona da conta Mercado Pago (usado pelo webhook). */
+async function obterContaPorUsuarioMercadoPago(mpUserId) {
+    if (mpUserId === undefined || mpUserId === null || mpUserId === '') return null;
+
+    const conta = await LojasMercadoPagoModel.getByMpUserId(String(mpUserId));
+
+    return conta ? { lojaId: conta.loja_id } : null;
+}
+
 /** Situação da conexão e taxas da PetCare, sem nenhum dado sensível. */
 async function obterStatus(lojaId) {
     const conta = await LojasMercadoPagoModel.getStatus(lojaId);
@@ -160,6 +217,8 @@ module.exports = {
     concluirConexao,
     obterStatus,
     desconectar,
+    obterAccessTokenDaLoja,
+    obterContaPorUsuarioMercadoPago,
     assinarState,
     lerState
 };

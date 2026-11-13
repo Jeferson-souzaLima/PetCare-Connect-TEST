@@ -1,31 +1,58 @@
 const db = require('../db');
+const { consultar } = require('../utils/transacao');
 
 const PagamentosModel = {
 
-    create: (dados, callback) => {
+    /*
+     * Cancela as tentativas pendentes anteriores e cria a nova, já com a
+     * comissão calculada. Usar dentro de uma transação.
+     */
+    substituirPendentes: async ({ tipoReferencia, referenciaId, valor, comissao }) => {
 
-        const sql = `
-            INSERT INTO pagamentos (
-                tipo_referencia,
-                referencia_id,
-                gateway,
-                gateway_preference_id,
-                gateway_payment_id,
-                status,
-                valor
+        await consultar(
+            `UPDATE pagamentos
+             SET status = 'cancelado'
+             WHERE tipo_referencia = ? AND referencia_id = ? AND status = 'pendente'`,
+            [tipoReferencia, referenciaId]
+        );
+
+        const resultado = await consultar(
+            `INSERT INTO pagamentos (
+                tipo_referencia, referencia_id, gateway, status, valor,
+                comissao_percentual, valor_comissao
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `;
+            VALUES (?, ?, 'mercado_pago', 'pendente', ?, ?, ?)`,
+            [tipoReferencia, referenciaId, valor, comissao.percentual, comissao.valor]
+        );
 
-        db.query(sql, [
-            dados.tipo_referencia,
-            dados.referencia_id,
-            dados.gateway,
-            dados.gateway_preference_id || null,
-            dados.gateway_payment_id || null,
-            dados.status || 'pendente',
-            dados.valor
-        ], callback);
+        return resultado.insertId;
+    },
+
+    updatePreferenceId: (id, preferenceId) => consultar(
+        'UPDATE pagamentos SET gateway_preference_id = ? WHERE id = ?',
+        [preferenceId, id]
+    ),
+
+    updateTarifaGateway: (id, tarifa) => consultar(
+        'UPDATE pagamentos SET tarifa_gateway = ? WHERE id = ?',
+        [tarifa, id]
+    ),
+
+    /** Pagamento com a loja da venda (pedido ou agendamento). */
+    getComLoja: async (id) => {
+        const linhas = await consultar(
+            `SELECT p.*, COALESCE(pe.loja_id, ag.loja_id) AS loja_id
+             FROM pagamentos p
+             LEFT JOIN pedidos pe
+                ON p.tipo_referencia = 'pedido' AND pe.id = p.referencia_id
+             LEFT JOIN agendamentos ag
+                ON p.tipo_referencia = 'agendamento' AND ag.id = p.referencia_id
+             WHERE p.id = ?
+             LIMIT 1`,
+            [id]
+        );
+
+        return linhas[0] || null;
     },
 
     getById: (id, callback) => {

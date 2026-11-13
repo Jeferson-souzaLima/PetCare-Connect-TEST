@@ -17,6 +17,15 @@ exports.getByLojaId = async (lojaId) => {
     return linhas[0] || null;
 };
 
+exports.getByMpUserId = async (mpUserId) => {
+    const linhas = await consultar(
+        'SELECT loja_id FROM lojas_mercadopago WHERE mp_user_id = ? LIMIT 1',
+        [mpUserId]
+    );
+
+    return linhas[0] || null;
+};
+
 exports.getStatus = async (lojaId) => {
     const linhas = await consultar(
         `SELECT token_expira_em, created_at AS conectado_em

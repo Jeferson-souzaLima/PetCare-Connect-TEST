@@ -21,6 +21,8 @@ const pagamentosRoutes = require('./Routes/pagamentos');
 const relatoriosRoutes = require('./Routes/relatorios');
 const mercadoPagoRoutes = require('./Routes/mercadoPago');
 const pedidosModel = require('./Models/pedidosModel');
+const agendamentosModel = require('./Models/agendamentosModel');
+const { PRAZO_PAGAMENTO_AGENDAMENTO_MIN, MARGEM_LIBERACAO_HORARIO_MIN } = require('./Config/financeiro');
 const cepRoutes = require('./Routes/cep');
 const { registrarErroInterno } = require('./utils/erroInterno');
 const { aplicarSegurancaHttp } = require('./middlewares/segurancaHttp');
@@ -75,6 +77,14 @@ app.use(tratarErros);
 setInterval(() => pedidosModel.cancelarReservasExpiradas((err) => {
     if (err) registrarErroInterno('app: liberar reservas expiradas', err);
 }), 60 * 1000).unref();
+
+// Libera horários de agendamentos não pagos no prazo (prazo do link + margem para avisos atrasados).
+setInterval(() => agendamentosModel.liberarHorariosNaoPagos(
+    PRAZO_PAGAMENTO_AGENDAMENTO_MIN + MARGEM_LIBERACAO_HORARIO_MIN,
+    (err) => {
+        if (err) registrarErroInterno('app: liberar horários de agendamentos não pagos', err);
+    }
+), 60 * 1000).unref();
 
 // Inicia o servidor
 const PORT = Number(process.env.PORT || 3000);

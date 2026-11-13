@@ -6,6 +6,20 @@ const AgendaDisponibilidade = require('../Models/agendaDisponibilidadeModel');
 const AgendaBloqueios = require('../Models/agendaBloqueiosModel');
 const { responderErroInterno } = require('../utils/erroInterno');
 const { podeAcessar, podeAcessarReferencia } = require('../utils/acessoRegistro');
+const { garantirLojaRecebeOnline } = require('../Services/cobrancaService');
+
+/** Agendamento feito pelo cliente exige que a loja receba pagamento online. */
+function exigirRecebimentoOnline(usuario, lojaId) {
+    return usuario.tipo === 'cliente' ? garantirLojaRecebeOnline(lojaId) : Promise.resolve();
+}
+
+function responderErroDeRecebimento(res, erro) {
+    if (erro?.status === 409) {
+        const mensagem = 'Esta loja ainda não está recebendo agendamentos com pagamento online.';
+        return res.status(409).json({ message: mensagem, mensagem });
+    }
+    return responderErroInterno(res, erro, 'agendamentosController.criarAgendamento: verificar recebimento da loja');
+}
 
 /*
  * Busca o serviço a agendar. O lojista só agenda (já confirmado) em serviço
@@ -73,7 +87,8 @@ exports.criarAgendamento = (req, res) => {
         const fim = new Date(inicio.getTime() + duracao * 60000);
 
         // 2?? Buscar configuração da agenda
-        AgendaConfig.getByLojaId(loja_id, (err, config) => {
+        // Cliente só agenda em loja que recebe pagamento online (senão o horário fica preso).
+        exigirRecebimentoOnline(usuario, loja_id).then(() => AgendaConfig.getByLojaId(loja_id, (err, config) => {
 
             if (err) return responderErroInterno(res, err, "agendamentosController.criarAgendamento");
             if (!config) {
@@ -203,7 +218,7 @@ exports.criarAgendamento = (req, res) => {
 
             });
 
-        });
+        }), (erro) => responderErroDeRecebimento(res, erro));
 
     });
 

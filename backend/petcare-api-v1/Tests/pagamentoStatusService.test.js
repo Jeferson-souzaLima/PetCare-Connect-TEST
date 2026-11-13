@@ -11,6 +11,7 @@ const PagamentosModel = require('../Models/pagamentosModel');
 const PedidosModel = require('../Models/pedidosModel');
 const AgendamentosModel = require('../Models/agendamentosModel');
 const MercadoPagoService = require('../Services/mercadoPagoService');
+const MercadoPagoOAuthService = require('../Services/mercadoPagoOAuthService');
 const servico = require('../Services/pagamentoStatusService');
 const controller = require('../Controllers/pagamentosController');
 
@@ -19,11 +20,18 @@ const silenciarLogs = (t) => {
 };
 
 /** Simula as chamadas de banco usadas no fluxo e registra o que foi chamado. */
-function simularModelos(t, { pagamentos = [] } = {}) {
+function simularModelos(t, { pagamentos = [], pagamentoComLoja = null, agendamentoAfetado = 1 } = {}) {
     const chamadas = [];
     t.mock.method(PagamentosModel, 'getByReferencia', (tipo, id, cb) => {
         chamadas.push(['getByReferencia', tipo, id]);
         cb(null, pagamentos);
+    });
+    t.mock.method(PagamentosModel, 'getComLoja', async (id) => {
+        chamadas.push(['getComLoja', id]);
+        return pagamentoComLoja;
+    });
+    t.mock.method(PagamentosModel, 'updateTarifaGateway', async (id, tarifa) => {
+        chamadas.push(['updateTarifaGateway', id, tarifa]);
     });
     t.mock.method(PagamentosModel, 'updateGatewayPaymentId', (id, gatewayId, cb) => {
         chamadas.push(['updateGatewayPaymentId', id, gatewayId]);
@@ -37,11 +45,22 @@ function simularModelos(t, { pagamentos = [] } = {}) {
         chamadas.push(['confirmarPagamento', id]);
         cb(null, { affectedRows: 1 });
     });
-    t.mock.method(AgendamentosModel, 'atualizarStatus', (id, status, cb) => {
-        chamadas.push(['agendamento.atualizarStatus', id, status]);
-        cb(null);
+    t.mock.method(AgendamentosModel, 'confirmarPagamento', (id, cb) => {
+        chamadas.push(['agendamento.confirmarPagamento', id]);
+        cb(null, { affectedRows: agendamentoAfetado });
+    });
+    t.mock.method(AgendamentosModel, 'cancelarPorFaltaDePagamento', (id, cb) => {
+        chamadas.push(['agendamento.cancelarPorFaltaDePagamento', id]);
+        cb(null, { affectedRows: 1 });
     });
     return chamadas;
+}
+
+/** Simula a conta Mercado Pago conectada: mp_user_id 777 é da loja 4. */
+function simularContas(t) {
+    t.mock.method(MercadoPagoOAuthService, 'obterContaPorUsuarioMercadoPago', async (mpUserId) =>
+        (String(mpUserId) === '777' ? { lojaId: 4 } : null));
+    t.mock.method(MercadoPagoOAuthService, 'obterAccessTokenDaLoja', async () => 'APP_USR-loja-4');
 }
 
 test('mapeia os status do Mercado Pago para os status internos', () => {
@@ -64,6 +83,17 @@ test('valorConfere aceita diferença de até 1 centavo e rejeita valores inváli
     assert.equal(servico.valorConfere(100, NaN), false);
 });
 
+test('tarifa do gateway soma só a tarifa do Mercado Pago, sem a comissão', () => {
+    assert.equal(servico.calcularTarifaGateway({
+        fee_details: [
+            { type: 'mercadopago_fee', amount: 2.99 },
+            { type: 'application_fee', amount: 8 },
+            { type: 'mercadopago_fee', amount: 0.1 }
+        ]
+    }), 3.09);
+    assert.equal(servico.calcularTarifaGateway({}), 0);
+});
+
 test('pagamento aprovado de pedido grava gateway, status e confirma o pedido', (t, done) => {
     silenciarLogs(t);
     const chamadas = simularModelos(t);
@@ -83,7 +113,37 @@ test('pagamento aprovado de pedido grava gateway, status e confirma o pedido', (
     );
 });
 
-test('pagamento expirado de agendamento cancela o agendamento', (t, done) => {
+test('pagamento aprovado de agendamento confirma o agendamento', (t, done) => {
+    silenciarLogs(t);
+    const chamadas = simularModelos(t);
+
+    servico.registrarResultadoPagamento(
+        { id: 3, tipo_referencia: 'agendamento', referencia_id: 9 },
+        555,
+        'aprovado',
+        () => {
+            assert.deepEqual(chamadas.at(-1), ['agendamento.confirmarPagamento', 9]);
+            done();
+        }
+    );
+});
+
+test('pagamento aprovado depois do prazo não reconfirma o agendamento e avisa no log', (t, done) => {
+    silenciarLogs(t);
+    simularModelos(t, { agendamentoAfetado: 0 });
+
+    servico.registrarResultadoPagamento(
+        { id: 3, tipo_referencia: 'agendamento', referencia_id: 9 },
+        555,
+        'aprovado',
+        () => {
+            assert.match(console.warn.mock.calls[0].arguments[0], /Verificar estorno/);
+            done();
+        }
+    );
+});
+
+test('pagamento expirado de agendamento cancela o agendamento (status válido)', (t, done) => {
     silenciarLogs(t);
     const chamadas = simularModelos(t);
 
@@ -92,7 +152,7 @@ test('pagamento expirado de agendamento cancela o agendamento', (t, done) => {
         555,
         'expirado',
         () => {
-            assert.deepEqual(chamadas.at(-1), ['agendamento.atualizarStatus', 9, 'cancelado']);
+            assert.deepEqual(chamadas.at(-1), ['agendamento.cancelarPorFaltaDePagamento', 9]);
             done();
         }
     );
@@ -107,7 +167,7 @@ test('pagamento recusado de agendamento não altera o agendamento', (t, done) =>
         555,
         'recusado',
         () => {
-            assert.equal(chamadas.some(([nome]) => nome === 'agendamento.atualizarStatus'), false);
+            assert.equal(chamadas.some(([nome]) => nome.startsWith('agendamento.')), false);
             done();
         }
     );
@@ -119,7 +179,7 @@ test('pagamento recusado de agendamento não altera o agendamento', (t, done) =>
 
 const SEGREDO = 'segredo-de-teste';
 
-function requisicaoAssinada(dataId) {
+function requisicaoAssinada(dataId, userId) {
     const requestId = 'req-1';
     const ts = '1704908010';
     const assinatura = crypto
@@ -130,7 +190,7 @@ function requisicaoAssinada(dataId) {
     return {
         query: { 'data.id': dataId },
         headers: { 'x-request-id': requestId, 'x-signature': `ts=${ts},v1=${assinatura}` },
-        body: { type: 'payment', action: 'payment.updated', data: { id: dataId } }
+        body: { type: 'payment', action: 'payment.updated', data: { id: dataId }, user_id: userId }
     };
 }
 
@@ -145,21 +205,81 @@ function chamarWebhook(req) {
     });
 }
 
-test('webhook aprovado de pedido atualiza pagamento e confirma o pedido', async (t) => {
+const PAGAMENTO_SPLIT = {
+    id: 11, status: 'pendente', valor: '59.90', valor_comissao: '4.79',
+    tipo_referencia: 'pedido', referencia_id: 5, loja_id: 4
+};
+
+test('webhook do split consulta o pagamento com o token da loja e confirma o pedido', async (t) => {
     silenciarLogs(t);
     process.env.MP_WEBHOOK_SECRET = SEGREDO;
+    simularContas(t);
+    const chamadas = simularModelos(t, { pagamentoComLoja: PAGAMENTO_SPLIT });
+    const buscar = t.mock.method(MercadoPagoService, 'buscarPagamento', async () => ({
+        id: 999, status: 'approved', external_reference: 'pagamento:11', transaction_amount: 59.9,
+        fee_details: [{ type: 'mercadopago_fee', amount: 2.99 }, { type: 'application_fee', amount: 4.79 }]
+    }));
+
+    const resposta = await chamarWebhook(requisicaoAssinada('999', 777));
+
+    assert.equal(resposta.status, 200);
+    assert.deepEqual(buscar.mock.calls[0].arguments, ['999', 'APP_USR-loja-4']);
+    assert.deepEqual(chamadas, [
+        ['getComLoja', 11],
+        ['updateTarifaGateway', 11, 2.99],
+        ['updateGatewayPaymentId', 11, '999'],
+        ['updateStatus', 11, 'aprovado'],
+        ['confirmarPagamento', 5]
+    ]);
+});
+
+test('webhook recusa pagamento recebido por conta de outra loja', async (t) => {
+    silenciarLogs(t);
+    process.env.MP_WEBHOOK_SECRET = SEGREDO;
+    simularContas(t);
+    const chamadas = simularModelos(t, { pagamentoComLoja: { ...PAGAMENTO_SPLIT, loja_id: 8 } });
+    t.mock.method(MercadoPagoService, 'buscarPagamento', async () => ({
+        id: 999, status: 'approved', external_reference: 'pagamento:11', transaction_amount: 59.9
+    }));
+
+    const resposta = await chamarWebhook(requisicaoAssinada('999', 777));
+
+    assert.equal(resposta.status, 200);
+    assert.deepEqual(chamadas, [['getComLoja', 11]]);
+});
+
+test('webhook recusa pagamento do split que chega pela conta da plataforma', async (t) => {
+    silenciarLogs(t);
+    process.env.MP_WEBHOOK_SECRET = SEGREDO;
+    simularContas(t);
+    const chamadas = simularModelos(t, { pagamentoComLoja: PAGAMENTO_SPLIT });
+    const buscar = t.mock.method(MercadoPagoService, 'buscarPagamento', async () => ({
+        id: 999, status: 'approved', external_reference: 'pagamento:11', transaction_amount: 59.9
+    }));
+
+    await chamarWebhook(requisicaoAssinada('999', 123));
+
+    assert.equal(buscar.mock.calls[0].arguments[1], undefined);
+    assert.deepEqual(chamadas, [['getComLoja', 11]]);
+});
+
+test('webhook de pagamento antigo (conta da plataforma) continua funcionando', async (t) => {
+    silenciarLogs(t);
+    process.env.MP_WEBHOOK_SECRET = SEGREDO;
+    simularContas(t);
     const chamadas = simularModelos(t, {
-        pagamentos: [{ id: 11, status: 'pendente', valor: '59.90', tipo_referencia: 'pedido', referencia_id: 5 }]
+        pagamentos: [{ id: 11, status: 'pendente', valor: '59.90', valor_comissao: null, tipo_referencia: 'pedido', referencia_id: 5 }]
     });
     t.mock.method(MercadoPagoService, 'buscarPagamento', async () => ({
         id: 999, status: 'approved', external_reference: 'pedido:5', transaction_amount: 59.9
     }));
 
-    const resposta = await chamarWebhook(requisicaoAssinada('999'));
+    const resposta = await chamarWebhook(requisicaoAssinada('999', 123));
 
     assert.equal(resposta.status, 200);
     assert.deepEqual(chamadas, [
         ['getByReferencia', 'pedido', 5],
+        ['updateTarifaGateway', 11, 0],
         ['updateGatewayPaymentId', 11, '999'],
         ['updateStatus', 11, 'aprovado'],
         ['confirmarPagamento', 5]
@@ -169,24 +289,23 @@ test('webhook aprovado de pedido atualiza pagamento e confirma o pedido', async 
 test('webhook com valor divergente não altera nada', async (t) => {
     silenciarLogs(t);
     process.env.MP_WEBHOOK_SECRET = SEGREDO;
-    const chamadas = simularModelos(t, {
-        pagamentos: [{ id: 11, status: 'pendente', valor: '59.90', tipo_referencia: 'pedido', referencia_id: 5 }]
-    });
+    simularContas(t);
+    const chamadas = simularModelos(t, { pagamentoComLoja: PAGAMENTO_SPLIT });
     t.mock.method(MercadoPagoService, 'buscarPagamento', async () => ({
-        id: 999, status: 'approved', external_reference: 'pedido:5', transaction_amount: 1.0
+        id: 999, status: 'approved', external_reference: 'pagamento:11', transaction_amount: 1.0
     }));
 
-    const resposta = await chamarWebhook(requisicaoAssinada('999'));
+    const resposta = await chamarWebhook(requisicaoAssinada('999', 777));
 
     assert.equal(resposta.status, 200);
-    assert.deepEqual(chamadas, [['getByReferencia', 'pedido', 5]]);
+    assert.deepEqual(chamadas, [['getComLoja', 11]]);
 });
 
 test('webhook com assinatura inválida responde 401', async (t) => {
     silenciarLogs(t);
     process.env.MP_WEBHOOK_SECRET = 'outro-segredo';
 
-    const resposta = await chamarWebhook(requisicaoAssinada('999'));
+    const resposta = await chamarWebhook(requisicaoAssinada('999', 777));
 
     assert.equal(resposta.status, 401);
 });

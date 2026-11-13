@@ -1,6 +1,8 @@
 const PagamentosModel = require('../Models/pagamentosModel');
 const PedidosModel = require('../Models/pedidosModel');
 const AgendamentosModel = require('../Models/agendamentosModel');
+const MercadoPagoService = require('./mercadoPagoService');
+const MercadoPagoOAuthService = require('./mercadoPagoOAuthService');
 const { registrarErroInterno } = require('../utils/erroInterno');
 
 /*
@@ -56,12 +58,16 @@ function aplicarStatusNaReferencia(pagamentoInterno, novoStatus, concluir) {
 
         // Pagamento aprovado → confirma o agendamento
         if (novoStatus === 'aprovado') {
-            return AgendamentosModel.atualizarStatus(
+            return AgendamentosModel.confirmarPagamento(
                 pagamentoInterno.referencia_id,
-                'confirmado',
-                (err) => {
+                (err, resultado) => {
                     if (err) {
                         registrarErroInterno('pagamentoStatusService: confirmar agendamento após pagamento', err);
+                        return concluir();
+                    }
+
+                    if (resultado.affectedRows === 0) {
+                        console.warn('Agendamento não confirmado: prazo de pagamento vencido ou status incompatível. Verificar estorno.', pagamentoInterno.referencia_id);
                         return concluir();
                     }
 
@@ -74,9 +80,8 @@ function aplicarStatusNaReferencia(pagamentoInterno, novoStatus, concluir) {
         // Pagamento cancelado ou expirado
         // → cancela o agendamento e libera o horário
         if (novoStatus === 'cancelado' || novoStatus === 'expirado') {
-            return AgendamentosModel.atualizarStatus(
+            return AgendamentosModel.cancelarPorFaltaDePagamento(
                 pagamentoInterno.referencia_id,
-                'cancelado',
                 (err) => {
                     if (err) {
                         registrarErroInterno('pagamentoStatusService: cancelar agendamento após pagamento', err);
@@ -153,9 +158,107 @@ function registrarResultadoPagamento(pagamentoInterno, gatewayPaymentId, novoSta
     );
 }
 
+/** Tarifa cobrada pelo Mercado Pago (sem a comissão da PetCare). */
+function calcularTarifaGateway(pagamentoMercadoPago) {
+    const tarifas = (pagamentoMercadoPago.fee_details || [])
+        .filter(item => item.type === 'mercadopago_fee')
+        .reduce((total, item) => total + Math.round(Number(item.amount || 0) * 100), 0);
+
+    return tarifas / 100;
+}
+
+const buscarPorReferencia = (tipo, id) => new Promise((resolve, reject) =>
+    PagamentosModel.getByReferencia(tipo, id, (erro, linhas) => (erro ? reject(erro) : resolve(linhas))));
+
+/*
+ * Localiza o pagamento interno a partir da external_reference.
+ * Novo formato (split): "pagamento:<id>".
+ * Formatos antigos (antes do split): "pedido:<id>" ou só o ID do agendamento.
+ */
+async function localizarPagamentoInterno(externalReference) {
+    const referencia = String(externalReference || '');
+
+    const novo = referencia.match(/^pagamento:(\d+)$/);
+    if (novo) return PagamentosModel.getComLoja(Number(novo[1]));
+
+    const antigo = referencia.match(/^(?:(pedido|agendamento):)?(\d+)$/);
+    if (!antigo) return null;
+
+    const pagamentos = await buscarPorReferencia(antigo[1] || 'agendamento', Number(antigo[2]));
+
+    return pagamentos.find(p => p.status === 'pendente') || pagamentos[0] || null;
+}
+
+/**
+ * Processa o aviso de pagamento do Mercado Pago (webhook já autenticado).
+ * No split, o pagamento pertence à conta da loja: ele é consultado com o
+ * token dela, e o pagamento interno precisa ser de uma venda dessa loja.
+ * Pagamentos antigos (conta da PetCare) seguem com o token da plataforma.
+ */
+async function processarNotificacaoPagamento({ paymentId, mpUserId }) {
+
+    const conta = await MercadoPagoOAuthService.obterContaPorUsuarioMercadoPago(mpUserId);
+    const accessToken = conta ? await MercadoPagoOAuthService.obterAccessTokenDaLoja(conta.lojaId) : undefined;
+
+    const pagamentoMercadoPago = await MercadoPagoService.buscarPagamento(paymentId, accessToken);
+
+    if (!pagamentoMercadoPago) {
+        console.error('Mercado Pago não retornou o pagamento:', paymentId);
+        return;
+    }
+
+    const pagamentoInterno = await localizarPagamentoInterno(pagamentoMercadoPago.external_reference);
+
+    if (!pagamentoInterno) {
+        console.error('Pagamento interno não encontrado:', {
+            gateway_payment_id: pagamentoMercadoPago.id,
+            external_reference: pagamentoMercadoPago.external_reference
+        });
+        return;
+    }
+
+    // Pagamento do split só vale se veio da conta da própria loja da venda.
+    const ehSplit = pagamentoInterno.valor_comissao !== null && pagamentoInterno.valor_comissao !== undefined;
+    const contaConfere = conta ? Number(pagamentoInterno.loja_id) === Number(conta.lojaId) : !ehSplit;
+
+    if (!contaConfere) {
+        console.error('Pagamento recebido por conta Mercado Pago que não é a da loja da venda:', {
+            pagamento_id: pagamentoInterno.id,
+            gateway_payment_id: pagamentoMercadoPago.id
+        });
+        return;
+    }
+
+    if (!valorConfere(Number(pagamentoMercadoPago.transaction_amount), Number(pagamentoInterno.valor))) {
+        console.error('Valor do pagamento divergente:', {
+            pagamento_id: pagamentoInterno.id,
+            valor_esperado: Number(pagamentoInterno.valor),
+            valor_pago: Number(pagamentoMercadoPago.transaction_amount),
+            gateway_payment_id: pagamentoMercadoPago.id
+        });
+        return;
+    }
+
+    const novoStatus = mapearStatusMercadoPago(pagamentoMercadoPago.status);
+
+    if (!novoStatus) {
+        console.warn('Status Mercado Pago não mapeado:', pagamentoMercadoPago.status);
+        return;
+    }
+
+    if (novoStatus === 'aprovado') {
+        await PagamentosModel.updateTarifaGateway(pagamentoInterno.id, calcularTarifaGateway(pagamentoMercadoPago));
+    }
+
+    await new Promise(resolve =>
+        registrarResultadoPagamento(pagamentoInterno, pagamentoMercadoPago.id, novoStatus, resolve));
+}
+
 module.exports = {
     mapearStatusMercadoPago,
     valorConfere,
     aplicarStatusNaReferencia,
-    registrarResultadoPagamento
+    registrarResultadoPagamento,
+    calcularTarifaGateway,
+    processarNotificacaoPagamento
 };

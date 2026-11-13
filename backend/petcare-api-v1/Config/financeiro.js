@@ -9,6 +9,14 @@ module.exports = {
     COMISSAO_PERCENTUAL: {
         pedido: 8,
         agendamento: 10
-    }
+    },
+
+    /*
+     * Tempo para o cliente pagar um agendamento. Depois disso o link de
+     * pagamento expira; o horário é liberado após a margem abaixo, que cobre
+     * avisos de pagamento (ex.: Pix) que chegam com atraso.
+     */
+    PRAZO_PAGAMENTO_AGENDAMENTO_MIN: 30,
+    MARGEM_LIBERACAO_HORARIO_MIN: 5
 
 };

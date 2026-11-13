@@ -4,8 +4,10 @@ const {
     criarPedidoReservado,
     calcularFrete
 } = require('../Services/pedidoCheckoutService');
-const MercadoPagoService = require('../Services/mercadoPagoService');
-const PagamentosModel = require('../Models/pagamentosModel');
+const { garantirLojaRecebeOnline, iniciarCobranca } = require('../Services/cobrancaService');
+
+// Mesmo prazo da reserva de estoque (pedidos.reserva_expira_em).
+const PRAZO_RESERVA_PEDIDO_MIN = 10;
 const { responderErroInterno, responderErroDoServico, registrarErroInterno } = require('../utils/erroInterno');
 
 // ===============================
@@ -316,7 +318,14 @@ exports.calcularFrete = async (req, res) => {
 
 exports.checkout = async (req, res) => {
     try {
+        // Antes de reservar estoque: a loja precisa conseguir receber online.
+        // (loja inválida é recusada com 400 por criarPedidoReservado)
+        if (Number.isInteger(Number(req.body?.loja_id))) {
+            await garantirLojaRecebeOnline(Number(req.body.loja_id));
+        }
+
         const pedido = await criarPedidoReservado({ usuarioId: req.usuario.id, dados: req.body });
+        const expiraEm = new Date(Date.now() + PRAZO_RESERVA_PEDIDO_MIN * 60 * 1000);
         const itensMercadoPago = pedido.itens.map(item => ({
             id: String(item.id),
             title: item.nome,
@@ -335,17 +344,18 @@ exports.checkout = async (req, res) => {
             });
         }
 
-        const preference = await MercadoPagoService.criarPreferencia({
-            titulo: `Pedido PetCare Connect #${pedido.pedidoId}`,
+        // Comissão só sobre os produtos: o frete fica todo com a loja.
+        const cobranca = await iniciarCobranca({
+            tipoReferencia: 'pedido',
+            referenciaId: pedido.pedidoId,
+            lojaId: Number(req.body.loja_id),
             valor: pedido.total,
-            referencia_id: pedido.pedidoId,
-            referencia_externa: `pedido:${pedido.pedidoId}`,
-            itens: itensMercadoPago
+            baseComissao: pedido.subtotal,
+            itens: itensMercadoPago,
+            expiraEm
         });
-        PagamentosModel.create({ tipo_referencia: 'pedido', referencia_id: pedido.pedidoId, gateway: 'mercado_pago', gateway_preference_id: preference.id, status: 'pendente', valor: pedido.total }, (erro, resultado) => {
-            if (erro) return res.status(500).json({ mensagem: 'Pedido reservado, mas não foi possível registrar o pagamento.' });
-            return res.status(201).json({ pedido_id: pedido.pedidoId, pagamento_id: resultado.insertId, total: pedido.total, valor_entrega: pedido.frete, checkout_url: preference.init_point, expira_em_minutos: 10 });
-        });
+
+        return res.status(201).json({ pedido_id: pedido.pedidoId, pagamento_id: cobranca.pagamentoId, total: pedido.total, valor_entrega: pedido.frete, checkout_url: cobranca.checkoutUrl, expira_em_minutos: PRAZO_RESERVA_PEDIDO_MIN });
     } catch (erro) {
         return responderErroDoServico(res, erro, 'pedidosController.checkout', 'Não foi possível iniciar o checkout.');
     }
