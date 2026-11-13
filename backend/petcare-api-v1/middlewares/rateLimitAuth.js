@@ -66,6 +66,21 @@ module.exports = {
         mensagem: 'Muitos reenvios do e-mail de confirmação. Aguarde uma hora e tente novamente.'
     }),
 
+    // Cada pedido de redefinição pode disparar um e-mail.
+    limitarRecuperacaoSenha: criarLimitador({
+        janelaMs: UMA_HORA,
+        limite: 5,
+        mensagem: 'Muitos pedidos de redefinição de senha. Aguarde uma hora e tente novamente.'
+    }),
+
+    // Tentativas com link inválido contam; quem acerta não é bloqueado.
+    limitarRedefinicaoSenha: criarLimitador({
+        janelaMs: QUINZE_MINUTOS,
+        limite: 10,
+        ignorarSucessos: true,
+        mensagem: 'Muitas tentativas de redefinir a senha. Aguarde 15 minutos e tente novamente.'
+    }),
+
     // /cep é público e consulta o ViaCEP: o limite evita uso da API como proxy gratuito (M6).
     limitarConsultaCep: criarLimitador({
         janelaMs: QUINZE_MINUTOS,

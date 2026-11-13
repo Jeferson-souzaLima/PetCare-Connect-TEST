@@ -49,3 +49,18 @@ async function enviarAvisoCadastroExistente(email) {
 }
 
 module.exports.enviarAvisoCadastroExistente = enviarAvisoCadastroExistente;
+
+async function enviarEmailRedefinicaoSenha(email, token, validadeMinutos) {
+    const redefinicaoUrl = new URL('/redefinir-senha', process.env.APP_URL);
+    redefinicaoUrl.searchParams.set('token', token);
+
+    await getTransporter().sendMail({
+        from: process.env.MAIL_FROM,
+        to: email,
+        subject: 'Redefinição de senha no PetCare Connect',
+        text: `Para criar uma nova senha no PetCare Connect, acesse: ${redefinicaoUrl.toString()} . O link expira em ${validadeMinutos} minutos e só pode ser usado uma vez. Se você não pediu a troca de senha, ignore este e-mail: sua senha atual continua valendo.`,
+        html: `<p>Olá!</p><p>Recebemos um pedido para criar uma nova senha na sua conta do PetCare Connect.</p><p><a href="${redefinicaoUrl.toString()}">Criar nova senha</a></p><p>O link expira em ${validadeMinutos} minutos e só pode ser usado uma vez.</p><p>Se você não pediu a troca de senha, ignore este e-mail: sua senha atual continua valendo.</p>`
+    });
+}
+
+module.exports.enviarEmailRedefinicaoSenha = enviarEmailRedefinicaoSenha;
