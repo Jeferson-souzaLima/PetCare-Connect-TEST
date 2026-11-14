@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { LogoPetCare } from "@/components/ui/LogoPetCare";
 import { AcoesCabecalho } from "./AcoesCabecalho";
 import { BuscaHome } from "./BuscaHome";
 import { CidadeAtual } from "./CidadeAtual";
@@ -18,7 +19,7 @@ export function HomeHeader({ usuario, logout, pagina = false }) {
     >
       <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-3 gap-y-3">
         <Link to="/" className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/60" aria-label="PetCare Connect, página inicial">
-          <img src="/logo.png" alt="" className="h-10 w-auto md:h-12" />
+          <LogoPetCare alt="" className="h-10 md:h-12" />
         </Link>
         <CidadeAtual usuario={usuario} />
         {pagina ? (
