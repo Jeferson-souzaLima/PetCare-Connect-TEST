@@ -63,6 +63,14 @@ export default function ExplorarPage({ tipo }) {
     [setSearchParams]
   );
 
+  // Título da aba e dos resultados de busca do Google, por página.
+  useEffect(() => {
+    document.title = `${config.titulo} | PetCare Connect`;
+    return () => {
+      document.title = "PetCare Connect: produtos e serviços para o seu pet";
+    };
+  }, [config.titulo]);
+
   // Vindo do "Explorar" da barra (?buscar=1): o campo de busca já abre com o foco.
   useEffect(() => {
     if (searchParams.get("buscar") === "1") campoRef.current?.focus();
