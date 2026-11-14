@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { PawPrint } from "lucide-react";
-import { getMediaUrl, IMAGEM_PADRAO_PET } from "@/services/mediaUrl";
+import { getMediaUrl } from "@/services/mediaUrl";
+import { imagemPadraoPet } from "@/utils/pets";
 import { BlocoResumo } from "./BlocoResumo";
 
 export function MeusPetsResumo({ estado, itens }) {
@@ -19,7 +20,7 @@ export function MeusPetsResumo({ estado, itens }) {
       <ul className="flex gap-3 overflow-x-auto">
         {itens.slice(0, 4).map((pet) => {
           // Pet sem foto: ilustração padrão (não uma foto de outro cachorro).
-          const foto = getMediaUrl(pet.imagem, IMAGEM_PADRAO_PET);
+          const foto = getMediaUrl(pet.imagem, imagemPadraoPet(pet.especie));
           return (
             <li key={pet.id} className="w-16 shrink-0 text-center">
               <span className="mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-pc-verde-100">
