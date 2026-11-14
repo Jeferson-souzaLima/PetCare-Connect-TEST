@@ -30,21 +30,17 @@ export function pedidosRecentes(lista, limite = 3) {
     .slice(0, limite);
 }
 
-/** Texto do seletor de cidade e, quando não há localização, para onde levar a pessoa. */
-export function rotuloLocalizacao({ usuario, coords }) {
-  if (usuario?.cidade && usuario?.uf) {
-    return { texto: `${usuario.cidade} - ${usuario.uf}`, destino: null };
-  }
-  if (coords) return { texto: "Perto de você", destino: null };
-  return { texto: "Definir localização", destino: usuario ? "/perfil" : "/login" };
+/**
+ * URL pública de um arquivo do site no R2 (VITE_MEDIA_URL = R2_PUBLIC_URL).
+ * Sem a variável, devolve null e a tela mostra o fallback sem imagem.
+ */
+export function urlMidiaSite(caminho, base = import.meta.env?.VITE_MEDIA_URL) {
+  const raiz = typeof base === "string" ? base.trim().replace(/\/+$/, "") : "";
+  if (!raiz || !caminho) return null;
+  return `${raiz}/${caminho.replace(/^\/+/, "")}`;
 }
 
-/**
- * URL pública de uma imagem da home no R2 (VITE_MEDIA_URL = R2_PUBLIC_URL).
- * Sem a variável, devolve null e a home mostra o fallback sem imagem.
- */
+/** URL de um banner da home no R2 (ou null sem VITE_MEDIA_URL). */
 export function urlBanner(arquivo, base = import.meta.env?.VITE_MEDIA_URL) {
-  const raiz = typeof base === "string" ? base.trim().replace(/\/+$/, "") : "";
-  if (!raiz || !arquivo) return null;
-  return `${raiz}/banners/home/${arquivo}`;
+  return arquivo ? urlMidiaSite(`banners/home/${arquivo}`, base) : null;
 }

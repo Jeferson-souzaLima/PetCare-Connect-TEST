@@ -4,6 +4,7 @@ import { useAuth } from "../hooks/useAuth";
 
 // Páginas públicas
 import NovaHomePage from "../pages/NovaHomePage";
+import ExplorarPage from "../pages/ExplorarPage";
 import HomeLojistaPage from "../pages/lojista/HomeLojistaPage";
 import ProdutoDetalhes from "../pages/ProdutoDetalhes";
 import LojaDetalhes from "../pages/LojaDetalhes";
@@ -68,6 +69,9 @@ export const router = createBrowserRouter([
   { path: "/termos", element: <TermosUsoPage /> },
   { path: "/privacidade", element: <PoliticaPrivacidadePage /> },
   { path: "/", element: <HomeRoute /> },
+  { path: "/lojas", element: <ExplorarPage key="lojas" tipo="lojas" /> },
+  { path: "/produtos", element: <ExplorarPage key="produtos" tipo="produtos" /> },
+  { path: "/servicos", element: <ExplorarPage key="servicos" tipo="servicos" /> },
 
   {
     element: <Layout />,

@@ -37,16 +37,18 @@ export function LojaCard({
       <img
         src={imagemUrl}
         alt={loja.nome_fantasia}
-        className="w-16 h-16 rounded-full object-cover mr-4"
+        // Logos costumam ter o nome escrito: object-contain mostra o logo inteiro, sem cortar o texto.
+        className="mr-4 h-16 w-16 shrink-0 rounded-xl bg-white object-contain p-1 ring-1 ring-black/5"
         onError={(e) => {
           // Troca uma vez só: se a imagem padrão também falhar, não entra em loop.
           if (!e.currentTarget.src.endsWith(IMAGEM_PADRAO_LOJA)) e.currentTarget.src = IMAGEM_PADRAO_LOJA;
         }}
       />
 
-      <div className="flex flex-col justify-center">
+      {/* pr-10: o texto não passa por baixo do coração de favoritar */}
+      <div className="flex min-w-0 flex-col justify-center pr-10">
 
-          <p className="font-semibold text-gray-800">
+          <p className="line-clamp-2 font-semibold text-gray-800">
               {loja.nome_fantasia}
           </p>
 
@@ -60,7 +62,7 @@ export function LojaCard({
 
           )}
 
-          <p className="text-sm text-gray-600">
+          <p className="line-clamp-2 text-sm text-gray-600">
               {loja.endereco}
           </p>
 

@@ -3,13 +3,16 @@ import { router } from './routes/router';
 import { AuthProvider } from './hooks/useAuth';
 import { CarrinhoProvider } from './context/CarrinhoContext';
 import { BuscaProvider } from "./context/BuscaContext";
+import { LocalizacaoProvider } from "./context/LocalizacaoProvider";
 
 function App() {
   return (
     <AuthProvider>
       <CarrinhoProvider>
         <BuscaProvider>
-          <RouterProvider router={router} />
+          <LocalizacaoProvider>
+            <RouterProvider router={router} />
+          </LocalizacaoProvider>
         </BuscaProvider>
       </CarrinhoProvider>
     </AuthProvider>

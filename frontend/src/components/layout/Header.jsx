@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
   ShoppingCart,
@@ -11,6 +11,7 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import { useBusca } from "../../hooks/useBusca";
 import { SearchDropdown } from "../search/SearchDropdown";
+import { LogoPetCare } from "../ui/LogoPetCare";
 
 export function Header() {
   const navigate = useNavigate();
@@ -227,16 +228,13 @@ export function Header() {
     <div className="flex items-center gap-4">
 
       {/* Logo */}
-      <div
-        className="shrink-0 cursor-pointer"
-        onClick={() => navigate("/")}
+      <Link
+        to="/"
+        aria-label="PetCare Connect, página inicial"
+        className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/60"
       >
-        <img
-          src="/logo.png"
-          alt="PetCare Logo"
-          className="h-12 w-auto object-contain"
-        />
-      </div>
+        <LogoPetCare alt="" className="h-10 md:h-12" />
+      </Link>
 
       {/* Área direita */}
       <div className="flex items-center flex-1 min-w-0">
@@ -374,15 +372,25 @@ export function Header() {
                 </>
               ) : (
                 <>
-                  <ShoppingCart
-                    className="w-7 h-7 text-white cursor-pointer"
+                  {/* Botões de verdade (teclado e leitor de tela): sem a barra antiga,
+                      este é o acesso ao carrinho no celular. */}
+                  <button
+                    type="button"
                     onClick={() => navigate("/carrinho")}
-                  />
+                    aria-label="Carrinho"
+                    className="rounded-full text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  >
+                    <ShoppingCart className="w-7 h-7" aria-hidden="true" />
+                  </button>
 
-                  <User
-                    className="w-7 h-7 text-white cursor-pointer"
+                  <button
+                    type="button"
                     onClick={handlePerfil}
-                  />
+                    aria-label="Minha conta"
+                    className="rounded-full text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  >
+                    <User className="w-7 h-7" aria-hidden="true" />
+                  </button>
                 </>
               )}
 

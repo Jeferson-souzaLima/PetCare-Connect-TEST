@@ -1,6 +1,6 @@
 import { API_URL } from "@/services/apiUrl";
 
-/** Imagens usadas quando o produto ou a loja não têm foto (SVGs leves em public/images). */
+/** Imagens usadas quando o produto ou a loja não têm foto (SVGs leves em public/images; a do pet fica em utils/pets). */
 export const IMAGEM_PADRAO_PRODUTO = "/images/produto-padrao.svg";
 export const IMAGEM_PADRAO_LOJA = "/images/loja-padrao.svg";
 

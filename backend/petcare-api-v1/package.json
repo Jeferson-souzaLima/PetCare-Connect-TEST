@@ -8,7 +8,9 @@
     "scripts": {
         "start": "node app.js",
         "dev": "nodemon app.js",
-        "test": "node --test \"Tests/*.test.js\""
+        "test": "node --test \"Tests/*.test.js\"",
+        "teste:verificar": "node --env-file=.env.teste scripts/verificarAmbienteTeste.js",
+        "teste:api": "node --env-file=.env.teste app.js"
     },
     "keywords": [],
     "author": "",

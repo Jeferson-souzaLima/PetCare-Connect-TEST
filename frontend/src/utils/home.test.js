@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { pedidosRecentes, proximosAgendamentos, rotuloLocalizacao, urlBanner } from "./home.js";
+import { pedidosRecentes, proximosAgendamentos, urlBanner, urlMidiaSite } from "./home.js";
 
 const AGORA = new Date("2026-11-11T12:00:00");
 
@@ -37,29 +37,17 @@ test("pedidosRecentes: mais recentes primeiro, até 3", () => {
   assert.deepEqual(pedidosRecentes(null), []);
 });
 
-test("rotuloLocalizacao: cidade do perfil, perto de você ou definir localização", () => {
-  assert.deepEqual(rotuloLocalizacao({ usuario: { tipo: "cliente", cidade: "Cotia", uf: "SP" }, coords: null }), {
-    texto: "Cotia - SP",
-    destino: null,
-  });
-  assert.deepEqual(rotuloLocalizacao({ usuario: null, coords: { latitude: -23.6, longitude: -46.9 } }), {
-    texto: "Perto de você",
-    destino: null,
-  });
-  assert.deepEqual(rotuloLocalizacao({ usuario: { tipo: "cliente" }, coords: null }), {
-    texto: "Definir localização",
-    destino: "/perfil",
-  });
-  assert.deepEqual(rotuloLocalizacao({ usuario: null, coords: null }), {
-    texto: "Definir localização",
-    destino: "/login",
-  });
-});
-
 test("urlBanner: monta a URL do R2 e devolve null sem VITE_MEDIA_URL", () => {
   assert.equal(urlBanner("hero-pets-mobile.webp", "https://cdn.x/"), "https://cdn.x/banners/home/hero-pets-mobile.webp");
   assert.equal(urlBanner("promo-1-desktop.webp", "https://cdn.x"), "https://cdn.x/banners/home/promo-1-desktop.webp");
   assert.equal(urlBanner("hero-pets-mobile.webp", undefined), null);
   assert.equal(urlBanner("hero-pets-mobile.webp", "   "), null);
   assert.equal(urlBanner("", "https://cdn.x"), null);
+});
+
+test("urlMidiaSite: caminho dentro do R2 do site", () => {
+  assert.equal(urlMidiaSite("site/home/lojas-perto-celular.webp", "https://cdn.x/"), "https://cdn.x/site/home/lojas-perto-celular.webp");
+  assert.equal(urlMidiaSite("/site/home/a.webp", "https://cdn.x"), "https://cdn.x/site/home/a.webp");
+  assert.equal(urlMidiaSite("site/home/a.webp", ""), null);
+  assert.equal(urlMidiaSite("", "https://cdn.x"), null);
 });

@@ -71,5 +71,12 @@ module.exports = {
         janelaMs: QUINZE_MINUTOS,
         limite: 60,
         mensagem: 'Muitas consultas de CEP. Aguarde alguns minutos e tente novamente.'
+    }),
+    // Localização (cidade, CEP e coordenadas) é pública e consulta o Nominatim, que aceita
+    // no máximo 1 consulta por segundo para o site todo: limite por IP mais apertado.
+    limitarConsultaLocalizacao: criarLimitador({
+        janelaMs: QUINZE_MINUTOS,
+        limite: 30,
+        mensagem: 'Muitas consultas de localização. Aguarde alguns minutos e tente novamente.'
     })
 };

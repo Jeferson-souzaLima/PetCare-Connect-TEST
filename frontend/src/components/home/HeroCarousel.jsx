@@ -3,28 +3,16 @@ import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { urlBanner } from "@/utils/home";
-import { INTERVALO_SLIDES_MS, SLIDES_HOME } from "./slidesHome";
+import { INTERVALO_SLIDES_MS, SLIDE_RESERVA, SLIDES_HOME } from "./slidesHome";
 
 const CONTROLE =
   "flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pc-verde-700 focus-visible:ring-offset-2";
 const DISTANCIA_MINIMA_SWIPE = 40;
 
-function SlideHtml({ slide, fotoFalhou, aoFalharImagem }) {
-  const usarFoto = Boolean(slide.imagem) && !fotoFalhou;
-  const fotoMobile = usarFoto && urlBanner(slide.imagem.mobile);
-  const fotoDesktop = usarFoto && urlBanner(slide.imagem.desktop);
-  const comFoto = Boolean(fotoMobile && fotoDesktop);
-
+function SlideHtml({ slide }) {
   return (
     <div className="relative flex h-full items-center overflow-hidden bg-gradient-to-br from-pc-verde-900 to-pc-verde-700 px-4 pb-8 pt-4 sm:px-8 md:py-4">
-      {comFoto && (
-        <picture className="pointer-events-none absolute inset-y-0 right-0 w-1/2">
-          <source media="(min-width: 768px)" srcSet={fotoDesktop} />
-          <img src={fotoMobile} alt={slide.imagem.alt ?? ""} className="h-full w-full object-cover object-left" onError={aoFalharImagem} />
-        </picture>
-      )}
-
-      <div className={`relative z-10 ${comFoto ? "max-w-[62%] md:max-w-[55%]" : "max-w-xl"}`}>
+      <div className="relative z-10 max-w-xl">
         <span className="inline-block rounded-pc-pill bg-pc-lima/20 px-3 py-1 text-xs font-semibold text-pc-lima">{slide.chip}</span>
         <h2 className="mt-2 text-lg font-bold leading-tight text-white min-[360px]:text-xl sm:text-2xl lg:text-3xl xl:text-xl min-[1440px]:text-3xl">
           {slide.titulo} <span className="text-pc-lima">{slide.destaque}</span>
@@ -53,8 +41,8 @@ function SlideHtml({ slide, fotoFalhou, aoFalharImagem }) {
  * 768 px), teclado (← →), deslizar com o dedo, pausa com mouse ou foco e sem troca
  * automática quando o sistema pede menos movimento. Todos os slides têm a mesma
  * altura (244 px no celular, 260 px de 640 a 767 px e proporção 1440:525 a partir de 768 px), para o conteúdo abaixo
- * não pular a cada troca. Slides de imagem só aparecem quando a imagem existe no R2
- * (VITE_MEDIA_URL definida e sem erro).
+ * não pular a cada troca. Banners só aparecem quando a imagem existe no R2 (VITE_MEDIA_URL
+ * definida e sem erro); sem nenhum, fica o slide em texto de reserva.
  */
 export function HeroCarousel() {
   const menosMovimento = useMediaQuery("(prefers-reduced-motion: reduce)");
@@ -67,14 +55,11 @@ export function HeroCarousel() {
     setFalhas((anteriores) => new Set(anteriores).add(id));
   }, []);
 
-  const slides = useMemo(
-    () =>
-      SLIDES_HOME.filter((slide) => {
-        if (slide.tipo === "html") return true;
-        return !falhas.has(slide.id) && Boolean(urlBanner(slide.arquivo.mobile));
-      }),
-    [falhas]
-  );
+  // Só os banners de imagem que existem no R2; sem nenhum, o slide em texto de reserva.
+  const slides = useMemo(() => {
+    const imagens = SLIDES_HOME.filter((slide) => !falhas.has(slide.id) && Boolean(urlBanner(slide.arquivo.mobile)));
+    return imagens.length ? imagens : [SLIDE_RESERVA];
+  }, [falhas]);
 
   const total = slides.length;
   const indice = total ? atual % total : 0;
@@ -133,19 +118,25 @@ export function HeroCarousel() {
         onTouchEnd={aoSoltar}
       >
         {slide?.tipo === "html" ? (
-          <SlideHtml slide={slide} fotoFalhou={falhas.has(`${slide.id}-foto`)} aoFalharImagem={() => registrarFalha(`${slide.id}-foto`)} />
+          <SlideHtml slide={slide} />
         ) : (
           slide && (
-            <picture>
-              <source media="(min-width: 640px)" srcSet={urlBanner(slide.arquivo.desktop)} />
-              <img
-                src={urlBanner(slide.arquivo.mobile)}
-                alt={slide.alt}
-                draggable={false}
-                className="block h-full w-full select-none object-cover"
-                onError={() => registrarFalha(slide.id)}
-              />
-            </picture>
+            <Link
+              to={slide.destino}
+              draggable={false}
+              className="block h-full w-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-pc-verde-700"
+            >
+              <picture>
+                <source media="(min-width: 640px)" srcSet={urlBanner(slide.arquivo.desktop)} />
+                <img
+                  src={urlBanner(slide.arquivo.mobile)}
+                  alt={slide.alt}
+                  draggable={false}
+                  className="block h-full w-full select-none object-cover"
+                  onError={() => registrarFalha(slide.id)}
+                />
+              </picture>
+            </Link>
           )
         )}
       </div>
