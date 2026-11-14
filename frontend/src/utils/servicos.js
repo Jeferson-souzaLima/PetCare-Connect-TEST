@@ -39,7 +39,7 @@ export function tipoImagemServico(nome) {
  * Imagem padrão do serviço (o serviço não tem foto própria): { celular, desktop, alt, foco },
  * ou null quando o nome não se encaixa ou sem VITE_MEDIA_URL.
  */
-export function imagemPadraoServico(nome, base = import.meta.env?.VITE_MEDIA_URL) {
+export function imagemPadraoServico(nome, base) {
   const tipo = tipoImagemServico(nome);
   const celular = tipo && urlMidiaSite(`site/servicos/${tipo}-celular.webp`, base);
   if (!celular) return null;

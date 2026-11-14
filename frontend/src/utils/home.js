@@ -30,17 +30,24 @@ export function pedidosRecentes(lista, limite = 3) {
     .slice(0, limite);
 }
 
-/**
- * URL pública de um arquivo do site no R2 (VITE_MEDIA_URL = R2_PUBLIC_URL).
- * Sem a variável, devolve null e a tela mostra o fallback sem imagem.
- */
-export function urlMidiaSite(caminho, base = import.meta.env?.VITE_MEDIA_URL) {
+// Imagens do site (banners, cards, fotos padrão) ficam no próprio site, em public/midia.
+// Se VITE_MEDIA_URL estiver definida, elas vêm de lá (R2), com os mesmos caminhos.
+const MIDIA_LOCAL = "/midia";
+const midiaExterna = () => (import.meta.env?.VITE_MEDIA_URL ?? "").trim();
+
+/** true quando há um endereço externo de mídia (R2) configurado. */
+export function temMidiaExterna() {
+  return Boolean(midiaExterna());
+}
+
+/** URL de um arquivo de mídia do site (ex.: "site/home/x.webp"); null sem caminho ou com base vazia. */
+export function urlMidiaSite(caminho, base = midiaExterna() || MIDIA_LOCAL) {
   const raiz = typeof base === "string" ? base.trim().replace(/\/+$/, "") : "";
   if (!raiz || !caminho) return null;
   return `${raiz}/${caminho.replace(/^\/+/, "")}`;
 }
 
-/** URL de um banner da home no R2 (ou null sem VITE_MEDIA_URL). */
-export function urlBanner(arquivo, base = import.meta.env?.VITE_MEDIA_URL) {
+/** URL de um banner da home (banners/home/). */
+export function urlBanner(arquivo, base) {
   return arquivo ? urlMidiaSite(`banners/home/${arquivo}`, base) : null;
 }
