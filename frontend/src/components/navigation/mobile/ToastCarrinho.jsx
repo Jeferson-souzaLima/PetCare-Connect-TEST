@@ -8,7 +8,7 @@ export default function ToastCarrinho() {
         fixed
         left-1/2
         -translate-x-1/2
-        bottom-24
+        bottom-[calc(6.5rem+env(safe-area-inset-bottom))]
         z-[60]
         flex
         items-center

@@ -1,0 +1,55 @@
+# MySQL local do ambiente de teste do PetCare Connect (nada aqui acessa a produção).
+# Uso: copie .env.example para .env nesta pasta, troque as senhas e rode "docker compose up -d".
+# Guia completo: docs/ambiente-de-teste.md
+name: petcare-teste
+
+services:
+  # Gera uma vez um certificado local (CA + servidor válido para localhost/127.0.0.1).
+  # A API exige SSL com verificação (db.js); o .env.teste aponta DB_SSL_CA_PATH para certificados/ca.pem.
+  certificados:
+    image: mysql:8.0
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -e
+        cd /certificados
+        if [ -f servidor.pem ]; then echo "Certificados locais já existem."; exit 0; fi
+        openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=PetCare Teste Local CA" -keyout ca-chave.pem -out ca.pem 2>/dev/null
+        openssl req -newkey rsa:2048 -nodes -subj "/CN=localhost" -keyout servidor-chave.pem -out servidor.csr 2>/dev/null
+        printf "subjectAltName=DNS:localhost,IP:127.0.0.1,IP:::1\n" > san.ext
+        openssl x509 -req -in servidor.csr -CA ca.pem -CAkey ca-chave.pem -CAcreateserial -days 3650 -extfile san.ext -out servidor.pem 2>/dev/null
+        chmod 644 ./*.pem
+        rm -f servidor.csr san.ext ca.srl
+        echo "Certificados locais criados."
+    volumes:
+      - ./certificados:/certificados
+
+  mysql:
+    image: mysql:8.0
+    depends_on:
+      certificados:
+        condition: service_completed_successfully
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Defina MYSQL_ROOT_PASSWORD em database/teste/.env}
+      MYSQL_DATABASE: petcare_teste
+      MYSQL_USER: petcare_teste
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Defina MYSQL_PASSWORD em database/teste/.env}
+    command:
+      - --ssl-ca=/certificados/ca.pem
+      - --ssl-cert=/certificados/servidor.pem
+      - --ssl-key=/certificados/servidor-chave.pem
+      - --require-secure-transport=ON
+    # Só nesta máquina (127.0.0.1); a porta 3307 evita conflito com um MySQL já instalado.
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - ./certificados:/certificados:ro
+      - dados:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  dados:

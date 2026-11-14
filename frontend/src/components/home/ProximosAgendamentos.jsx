@@ -13,7 +13,7 @@ export function ProximosAgendamentos({ estado, itens }) {
       vazio={
         <p className="text-sm text-pc-texto-suave">
           Nenhum agendamento.{" "}
-          <Link to="/?categoria=servicos#explorar" className="font-semibold text-pc-verde-700 hover:underline">Agendar um serviço</Link>
+          <Link to="/servicos" className="font-semibold text-pc-verde-700 hover:underline">Agendar um serviço</Link>
         </p>
       }
     >

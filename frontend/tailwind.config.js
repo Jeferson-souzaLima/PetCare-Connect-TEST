@@ -27,6 +27,16 @@ export default {
       boxShadow: {
         'pc-card': '0 2px 10px rgba(2, 63, 30, 0.08)',
       },
+      // Entrada da home no celular: o painel claro sobe como uma folha. Usada com motion-safe (respeita "reduzir movimento").
+      keyframes: {
+        'pc-folha': {
+          from: { opacity: '0.4', transform: 'translateY(160px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'pc-folha': 'pc-folha 500ms cubic-bezier(0.22, 1, 0.36, 1) both',
+      },
     },
   },
   plugins: [],

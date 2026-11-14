@@ -3,9 +3,9 @@ import { Scissors, ShoppingBag, Stethoscope, Store } from "lucide-react";
 
 // Atalhos enquanto produtos não têm categoria no banco (ver spec, seção 9).
 const ATALHOS = [
-  { rotulo: "Produtos", destino: "/?categoria=produtos#explorar", icone: ShoppingBag },
-  { rotulo: "Serviços", destino: "/?categoria=servicos#explorar", icone: Scissors },
-  { rotulo: "Lojas", destino: "/?categoria=lojas#explorar", icone: Store },
+  { rotulo: "Produtos", destino: "/produtos", icone: ShoppingBag },
+  { rotulo: "Serviços", destino: "/servicos", icone: Scissors },
+  { rotulo: "Lojas", destino: "/lojas", icone: Store },
   { rotulo: "Clínicas", destino: "/busca?q=veterin%C3%A1ria", icone: Stethoscope },
 ];
 

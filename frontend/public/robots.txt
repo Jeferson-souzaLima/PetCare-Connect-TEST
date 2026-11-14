@@ -1,0 +1,12 @@
+# Páginas públicas liberadas; áreas com login não interessam aos buscadores.
+User-agent: *
+Allow: /
+Disallow: /perfil
+Disallow: /perfil-lojista
+Disallow: /carrinho
+Disallow: /meus-pedidos
+Disallow: /meus-agendamentos
+Disallow: /favoritos
+Disallow: /lojista
+Disallow: /pagamento
+Disallow: /agendar

@@ -8,6 +8,11 @@
 **/.env
 **/.env.*
 !**/.env.example
+!**/.env.teste.example
+
+# Ambiente de teste local (certificados gerados e estrutura exportada)
+database/teste/certificados/
+database/teste/*.sql
 
 # Runtime uploads
 backend/petcare-api-v1/uploads/

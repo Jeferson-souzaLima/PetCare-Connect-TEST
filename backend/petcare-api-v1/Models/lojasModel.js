@@ -16,17 +16,25 @@ exports.getPublicaPorId = (id, callback) => {
     });
 };
 
-exports.getPaginados = (page, limit, callback) => {
+// filtros (opcional): { soComEntrega: boolean, termo: { sql, valores } }
+exports.getPaginados = (page, limit, filtros, callback) => {
+
+    if (typeof filtros === 'function') {
+        callback = filtros;
+        filtros = {};
+    }
 
     const offset = (page - 1) * limit;
+    const termo = filtros.termo ?? { sql: '', valores: [] };
+    const condicoes = `ativo = 1${filtros.soComEntrega ? ' AND entrega_ativa = 1' : ''}${termo.sql}`;
 
     const queryTotal = `
         SELECT COUNT(*) AS total
         FROM lojas
-        WHERE ativo = 1
+        WHERE ${condicoes}
     `;
 
-    db.query(queryTotal, (err, totalResults) => {
+    db.query(queryTotal, termo.valores, (err, totalResults) => {
 
         if (err) {
             return callback(err);
@@ -37,14 +45,14 @@ exports.getPaginados = (page, limit, callback) => {
         const queryLojas = `
             SELECT ${CAMPOS_PUBLICOS}
             FROM lojas
-            WHERE ativo = 1
+            WHERE ${condicoes}
             ORDER BY id DESC
             LIMIT ? OFFSET ?
         `;
 
         db.query(
             queryLojas,
-            [limit, offset],
+            [...termo.valores, limit, offset],
             (err, results) => {
 
                 if (err) {

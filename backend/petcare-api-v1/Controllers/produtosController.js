@@ -3,6 +3,7 @@ const path = require('path');
 const produtosModel = require('../Models/produtosModel');
 const r2Storage = require('../Services/r2Storage');
 const { responderErroInterno, responderErroDoServico } = require('../utils/erroInterno');
+const { filtrosProdutos } = require('../utils/filtrosCatalogo');
 
 const saveImagens = (imagens) => new Promise((resolve, reject) => {
     produtosModel.saveImagens(imagens, (err, result) => err ? reject(err) : resolve(result));
@@ -38,9 +39,15 @@ exports.listarProdutos = (req, res) => {
         });
     }
 
+    const filtros = filtrosProdutos(req.query);
+    if (filtros.erro) {
+        return res.status(400).json({ mensagem: filtros.erro });
+    }
+
     produtosModel.getPaginados(
         page,
         limit,
+        filtros,
         (err, resultado) => {
 
             if (err) {

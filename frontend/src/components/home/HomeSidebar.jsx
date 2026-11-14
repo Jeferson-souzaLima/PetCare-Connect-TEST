@@ -3,9 +3,9 @@ import { CalendarDays, Heart, Home, Package, PawPrint, Scissors, ShoppingBag, St
 
 const LINKS = [
   { rotulo: "Início", destino: "/", icone: Home, fim: true },
-  { rotulo: "Produtos", destino: "/?categoria=produtos#explorar", icone: ShoppingBag },
-  { rotulo: "Serviços", destino: "/?categoria=servicos#explorar", icone: Scissors },
-  { rotulo: "Lojas e Parceiros", destino: "/?categoria=lojas#explorar", icone: Store },
+  { rotulo: "Produtos", destino: "/produtos", icone: ShoppingBag },
+  { rotulo: "Serviços", destino: "/servicos", icone: Scissors },
+  { rotulo: "Lojas e Parceiros", destino: "/lojas", icone: Store },
   { rotulo: "Meus Pets", destino: "/perfil", icone: PawPrint },
   { rotulo: "Meus Pedidos", destino: "/meus-pedidos", icone: Package },
   { rotulo: "Meus Agendamentos", destino: "/meus-agendamentos", icone: CalendarDays },

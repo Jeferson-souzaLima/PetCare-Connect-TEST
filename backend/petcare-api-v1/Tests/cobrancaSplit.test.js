@@ -8,6 +8,8 @@ process.env.MP_TOKEN_KEY = process.env.MP_TOKEN_KEY || crypto.randomBytes(32).to
 process.env.MP_CLIENT_ID = '123456';
 process.env.MP_CLIENT_SECRET = 'segredo-cliente';
 process.env.MP_OAUTH_REDIRECT_URI = 'https://api.exemplo.com/mercadopago/oauth/retorno';
+// A cobrança exige a URL do webhook; o teste não pode depender do .env de quem roda.
+process.env.MP_WEBHOOK_URL = 'https://api.exemplo.com/pagamentos/webhook';
 
 const { OAuth, Preference } = require('mercadopago');
 const db = require('../db');

@@ -2,6 +2,7 @@
 const lojaModel = require('../Models/lojasModel');
 const db = require('../db');
 const { responderErroInterno, registrarErroInterno } = require('../utils/erroInterno');
+const { filtrosLojas } = require('../utils/filtrosCatalogo');
 
 // Listar todas as lojas
 exports.listarLojas = (req, res) => {
@@ -21,9 +22,15 @@ exports.listarLojas = (req, res) => {
         });
     }
 
+    const filtros = filtrosLojas(req.query);
+    if (filtros.erro) {
+        return res.status(400).json({ mensagem: filtros.erro });
+    }
+
     lojaModel.getPaginados(
         page,
         limit,
+        filtros,
         (err, resultado) => {
 
             if (err) {

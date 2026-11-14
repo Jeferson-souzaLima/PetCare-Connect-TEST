@@ -1,17 +1,18 @@
 import { Outlet } from "react-router-dom";
 import { Header } from "../components/layout/Header";
-import { MobileBottomNav } from "../components/navigation/MobileBottomNav";
+import { BarraInferiorCliente } from "../components/navigation/BarraInferiorCliente";
 
 export default function Layout({ children }) {
   return (
     <>
       <Header />
 
-      <main className="pb-24 md:pb-0">
+      {/* Espaço para a barra inferior flutuante (altura + distância da borda + safe-area). */}
+      <main className="pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-0">
         {children ?? <Outlet />}
       </main>
 
-      <MobileBottomNav />
+      <BarraInferiorCliente />
     </>
   );
 }

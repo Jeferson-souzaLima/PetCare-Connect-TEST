@@ -1,0 +1,49 @@
+# Backup diário do banco de produção para um bucket PRIVADO do R2 (guia: docs/backup-do-banco.md).
+# Só roda depois que os segredos abaixo forem cadastrados em Settings > Secrets and variables > Actions.
+name: Backup do banco
+
+on:
+  schedule:
+    - cron: "17 6 * * *" # todo dia às 03:17 de Brasília
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-banco
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend/petcare-api-v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/petcare-api-v1/package-lock.json
+      - run: npm ci --omit=dev
+      - name: Certificado do banco
+        run: printf '%s' "$DB_SSL_CA" > "$RUNNER_TEMP/ca.pem"
+        env:
+          DB_SSL_CA: ${{ secrets.BACKUP_DB_SSL_CA }}
+      - name: Backup
+        run: DB_SSL_CA_PATH="$RUNNER_TEMP/ca.pem" node scripts/backupBanco.js
+        env:
+          DB_HOST: ${{ secrets.BACKUP_DB_HOST }}
+          DB_PORT: ${{ secrets.BACKUP_DB_PORT }}
+          DB_USER: ${{ secrets.BACKUP_DB_USER }}
+          DB_PASSWORD: ${{ secrets.BACKUP_DB_PASSWORD }}
+          DB_NAME: ${{ secrets.BACKUP_DB_NAME }}
+          BACKUP_SENHA: ${{ secrets.BACKUP_SENHA }}
+          BACKUP_R2_BUCKET: ${{ secrets.BACKUP_R2_BUCKET }}
+          BACKUP_RETENCAO_DIAS: "30"
+          R2_ENDPOINT: ${{ secrets.BACKUP_R2_ENDPOINT }}
+          R2_ACCESS_KEY_ID: ${{ secrets.BACKUP_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_R2_SECRET_ACCESS_KEY }}
