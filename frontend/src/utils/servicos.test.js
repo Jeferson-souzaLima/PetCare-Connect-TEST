@@ -31,7 +31,8 @@ test("imagemPadraoServico: monta celular/desktop no R2 e devolve null sem VITE_M
   assert.equal(banho.celular, "https://cdn.x/site/servicos/banho-celular.webp");
   assert.equal(banho.desktop, "https://cdn.x/site/servicos/banho-desktop.webp");
   assert.match(banho.alt, /poodle/);
-  assert.equal(imagemPadraoServico("Banho Básico", undefined), null);
+  assert.equal(imagemPadraoServico("Banho Básico", undefined).celular, "/midia/site/servicos/banho-celular.webp");
+  assert.equal(imagemPadraoServico("Banho Básico", ""), null);
   assert.equal(imagemPadraoServico("Serviço de Teste", "https://cdn.x"), null);
   assert.equal(imagemPadraoServico("Vacinação", "https://cdn.x").desktop, "https://cdn.x/site/servicos/vacina-desktop.webp");
 });

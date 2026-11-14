@@ -25,11 +25,18 @@ function esperarAte(instante) {
     return new Promise((resolve) => setTimeout(resolve, falta)).then(() => esperarAte(instante));
 }
 
-/** Reserva a próxima vaga da fila e espera até ela (1 consulta por segundo). */
+/**
+ * Fila de 1 consulta por segundo. O intervalo conta a partir do envio REAL da consulta anterior
+ * (e não do horário previsto): se o servidor atrasar uma consulta, a seguinte espera o segundo inteiro.
+ */
+let fila = Promise.resolve();
 function aguardarVez() {
-    const vaga = Math.max(Date.now(), proximaLiberacao);
-    proximaLiberacao = vaga + INTERVALO_MINIMO_MS;
-    return esperarAte(vaga);
+    const vez = fila.then(async () => {
+        await esperarAte(proximaLiberacao);
+        proximaLiberacao = Date.now() + INTERVALO_MINIMO_MS;
+    });
+    fila = vez;
+    return vez;
 }
 
 function lerMemoria(chave) {

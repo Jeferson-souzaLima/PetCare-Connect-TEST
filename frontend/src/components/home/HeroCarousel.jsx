@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { urlBanner } from "@/utils/home";
+import { temMidiaExterna, urlBanner } from "@/utils/home";
 import { INTERVALO_SLIDES_MS, SLIDE_RESERVA, SLIDES_HOME } from "./slidesHome";
 
 const CONTROLE =
@@ -55,9 +55,9 @@ export function HeroCarousel() {
     setFalhas((anteriores) => new Set(anteriores).add(id));
   }, []);
 
-  // Só os banners de imagem que existem no R2; sem nenhum, o slide em texto de reserva.
+  // Banners que carregam (os "externos" só com VITE_MEDIA_URL); sem nenhum, o slide em texto de reserva.
   const slides = useMemo(() => {
-    const imagens = SLIDES_HOME.filter((slide) => !falhas.has(slide.id) && Boolean(urlBanner(slide.arquivo.mobile)));
+    const imagens = SLIDES_HOME.filter((slide) => !falhas.has(slide.id) && (!slide.externo || temMidiaExterna()));
     return imagens.length ? imagens : [SLIDE_RESERVA];
   }, [falhas]);
 

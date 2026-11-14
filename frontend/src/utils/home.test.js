@@ -37,10 +37,10 @@ test("pedidosRecentes: mais recentes primeiro, até 3", () => {
   assert.deepEqual(pedidosRecentes(null), []);
 });
 
-test("urlBanner: monta a URL do R2 e devolve null sem VITE_MEDIA_URL", () => {
+test("urlBanner: usa a base informada; sem base, as imagens do próprio site", () => {
   assert.equal(urlBanner("hero-pets-mobile.webp", "https://cdn.x/"), "https://cdn.x/banners/home/hero-pets-mobile.webp");
   assert.equal(urlBanner("promo-1-desktop.webp", "https://cdn.x"), "https://cdn.x/banners/home/promo-1-desktop.webp");
-  assert.equal(urlBanner("hero-pets-mobile.webp", undefined), null);
+  assert.equal(urlBanner("hero-pets-mobile.webp", undefined), "/midia/banners/home/hero-pets-mobile.webp");
   assert.equal(urlBanner("hero-pets-mobile.webp", "   "), null);
   assert.equal(urlBanner("", "https://cdn.x"), null);
 });

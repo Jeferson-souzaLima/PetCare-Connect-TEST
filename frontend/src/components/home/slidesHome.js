@@ -47,6 +47,7 @@ export const SLIDES_HOME = [
   },
   {
     id: "promo-1",
+    externo: true, // arquivo só existe no R2: o slide aparece apenas com VITE_MEDIA_URL
     tipo: "imagem",
     arquivo: { mobile: "promo-1-mobile.webp", desktop: "promo-1-desktop.webp" },
     destino: "/produtos",
@@ -54,6 +55,7 @@ export const SLIDES_HOME = [
   },
   {
     id: "promo-2",
+    externo: true, // arquivo só existe no R2: o slide aparece apenas com VITE_MEDIA_URL
     tipo: "imagem",
     arquivo: { mobile: "promo-2-mobile.webp", desktop: "promo-2-desktop.webp" },
     destino: "/produtos",
@@ -61,6 +63,7 @@ export const SLIDES_HOME = [
   },
   {
     id: "promo-3",
+    externo: true, // arquivo só existe no R2: o slide aparece apenas com VITE_MEDIA_URL
     tipo: "imagem",
     arquivo: { mobile: "promo-3-mobile.webp", desktop: "promo-3-desktop.webp" },
     destino: "/produtos",
@@ -68,6 +71,7 @@ export const SLIDES_HOME = [
   },
   {
     id: "promo-4",
+    externo: true, // arquivo só existe no R2: o slide aparece apenas com VITE_MEDIA_URL
     tipo: "imagem",
     arquivo: { mobile: "promo-4-mobile.webp", desktop: "promo-4-desktop.webp" },
     destino: "/produtos",
