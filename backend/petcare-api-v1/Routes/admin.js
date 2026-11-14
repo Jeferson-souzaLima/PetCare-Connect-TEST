@@ -12,5 +12,7 @@ router.patch('/lojas/:id', adminController.definirSituacaoLoja);
 router.get('/usuarios', adminController.listarUsuarios);
 router.get('/pedidos', adminController.listarPedidos);
 router.post('/pedidos/:id/cancelar', adminController.cancelarPedido);
+router.get('/financeiro', adminController.obterFinanceiro);
+router.get('/rankings', adminController.obterRankings);
 
 module.exports = router;

@@ -1,5 +1,20 @@
 const buscaModel = require('../Models/buscaModel');
-const { responderErroInterno } = require('../utils/erroInterno');
+const { responderErroInterno, registrarErroInterno } = require('../utils/erroInterno');
+
+const TAMANHO_MAXIMO_TERMO = 100;
+
+/*
+ * Registra a busca feita na página de resultados, para o ranking do admin.
+ * Roda em segundo plano: uma falha aqui nunca afeta a resposta ao cliente.
+ */
+function registrarBusca(texto, resultados) {
+    const termo = texto.toLowerCase().replace(/\s+/g, ' ').slice(0, TAMANHO_MAXIMO_TERMO).trim();
+    if (termo.length < 2) return;
+
+    const total = resultados.produtos.length + resultados.lojas.length + resultados.servicos.length;
+    buscaModel.registrarBusca(termo, total)
+        .catch((erro) => registrarErroInterno('buscaController.registrarBusca', erro));
+}
 
 exports.buscar = (req, res) => {
     const { q } = req.query;
@@ -64,6 +79,8 @@ exports.buscarResultados = (req, res) => {
         if (err) {
             return responderErroInterno(res, err, "buscaController.buscarResultados");
         }
+
+        registrarBusca(q, resultados);
 
         res.status(200).json({
             contexto: 'cliente',

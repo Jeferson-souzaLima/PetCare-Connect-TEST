@@ -1,4 +1,5 @@
 const AdminModel = require('../Models/adminModel');
+const Indicadores = require('../Models/adminIndicadoresModel');
 const pedidosModel = require('../Models/pedidosModel');
 const { estornarVendaSePaga } = require('../Services/estornoService');
 const { responderErroInterno, responderErroDoServico, registrarErroInterno } = require('../utils/erroInterno');
@@ -115,4 +116,100 @@ exports.cancelarPedido = (req, res) => {
             }))
             .catch((erroEstorno) => responderErroDoServico(res, erroEstorno, 'adminController.cancelarPedido', 'Não foi possível cancelar o pedido.'));
     });
+};
+
+// ===============================
+// INDICADORES (financeiro e rankings)
+// ===============================
+
+const PRIMEIRO_ANO = 2025;
+const doisDigitos = (n) => String(n).padStart(2, '0');
+
+/** Período de um ano inteiro ou de um mês, a partir de ?ano= e ?mes=. Retorna null se inválido. */
+function periodoDaConsulta({ ano: anoInformado, mes: mesInformado }) {
+    const anoAtual = new Date().getFullYear();
+    const ano = anoInformado === undefined ? anoAtual : Number(anoInformado);
+    if (!Number.isInteger(ano) || ano < PRIMEIRO_ANO || ano > anoAtual) return null;
+
+    if (mesInformado === undefined) {
+        return { ano, mes: null, inicio: `${ano}-01-01 00:00:00`, fimExclusivo: `${ano + 1}-01-01 00:00:00` };
+    }
+
+    const mes = Number(mesInformado);
+    if (!Number.isInteger(mes) || mes < 1 || mes > 12) return null;
+
+    const fim = mes === 12 ? `${ano + 1}-01` : `${ano}-${doisDigitos(mes + 1)}`;
+    return { ano, mes, inicio: `${ano}-${doisDigitos(mes)}-01 00:00:00`, fimExclusivo: `${fim}-01 00:00:00` };
+}
+
+const MENSAGEM_PERIODO_INVALIDO = `Informe ano entre ${PRIMEIRO_ANO} e o ano atual e, se quiser, mes entre 1 e 12.`;
+
+const CAMPOS_FINANCEIROS = ['gmv', 'gmv_produtos', 'gmv_servicos', 'receita_comissoes', 'vendas', 'estornos', 'vendas_estornadas'];
+const centavos = (valor) => Math.round(valor * 100) / 100;
+
+function comTicketMedio(valores) {
+    return { ...valores, ticket_medio: valores.vendas ? centavos(valores.gmv / valores.vendas) : 0 };
+}
+
+exports.obterFinanceiro = async (req, res) => {
+    const periodo = periodoDaConsulta({ ano: req.query.ano });
+    if (!periodo) return res.status(400).json({ mensagem: MENSAGEM_PERIODO_INVALIDO });
+
+    try {
+        const linhas = await Indicadores.financeiroPorMes(periodo.inicio, periodo.fimExclusivo);
+        const zerado = () => Object.fromEntries(CAMPOS_FINANCEIROS.map((campo) => [campo, 0]));
+        const total = zerado();
+
+        const meses = Array.from({ length: 12 }, (_, indice) => {
+            const linha = linhas.find((l) => Number(l.mes) === indice + 1);
+            const valores = zerado();
+            for (const campo of CAMPOS_FINANCEIROS) {
+                valores[campo] = linha ? Number(linha[campo]) : 0;
+                total[campo] = centavos(total[campo] + valores[campo]);
+            }
+            return { mes: indice + 1, ...comTicketMedio(valores) };
+        });
+
+        return res.json({ ano: periodo.ano, total: comTicketMedio(total), meses });
+    } catch (erro) {
+        return responderErroInterno(res, erro, 'adminController.obterFinanceiro');
+    }
+};
+
+const comNumeros = (linhas, campos) => linhas.map((linha) => ({
+    ...linha,
+    ...Object.fromEntries(campos.map((campo) => [campo, Number(linha[campo])]))
+}));
+
+exports.obterRankings = async (req, res) => {
+    const periodo = periodoDaConsulta(req.query);
+    if (!periodo) return res.status(400).json({ mensagem: MENSAGEM_PERIODO_INVALIDO });
+
+    try {
+        const r = await Indicadores.rankings(periodo.inicio, periodo.fimExclusivo);
+        const favoritos = comNumeros(r.favoritos, ['total']);
+        const favoritosDoTipo = (tipo) => favoritos
+            .filter((f) => f.tipo === tipo)
+            .map(({ id, nome, total }) => ({ id, nome, total }));
+
+        return res.json({
+            periodo: { ano: periodo.ano, mes: periodo.mes },
+            mais_vendidos: {
+                produtos: comNumeros(r.produtos, ['quantidade', 'valor']),
+                servicos: comNumeros(r.servicos, ['quantidade', 'valor']),
+                lojas: comNumeros(r.lojas, ['vendas', 'valor', 'comissao'])
+            },
+            mais_favoritados: {
+                produtos: favoritosDoTipo('produto'),
+                servicos: favoritosDoTipo('servico'),
+                lojas: favoritosDoTipo('loja')
+            },
+            buscas: {
+                mais_buscadas: comNumeros(r.buscas, ['total']),
+                sem_resultado: comNumeros(r.buscasSemResultado, ['total'])
+            }
+        });
+    } catch (erro) {
+        return responderErroInterno(res, erro, 'adminController.obterRankings');
+    }
 };

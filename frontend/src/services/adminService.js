@@ -24,3 +24,13 @@ export async function cancelarPedidoAdmin(pedidoId) {
   const { data } = await api.post(`/admin/pedidos/${pedidoId}/cancelar`);
   return data;
 }
+
+export async function obterFinanceiroAdmin(ano) {
+  const { data } = await api.get("/admin/financeiro", { params: { ano } });
+  return data;
+}
+
+export async function obterRankingsAdmin({ ano, mes }) {
+  const { data } = await api.get("/admin/rankings", { params: { ano, mes: mes || undefined } });
+  return data;
+}

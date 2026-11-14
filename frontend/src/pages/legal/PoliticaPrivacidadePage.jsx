@@ -22,7 +22,7 @@ export default function PoliticaPrivacidadePage() {
         <li><strong>Endereço:</strong> CEP, rua, número, complemento, bairro, cidade e UF, e as coordenadas geográficas calculadas a partir dele, usadas para entrega e cálculo de frete.</li>
         <li><strong>Localização do aparelho:</strong> só quando você autoriza no navegador. É usada para mostrar lojas e serviços próximos e para calcular a entrega. Se você escolher usar a localização atual para definir o endereço do seu perfil, as coordenadas ficam gravadas no seu cadastro.</li>
         <li><strong>Pets:</strong> nome, espécie, raça, idade e foto que você cadastrar.</li>
-        <li><strong>Uso da plataforma:</strong> pedidos, agendamentos, favoritos e histórico de buscas (este último fica só no seu navegador).</li>
+        <li><strong>Uso da plataforma:</strong> pedidos, agendamentos, favoritos e histórico de buscas (este último fica só no seu navegador). Também registramos os termos pesquisados na busca do site, sem ligá-los a você (sem conta, nome ou IP), para saber o que os clientes mais procuram.</li>
         <li><strong>Pagamentos:</strong> valor e situação do pagamento. Os dados do cartão ou do Pix são informados diretamente no Mercado Pago; o PetCare Connect não recebe nem guarda esses dados.</li>
         <li><strong>Conta Mercado Pago da loja:</strong> quando o lojista conecta a conta, guardamos a identificação da conta e a autorização de acesso concedida pelo Mercado Pago, sempre cifradas. Ela é usada só para criar as cobranças da loja e fazer reembolsos, e é apagada quando a loja desconecta a conta.</li>
         <li><strong>Lojistas:</strong> nome fantasia, razão social, CNPJ, telefone, endereço e descrição da loja, além das imagens publicadas.</li>
@@ -35,6 +35,7 @@ export default function PoliticaPrivacidadePage() {
         <li><strong>Criar e manter sua conta, processar pedidos, agendamentos, entregas e pagamentos:</strong> execução do contrato com você (art. 7º, V, da LGPD).</li>
         <li><strong>Enviar e-mails necessários ao serviço</strong>, como a confirmação de cadastro e a redefinição de senha: execução do contrato.</li>
         <li><strong>Segurança e prevenção de fraudes e abusos:</strong> legítimo interesse (art. 7º, IX).</li>
+        <li><strong>Estatísticas de uso da plataforma</strong>, como os termos mais buscados, para melhorar a oferta de produtos e serviços: legítimo interesse (art. 7º, IX), sempre sem identificar você.</li>
         <li><strong>Cumprir obrigações legais e regulatórias:</strong> obrigação legal (art. 7º, II), por exemplo a guarda de registros de pedidos e pagamentos e de registros de acesso exigida pelo Marco Civil da Internet.</li>
         <li><strong>Usar a localização do aparelho:</strong> sua autorização no navegador, que pode ser retirada a qualquer momento nas configurações dele. Ao alterar o endereço do perfil, as coordenadas gravadas são substituídas pelas do novo endereço; para excluí-las, use os direitos do item 7.</li>
       </ul>
