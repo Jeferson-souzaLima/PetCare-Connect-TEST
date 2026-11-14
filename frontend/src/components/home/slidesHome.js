@@ -1,23 +1,22 @@
 // Slides do banner da home. Imagens no R2 em banners/home/ (ver spec, seção 7):
 // versão mobile 3:2 (1125×750) e desktop 1440×525. O banner inteiro é um link para `destino`,
 // porque o botão desenhado na arte ("Agendar agora", "Ver produtos"...) precisa funcionar.
-// O slide "html" aceita uma foto opcional (metade direita, só do tablet para cima;
-// arquivo ~1080×790 em banners/home/). Sem ela, mostra só o fundo verde e o texto.
+// Slide em texto (fundo verde e dois botões): só aparece quando nenhum banner de imagem
+// carrega (sem VITE_MEDIA_URL ou com erro em todos), para o topo da home nunca ficar vazio.
+export const SLIDE_RESERVA = {
+  id: "principal",
+  tipo: "html",
+  chip: "PetCare Connect",
+  titulo: "Produtos e serviços para o seu pet,",
+  destaque: "no mesmo lugar!",
+  texto: "Compre o que seu pet precisa e agende serviços com as melhores lojas da sua região.",
+  acoes: [
+    { rotulo: "Comprar Produtos", destino: "/produtos", principal: true },
+    { rotulo: "Agendar Serviços", destino: "/servicos", principal: false },
+  ],
+};
+
 export const SLIDES_HOME = [
-  {
-    id: "principal",
-    tipo: "html",
-    chip: "PetCare Connect",
-    titulo: "Produtos e serviços para o seu pet,",
-    destaque: "no mesmo lugar!",
-    texto: "Compre o que seu pet precisa e agende serviços com as melhores lojas da sua região.",
-    acoes: [
-      { rotulo: "Comprar Produtos", destino: "/produtos", principal: true },
-      { rotulo: "Agendar Serviços", destino: "/servicos", principal: false },
-    ],
-    // Foto decorativa (alt vazio): o título e os botões já dizem tudo. Sem o arquivo, fica só o verde.
-    imagem: { desktop: "hero-pets-desktop.webp", alt: "" },
-  },
   {
     id: "banho-tosa",
     tipo: "imagem",
