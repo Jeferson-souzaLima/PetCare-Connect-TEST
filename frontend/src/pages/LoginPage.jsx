@@ -1,9 +1,11 @@
 import { API_URL } from "@/services/apiUrl";
 import { useEffect, useState } from "react";
 import { lerAvisoParaLogin, limparAvisoParaLogin } from "@/utils/sessao";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { FaEnvelope, FaLock } from "react-icons/fa";
+
+const DESTINO_APOS_LOGIN = { lojista: "/perfil-lojista", admin: "/admin" };
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -42,11 +44,7 @@ export default function LoginPage() {
       }
 
       login(data.usuario, data.token);
-      if (data.usuario.tipo === "lojista") {
-        navigate("/perfil-lojista");
-      } else {
-        navigate("/perfil");
-      }
+      navigate(DESTINO_APOS_LOGIN[data.usuario.tipo] || "/perfil");
       
     } catch {
       setErro("Erro ao conectar com o servidor");
@@ -113,6 +111,12 @@ export default function LoginPage() {
               className="flex-1 outline-none text-gray-700"
               required
             />
+          </div>
+
+          <div className="text-right">
+            <Link to="/esqueci-senha" className="text-sm font-semibold text-[#0E5617] hover:underline">
+              Esqueci minha senha
+            </Link>
           </div>
 
           <button

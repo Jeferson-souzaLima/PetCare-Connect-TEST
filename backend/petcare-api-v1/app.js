@@ -20,6 +20,7 @@ const geolocalizacaoRoutes = require("./Routes/geolocalizacao");
 const pagamentosRoutes = require('./Routes/pagamentos');
 const relatoriosRoutes = require('./Routes/relatorios');
 const mercadoPagoRoutes = require('./Routes/mercadoPago');
+const adminRoutes = require('./Routes/admin');
 const pedidosModel = require('./Models/pedidosModel');
 const agendamentosModel = require('./Models/agendamentosModel');
 const { PRAZO_PAGAMENTO_AGENDAMENTO_MIN, MARGEM_LIBERACAO_HORARIO_MIN } = require('./Config/financeiro');
@@ -68,6 +69,7 @@ app.use('/geolocalizacao', geolocalizacaoRoutes);
 app.use('/pagamentos', pagamentosRoutes);
 app.use('/relatorios', relatoriosRoutes);
 app.use('/mercadopago', mercadoPagoRoutes);
+app.use('/admin', adminRoutes);
 app.use('/cep', cepRoutes);
 
 // Erros que escapam das rotas (upload recusado, JSON malformado, etc.)

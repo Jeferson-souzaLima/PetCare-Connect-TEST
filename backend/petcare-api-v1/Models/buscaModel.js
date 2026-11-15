@@ -1,4 +1,11 @@
 const db = require('../db');
+const { consultar } = require('../utils/transacao');
+
+// Só o termo e a quantidade de resultados: sem usuário nem IP.
+exports.registrarBusca = (termo, totalResultados) => consultar(
+    'INSERT INTO buscas_realizadas (termo, total_resultados) VALUES (?, ?)',
+    [termo, totalResultados]
+);
 
 // ===============================
 // BUSCA GLOBAL

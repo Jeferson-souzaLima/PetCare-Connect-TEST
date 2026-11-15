@@ -1,15 +1,10 @@
 import { Link } from "react-router-dom";
 
-/** Moldura das páginas de Termos e Privacidade, com aviso de rascunho. */
+/** Moldura das páginas de Termos e Privacidade. */
 export function DocumentoLegal({ titulo, versao, children }) {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <article className="mx-auto max-w-3xl rounded-2xl bg-white p-6 shadow-md sm:p-10">
-        <div role="note" className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-          <strong>Rascunho pendente de revisão jurídica.</strong> Este texto descreve o funcionamento atual da
-          plataforma, mas ainda será revisado por um advogado. Os trechos entre colchetes ainda precisam ser definidos.
-        </div>
-
         <h1 className="text-3xl font-bold text-green-900">{titulo}</h1>
         <p className="mt-1 text-sm text-gray-500">Versão {versao}</p>
 

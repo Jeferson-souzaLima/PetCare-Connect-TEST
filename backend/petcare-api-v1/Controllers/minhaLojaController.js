@@ -58,9 +58,10 @@ exports.criarMinhaLoja = async (req, res) => {
             cep,
             latitude,
             longitude,
-            entrega_ativa, taxa_entrega_fixa, taxa_entrega_por_km, raio_entrega_km
+            entrega_ativa, taxa_entrega_fixa, taxa_entrega_por_km, raio_entrega_km,
+            ativo
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
         `;
         const values = [
             req.usuario.id,

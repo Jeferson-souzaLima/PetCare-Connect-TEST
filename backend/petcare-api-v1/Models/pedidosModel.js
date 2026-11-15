@@ -1,11 +1,6 @@
 const db = require('../db');
 const historicoStatusModel = require('./historicoStatusModel');
 
-// Buscar todos os pedidos
-exports.getAll = (callback) => {
-    db.query('SELECT * FROM pedidos', callback);
-};
-
 // Atualizar o status do pedido
 exports.updateStatus = (id, status, callback) => {
     const query = `
@@ -154,6 +149,10 @@ exports.cancelarReserva = (id, callback) =>
 /** Pedido pago e ainda não preparado (o pagamento já deve ter sido estornado). */
 exports.cancelarPago = (id, callback) =>
     cancelarComDevolucao(id, "status = 'pago'", callback);
+
+/** Cancelamento pelo admin: só enquanto o pedido não saiu da loja. */
+exports.cancelarPeloAdmin = (id, callback) =>
+    cancelarComDevolucao(id, "status IN ('aguardando_pagamento', 'pago', 'em_preparo', 'pronto_para_retirada')", callback);
 
 exports.getMeusPedidosCompletos = (usuario_id, callback) => {
     const query = `
