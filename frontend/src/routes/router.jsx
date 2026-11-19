@@ -1,11 +1,11 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import Layout from "../layout/Layout";
+import LayoutLojista from "../layout/LayoutLojista";
 import { useAuth } from "../hooks/useAuth";
 
 // Páginas públicas
 import NovaHomePage from "../pages/NovaHomePage";
 import ExplorarPage from "../pages/ExplorarPage";
-import HomeLojistaPage from "../pages/lojista/HomeLojistaPage";
 import ProdutoDetalhes from "../pages/ProdutoDetalhes";
 import LojaDetalhes from "../pages/LojaDetalhes";
 import ResultadosBuscaPage from "../pages/ResultadosBuscaPage";
@@ -48,15 +48,9 @@ import AdminPage from "../pages/admin/AdminPage";
 function HomeRoute() {
   const { usuario } = useAuth();
 
-  // O lojista mantém a home e o Layout atuais; cliente e visitante usam a nova home,
-  // que tem cabeçalho e barra inferior próprios.
-  if (usuario?.tipo === "lojista") {
-    return (
-      <Layout>
-        <HomeLojistaPage />
-      </Layout>
-    );
-  }
+  // A home do lojista é o painel da área do lojista; cliente e visitante usam a
+  // nova home, que tem cabeçalho e barra inferior próprios.
+  if (usuario?.tipo === "lojista") return <Navigate to="/perfil-lojista" replace />;
 
   return <NovaHomePage />;
 }
@@ -78,6 +72,28 @@ export const router = createBrowserRouter([
   { path: "/lojas", element: <ExplorarPage key="lojas" tipo="lojas" /> },
   { path: "/produtos", element: <ExplorarPage key="produtos" tipo="produtos" /> },
   { path: "/servicos", element: <ExplorarPage key="servicos" tipo="servicos" /> },
+
+  // ===============================
+  // LOJISTA (cabeçalho, menu lateral e barra inferior próprios)
+  // ===============================
+  {
+    element: (
+      <PrivateRoute role="lojista">
+        <LayoutLojista />
+      </PrivateRoute>
+    ),
+    children: [
+      { path: "/perfil-lojista", element: <PainelLojistaPage /> },
+      { path: "/lojista/pedidos", element: <MeusPedidosLojistaPage /> },
+      { path: "/lojista/produtos", element: <ProdutosLojistaPage /> },
+      { path: "/lojista/perfil", element: <DadosLojaPage /> },
+      { path: "/lojista/servicos", element: <ServicosLojistaPage /> },
+      { path: "/lojista/agenda", element: <AgendaLojistaPage /> },
+      { path: "/lojista/agenda/configuracoes", element: <ConfiguracoesAgendaPage /> },
+      { path: "/lojista/ajuda-suporte", element: <AjudaSuportePage /> },
+      { path: "/lojista/relatorios", element: <RelatoriosPage /> },
+    ],
+  },
 
   {
     element: <Layout />,
@@ -135,82 +151,6 @@ export const router = createBrowserRouter([
         element: (
           <PrivateRoute role="cliente">
             <FavoritosPage />
-          </PrivateRoute>
-        ),
-      },
-
-      // ===============================
-      // LOJISTA
-      // ===============================
-      {
-        path: "/perfil-lojista",
-        element: (
-          <PrivateRoute role="lojista">
-            <PainelLojistaPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "/lojista/pedidos",
-        element: (
-          <PrivateRoute role="lojista">
-            <MeusPedidosLojistaPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "/lojista/produtos",
-        element: (
-          <PrivateRoute role="lojista">
-            <ProdutosLojistaPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "/lojista/perfil",
-        element: (
-          <PrivateRoute role="lojista">
-            <DadosLojaPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "/lojista/servicos",
-        element: (
-          <PrivateRoute role="lojista">
-            <ServicosLojistaPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "/lojista/agenda",
-        element: (
-          <PrivateRoute role="lojista">
-            <AgendaLojistaPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "/lojista/agenda/configuracoes",
-        element: (
-          <PrivateRoute role="lojista">
-            <ConfiguracoesAgendaPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "/lojista/ajuda-suporte",
-        element: (
-          <PrivateRoute role="lojista">
-            <AjudaSuportePage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "/lojista/relatorios",
-        element: (
-          <PrivateRoute role="lojista">
-            <RelatoriosPage />
           </PrivateRoute>
         ),
       },

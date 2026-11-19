@@ -1,6 +1,7 @@
 const relatoriosModel = require('../Models/relatoriosModel');
 const { registrarErroInterno } = require('../utils/erroInterno');
 const { calcularLiquido } = require('../Services/comissaoService');
+const { agoraNoHorarioDasLojas, adicionarDias } = require('../utils/dataLocal');
 
 const FORMATO_DATA = /^\d{4}-\d{2}-\d{2}$/;
 const LIMITE_DIAS_PERIODO = 366;
@@ -12,12 +13,6 @@ function dataValida(data) {
     return dataUtc.getUTCFullYear() === ano
         && dataUtc.getUTCMonth() === mes - 1
         && dataUtc.getUTCDate() === dia;
-}
-
-function adicionarDias(data, dias) {
-    const resultado = new Date(`${data}T00:00:00Z`);
-    resultado.setUTCDate(resultado.getUTCDate() + dias);
-    return resultado.toISOString().slice(0, 10);
 }
 
 function periodoPadrao() {
@@ -104,5 +99,69 @@ exports.obterRelatorio = async (req, res) => {
     } catch (erro) {
         registrarErroInterno('relatoriosController: Erro ao gerar relatório do lojista', erro);
         return res.status(500).json({ mensagem: 'Não foi possível gerar o relatório.' });
+    }
+};
+
+// ===============================
+// PAINEL DO LOJISTA (home)
+// ===============================
+
+const DIAS_DO_PAINEL = 30;
+
+/** Variação percentual em relação ao período anterior; null quando não há base de comparação. */
+function variacao(atual, anterior) {
+    if (!anterior) return null;
+    return Math.round(((atual - anterior) / anterior) * 1000) / 10;
+}
+
+const indicador = (atual, anterior) => ({ atual, anterior, variacao: variacao(atual, anterior) });
+
+exports.obterPainel = async (req, res) => {
+    const lojaId = req.usuario.loja_id;
+    if (!lojaId) {
+        return res.status(400).json({ mensagem: 'Loja não identificada no token.' });
+    }
+
+    const { data: hoje, dataHora: agora } = agoraNoHorarioDasLojas();
+    const dataInicial = adicionarDias(hoje, -(DIAS_DO_PAINEL - 1));
+    const inicioAnterior = adicionarDias(dataInicial, -DIAS_DO_PAINEL);
+    const fimExclusivo = adicionarDias(hoje, 1);
+
+    try {
+        const painel = await relatoriosModel.obterPainelDaLoja(lojaId, {
+            inicioAnterior: `${inicioAnterior} 00:00:00`,
+            inicio: `${dataInicial} 00:00:00`,
+            fim: `${fimExclusivo} 00:00:00`,
+            agora,
+            hoje
+        });
+
+        const porDia = new Map(painel.vendasPorDia.map((linha) => [linha.data, linha]));
+        const soma = (linhas, campo) => linhas.reduce((total, linha) => total + Number(linha[campo]), 0);
+        const doPeriodoAnterior = painel.vendasPorDia.filter((linha) => linha.data < dataInicial);
+        const doPeriodoAtual = painel.vendasPorDia.filter((linha) => linha.data >= dataInicial);
+        const centavos = (valor) => Math.round(valor * 100) / 100;
+
+        return res.json({
+            periodo: { data_inicial: dataInicial, data_final: hoje },
+            indicadores: {
+                vendas: indicador(centavos(soma(doPeriodoAtual, 'receita')), centavos(soma(doPeriodoAnterior, 'receita'))),
+                pedidos: indicador(soma(doPeriodoAtual, 'pedidos'), soma(doPeriodoAnterior, 'pedidos')),
+                agendamentos: indicador(Number(painel.agendamentos.atual), Number(painel.agendamentos.anterior)),
+                novos_clientes: indicador(Number(painel.novosClientes.atual), Number(painel.novosClientes.anterior))
+            },
+            vendas_por_dia: Array.from({ length: DIAS_DO_PAINEL }, (_, indice) => {
+                const data = adicionarDias(dataInicial, indice);
+                return { data, receita: Number(porDia.get(data)?.receita || 0) };
+            }),
+            proximos_agendamentos: painel.proximosAgendamentos,
+            pendencias: {
+                pedidos_a_preparar: Number(painel.pendencias.pedidos_a_preparar),
+                agendamentos_hoje: Number(painel.pendencias.agendamentos_hoje)
+            }
+        });
+    } catch (erro) {
+        registrarErroInterno('relatoriosController: Erro ao montar o painel do lojista', erro);
+        return res.status(500).json({ mensagem: 'Não foi possível carregar o painel.' });
     }
 };

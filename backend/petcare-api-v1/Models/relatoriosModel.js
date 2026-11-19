@@ -149,3 +149,108 @@ exports.obterRelatorioDaLoja = async (lojaId, inicio, fimExclusivo) => {
         }
     };
 };
+
+// ===============================
+// PAINEL DO LOJISTA (home)
+// ===============================
+
+// Venda aprovada da loja, seja de pedido ou de agendamento. Parâmetros: lojaId, lojaId.
+const VENDAS_APROVADAS_DA_LOJA = `
+    FROM pagamentos pg
+    LEFT JOIN pedidos pe
+        ON pg.tipo_referencia = 'pedido' AND pg.referencia_id = pe.id AND pe.loja_id = ?
+    LEFT JOIN agendamentos ag
+        ON pg.tipo_referencia = 'agendamento' AND pg.referencia_id = ag.id AND ag.loja_id = ?
+    WHERE pg.status = 'aprovado'
+      AND (pe.id IS NOT NULL OR ag.id IS NOT NULL)`;
+
+const STATUS_AGENDAMENTO_REALIZADO = "('confirmado', 'em_atendimento', 'concluido')";
+const LIMITE_PROXIMOS_AGENDAMENTOS = 3;
+
+/*
+ * Números da home do lojista: período atual [inicio, fim) e o anterior
+ * [inicioAnterior, inicio), de mesmo tamanho, para comparar.
+ * agora e hoje estão no horário das lojas (os agendamentos são gravados assim).
+ */
+exports.obterPainelDaLoja = async (lojaId, { inicioAnterior, inicio, fim, agora, hoje }) => {
+    const [vendasPorDia, agendamentos, novosClientes, proximosAgendamentos, pendencias] = await Promise.all([
+        executar(
+            `SELECT
+                DATE_FORMAT(pg.updated_at, '%Y-%m-%d') AS data,
+                COALESCE(SUM(pg.valor), 0) AS receita,
+                COUNT(DISTINCT pe.id) AS pedidos
+            ${VENDAS_APROVADAS_DA_LOJA}
+              AND pg.updated_at >= ?
+              AND pg.updated_at < ?
+            GROUP BY data
+            ORDER BY data ASC`,
+            [lojaId, lojaId, inicioAnterior, fim]
+        ),
+        executar(
+            `SELECT
+                COALESCE(SUM(a.data_inicio >= ?), 0) AS atual,
+                COALESCE(SUM(a.data_inicio < ?), 0) AS anterior
+            FROM agendamentos a
+            WHERE a.loja_id = ?
+              AND a.status IN ${STATUS_AGENDAMENTO_REALIZADO}
+              AND a.data_inicio >= ?
+              AND a.data_inicio < ?`,
+            [inicio, inicio, lojaId, inicioAnterior, fim]
+        ),
+        // Cliente novo: a primeira compra paga na loja caiu no período.
+        executar(
+            `SELECT
+                COALESCE(SUM(primeira >= ?), 0) AS atual,
+                COALESCE(SUM(primeira >= ? AND primeira < ?), 0) AS anterior
+            FROM (
+                SELECT cliente, MIN(data) AS primeira
+                FROM (
+                    SELECT pe.usuario_id AS cliente, pg.updated_at AS data
+                    FROM pagamentos pg
+                    INNER JOIN pedidos pe ON pg.tipo_referencia = 'pedido' AND pe.id = pg.referencia_id
+                    WHERE pe.loja_id = ? AND pg.status = 'aprovado'
+                    UNION ALL
+                    SELECT ag.cliente_id AS cliente, pg.updated_at AS data
+                    FROM pagamentos pg
+                    INNER JOIN agendamentos ag ON pg.tipo_referencia = 'agendamento' AND ag.id = pg.referencia_id
+                    WHERE ag.loja_id = ? AND pg.status = 'aprovado' AND ag.cliente_id IS NOT NULL
+                ) compras
+                GROUP BY cliente
+            ) clientes
+            WHERE primeira < ?`,
+            [inicio, inicioAnterior, inicio, lojaId, lojaId, fim]
+        ),
+        executar(
+            `SELECT
+                a.id,
+                DATE_FORMAT(a.data_inicio, '%Y-%m-%dT%H:%i:%s') AS data_inicio,
+                s.nome AS servico,
+                a.pet_nome,
+                COALESCE(u.nome, a.cliente_nome_externo) AS cliente
+            FROM agendamentos a
+            INNER JOIN servicos s ON s.id = a.servico_id
+            LEFT JOIN usuarios u ON u.id = a.cliente_id
+            WHERE a.loja_id = ?
+              AND a.status = 'confirmado'
+              AND a.data_inicio >= ?
+            ORDER BY a.data_inicio ASC
+            LIMIT ${LIMITE_PROXIMOS_AGENDAMENTOS}`,
+            [lojaId, agora]
+        ),
+        executar(
+            `SELECT
+                (SELECT COUNT(*) FROM pedidos WHERE loja_id = ? AND status = 'pago') AS pedidos_a_preparar,
+                (SELECT COUNT(*) FROM agendamentos
+                 WHERE loja_id = ? AND status = 'confirmado' AND DATE(data_inicio) = ?) AS agendamentos_hoje`,
+            [lojaId, lojaId, hoje]
+        )
+    ]);
+
+    return {
+        vendasPorDia,
+        agendamentos: agendamentos[0],
+        novosClientes: novosClientes[0],
+        proximosAgendamentos,
+        pendencias: pendencias[0]
+    };
+};

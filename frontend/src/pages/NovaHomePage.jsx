@@ -10,7 +10,7 @@ import { SecoesConteudoHome } from "@/components/home/SecoesConteudoHome";
 import { useAuth } from "@/hooks/useAuth";
 import { useResumoCliente } from "@/hooks/useResumoCliente";
 
-/** Home do cliente e do visitante. A home do lojista continua em HomeLojistaPage. */
+/** Home do cliente e do visitante. A do lojista é o painel (PainelLojistaPage). */
 export default function NovaHomePage() {
   const { usuario, logout } = useAuth();
   const resumo = useResumoCliente();
