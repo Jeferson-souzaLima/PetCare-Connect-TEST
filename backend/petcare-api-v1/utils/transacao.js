@@ -20,6 +20,10 @@ function emTransacao(trabalho, callback) {
     });
 }
 
+/** emTransacao em forma de Promise: resolve com o retorno de trabalho(). */
+const transacao = (trabalho) => new Promise((resolve, reject) =>
+    emTransacao(trabalho, (erro, resultado) => (erro ? reject(erro) : resolve(resultado))));
+
 /** Erro de regra de negócio com status HTTP 4xx e mensagem para o usuário. */
 function erroDeNegocio(status, mensagem) {
     const erro = new Error(mensagem);
@@ -27,4 +31,4 @@ function erroDeNegocio(status, mensagem) {
     return erro;
 }
 
-module.exports = { consultar, emTransacao, erroDeNegocio };
+module.exports = { consultar, emTransacao, transacao, erroDeNegocio };
