@@ -1,4 +1,4 @@
-const { verificar } = require('../Config/jwt');
+const { aceitarToken } = require('./sessaoToken');
 
 module.exports = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -15,18 +15,6 @@ module.exports = (req, res, next) => {
         });
     }
 
-    const token = authHeader.split(' ')[1];
-
-    try {
-        const decoded = verificar(token);
-
-        // Mantém o mesmo padrão do authMiddleware existente
-        req.usuario = decoded;
-
-        next();
-    } catch (err) {
-        return res.status(401).json({
-            mensagem: 'Token inválido.'
-        });
-    }
+    // Mantém o mesmo padrão do authMiddleware existente
+    return aceitarToken(authHeader.split(' ')[1], req, res, next);
 };

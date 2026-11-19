@@ -176,7 +176,8 @@ exports.anonimizarConta = async (id, senhaHashInutilizavel) => {
             senha_hash = ?,
             telefone = NULL, cidade = NULL, uf = NULL, cep = NULL, logradouro = NULL,
             numero = NULL, complemento = NULL, bairro = NULL, latitude = NULL, longitude = NULL,
-            email_verificado = 0, email_verificacao_token_hash = NULL, email_verificacao_expira_em = NULL
+            email_verificado = 0, email_verificacao_token_hash = NULL, email_verificacao_expira_em = NULL,
+            sessao_versao = sessao_versao + 1
          WHERE id = ?`,
         [senhaHashInutilizavel, id]
     );

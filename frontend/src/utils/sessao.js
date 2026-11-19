@@ -40,6 +40,20 @@ export function expiracaoDoToken(token) {
   }
 }
 
+// Maior espera aceita por setTimeout (cerca de 24,8 dias); acima disso ele dispara na hora.
+const MAIOR_ESPERA_DO_TIMER = 2 ** 31 - 1;
+
+/**
+ * Quanto esperar (ms) antes de conferir se o token venceu, ou null se não der para ler.
+ * Tokens de "manter conectado" (30 dias) passam do limite do setTimeout: nesse caso
+ * espera o máximo permitido, e quem chamou confere de novo.
+ */
+export function esperaAteConferirToken(token, agora = Date.now()) {
+  const expiraEm = expiracaoDoToken(token);
+  if (expiraEm === null) return null;
+  return Math.min(Math.max(expiraEm - agora, 0), MAIOR_ESPERA_DO_TIMER);
+}
+
 export function tokenExpirado(token, agora = Date.now()) {
   const expiraEm = expiracaoDoToken(token);
   return expiraEm === null || expiraEm <= agora;

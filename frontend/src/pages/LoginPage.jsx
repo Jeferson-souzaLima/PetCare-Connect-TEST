@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [aviso, setAviso] = useState(lerAvisoParaLogin);
   const [emailNaoVerificado, setEmailNaoVerificado] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [manterConectado, setManterConectado] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -42,7 +43,7 @@ export default function LoginPage() {
       const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, senha }),
+        body: JSON.stringify({ email, senha, manterConectado }),
       });
       const data = await res.json();
 
@@ -109,8 +110,21 @@ export default function LoginPage() {
             onChange={(e) => setSenha(e.target.value)}
             obrigatorio
           />
-          <div className="mt-2 text-right text-sm">
-            <LinkAcesso to="/esqueci-senha">Esqueci minha senha</LinkAcesso>
+          <div className="mt-3 flex items-start justify-between gap-4 text-sm">
+            <label className="flex min-w-0 cursor-pointer items-start gap-2 text-pc-texto">
+              <input
+                type="checkbox"
+                checked={manterConectado}
+                onChange={(e) => setManterConectado(e.target.checked)}
+                aria-describedby="login-manter-dica"
+                className="mt-0.5 h-4 w-4 accent-pc-verde-700"
+              />
+              <span>
+                Manter conectado
+                <span id="login-manter-dica" className="block text-xs text-pc-texto-suave">Por 30 dias. Use só em aparelho pessoal.</span>
+              </span>
+            </label>
+            <LinkAcesso to="/esqueci-senha" className="shrink-0">Esqueci minha senha</LinkAcesso>
           </div>
         </div>
 
