@@ -1,25 +1,9 @@
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { FaLock } from "react-icons/fa";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { CircleCheck, Lock } from "lucide-react";
 import { redefinirSenha } from "@/services/authService";
-
-function CampoSenha({ placeholder, valor, aoMudar }) {
-  return (
-    <div className="flex items-center rounded-xl border-2 border-[#0E5617] p-3 focus-within:ring-2 focus-within:ring-[#F0F2A0]">
-      <FaLock className="mr-3 text-[#0E5617]" />
-      <input
-        type="password"
-        placeholder={placeholder}
-        value={valor}
-        minLength={8}
-        autoComplete="new-password"
-        onChange={(e) => aoMudar(e.target.value)}
-        className="flex-1 text-gray-700 outline-none"
-        required
-      />
-    </div>
-  );
-}
+import { MolduraAutenticacao } from "@/components/autenticacao/MolduraAutenticacao";
+import { AvisoAcesso, BotaoAcesso, CampoSenhaAcesso, LinkAcesso } from "@/components/autenticacao/ElementosAcesso";
 
 export default function RedefinirSenhaPage() {
   const [searchParams] = useSearchParams();
@@ -51,40 +35,53 @@ export default function RedefinirSenhaPage() {
     }
   }
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-950 via-green-900 to-green-800 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
-        <h1 className="text-center text-2xl font-bold text-green-900">Criar nova senha</h1>
+  if (concluido) {
+    return (
+      <MolduraAutenticacao titulo="Senha alterada">
+        <div role="status" className="text-center">
+          <CircleCheck aria-hidden="true" className="mx-auto h-14 w-14 text-pc-verde-700" />
+          <p className="mt-3 text-[15px] text-pc-texto-suave">{concluido}</p>
+          <BotaoAcesso type="button" onClick={() => navigate("/login")} className="mt-6">
+            Ir para o login
+          </BotaoAcesso>
+        </div>
+      </MolduraAutenticacao>
+    );
+  }
 
-        {concluido ? (
-          <div className="mt-6 text-center">
-            <p className="text-green-700">{concluido}</p>
-            <button type="button" onClick={() => navigate("/login")} className="mt-6 rounded-xl bg-green-900 px-5 py-3 font-semibold text-white hover:bg-green-800">
-              Ir para o login
-            </button>
-          </div>
-        ) : (
-          <>
-            {token && (
-              <form onSubmit={salvar} className="mt-6 space-y-5">
-                <CampoSenha placeholder="Nova senha (mínimo 8 caracteres)" valor={senha} aoMudar={setSenha} />
-                <CampoSenha placeholder="Repita a nova senha" valor={confirmacaoSenha} aoMudar={setConfirmacaoSenha} />
-                <button
-                  type="submit"
-                  disabled={enviando}
-                  className="w-full rounded-xl bg-[#0E5617] py-3 font-semibold text-white transition hover:bg-green-800 disabled:opacity-60"
-                >
-                  {enviando ? "Salvando..." : "Salvar nova senha"}
-                </button>
-              </form>
-            )}
-            {erro && <p className="mt-3 text-center text-sm text-red-500">{erro}</p>}
-            <p className="mt-6 text-center text-sm text-gray-600">
-              <Link to="/esqueci-senha" className="font-semibold text-[#0E5617] hover:underline">Solicitar novo link</Link>
-            </p>
-          </>
-        )}
-      </div>
-    </div>
+  return (
+    <MolduraAutenticacao titulo="Criar nova senha" subtitulo="Escolha uma senha com pelo menos 8 caracteres.">
+      {token && (
+        <form onSubmit={salvar} className="space-y-4">
+          <CampoSenhaAcesso
+            id="nova-senha"
+            rotulo="Nova senha"
+            icone={Lock}
+            autoComplete="new-password"
+            minLength={8}
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            obrigatorio
+          />
+          <CampoSenhaAcesso
+            id="nova-senha-confirmacao"
+            rotulo="Repita a nova senha"
+            icone={Lock}
+            autoComplete="new-password"
+            minLength={8}
+            value={confirmacaoSenha}
+            onChange={(e) => setConfirmacaoSenha(e.target.value)}
+            obrigatorio
+          />
+          <AvisoAcesso erro={erro} />
+          <BotaoAcesso carregando={enviando} textoCarregando="Salvando...">Salvar nova senha</BotaoAcesso>
+        </form>
+      )}
+      {!token && <AvisoAcesso erro={erro} />}
+
+      <p className="mt-6 text-center text-[15px]">
+        <LinkAcesso to="/esqueci-senha">Solicitar novo link</LinkAcesso>
+      </p>
+    </MolduraAutenticacao>
   );
 }

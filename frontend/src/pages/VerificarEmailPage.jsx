@@ -1,6 +1,15 @@
 import { API_URL } from "@/services/apiUrl";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { CircleAlert, CircleCheck, LoaderCircle } from "lucide-react";
+import { MolduraAutenticacao } from "@/components/autenticacao/MolduraAutenticacao";
+import { BotaoAcesso } from "@/components/autenticacao/ElementosAcesso";
+
+const ICONE_POR_STATUS = {
+  carregando: { icone: LoaderCircle, classe: "animate-spin text-pc-verde-700" },
+  sucesso: { icone: CircleCheck, classe: "text-pc-verde-700" },
+  erro: { icone: CircleAlert, classe: "text-red-600" },
+};
 
 export default function VerificarEmailPage() {
   const [searchParams] = useSearchParams();
@@ -29,13 +38,19 @@ export default function VerificarEmailPage() {
       });
   }, [searchParams]);
 
+  const { icone: Icone, classe } = ICONE_POR_STATUS[status];
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-950 via-green-900 to-green-800 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl">
-        <h1 className="text-2xl font-bold text-green-900">Confirmação de e-mail</h1>
-        <p className={`mt-4 ${status === "erro" ? "text-red-600" : "text-gray-700"}`}>{mensagem}</p>
-        {status !== "carregando" && <button type="button" onClick={() => navigate("/login")} className="mt-6 rounded-xl bg-green-900 px-5 py-3 font-semibold text-white hover:bg-green-800">Ir para o login</button>}
+    <MolduraAutenticacao titulo="Confirmação de e-mail">
+      <div role="status" className="text-center">
+        <Icone aria-hidden="true" className={`mx-auto h-14 w-14 ${classe}`} />
+        <p className={`mt-3 text-[15px] ${status === "erro" ? "text-red-700" : "text-pc-texto-suave"}`}>{mensagem}</p>
+        {status !== "carregando" && (
+          <BotaoAcesso type="button" onClick={() => navigate("/login")} className="mt-6">
+            Ir para o login
+          </BotaoAcesso>
+        )}
       </div>
-    </div>
+    </MolduraAutenticacao>
   );
 }
