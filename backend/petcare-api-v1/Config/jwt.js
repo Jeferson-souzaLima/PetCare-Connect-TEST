@@ -16,7 +16,14 @@ if (secret.length < TAMANHO_MINIMO_SEGREDO) {
 // Algoritmo fixo na assinatura e na verificação: o token não escolhe o algoritmo.
 const ALGORITMO = 'HS256';
 
-const assinar = (payload) => jwt.sign(payload, secret, { algorithm: ALGORITMO, expiresIn: '1d' });
+// Sessão comum: 1 dia. "Manter conectado": 30 dias (o token leva a versão da sessão).
+const DURACAO_SESSAO = '1d';
+const DURACAO_MANTER_CONECTADO = '30d';
+
+const assinar = (payload, { manterConectado = false } = {}) => jwt.sign(payload, secret, {
+    algorithm: ALGORITMO,
+    expiresIn: manterConectado ? DURACAO_MANTER_CONECTADO : DURACAO_SESSAO
+});
 const verificar = (token) => jwt.verify(token, secret, { algorithms: [ALGORITMO] });
 
 module.exports = { assinar, verificar };

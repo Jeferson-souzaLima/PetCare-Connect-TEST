@@ -33,6 +33,7 @@ async function solicitarRedefinicao(email) {
 /*
  * Troca a senha se o link for válido. O link vale uma vez só. Como só o dono
  * do e-mail recebe o link, a conta também fica com o e-mail confirmado.
+ * Também encerra os logins "manter conectado" (sessao_versao).
  */
 async function redefinirSenha(token, novaSenha) {
     const senhaHash = await bcrypt.hash(novaSenha, CUSTO_BCRYPT);
@@ -44,7 +45,8 @@ async function redefinirSenha(token, novaSenha) {
              senha_reset_expira_em = NULL,
              email_verificado = 1,
              email_verificacao_token_hash = NULL,
-             email_verificacao_expira_em = NULL
+             email_verificacao_expira_em = NULL,
+             sessao_versao = sessao_versao + 1
          WHERE senha_reset_token_hash = ?
            AND senha_reset_expira_em > NOW()`,
         [senhaHash, hashTokenConfirmacao(token)]

@@ -37,9 +37,19 @@ function atualizarCustoDaSenha(usuario, senha) {
         .catch((err) => registrarErroInterno('authController.login - atualizar custo da senha', err));
 }
 
+/*
+ * Token do login. Com "manter conectado", vale 30 dias e leva a versão da
+ * sessão da conta (sv), que permite derrubá-lo (ver middlewares/sessaoToken).
+ */
+function emitirToken(usuario, dados, manterConectado) {
+    const payload = manterConectado ? { ...dados, sv: Number(usuario.sessao_versao) || 0 } : dados;
+    return assinar(payload, { manterConectado });
+}
+
 exports.login = (req, res) => {
     const email = normalizarEmail(req.body?.email);
     const { senha } = req.body || {};
+    const manterConectado = req.body?.manterConectado === true;
 
     if (!email || !senha) {
         return res.status(400).json({
@@ -88,12 +98,11 @@ exports.login = (req, res) => {
 
                         const lojaId = lojaResults[0].id;
 
-                        const token = assinar(
-                            {
-                                id: usuario.id,
-                                tipo: tipoUsuario,
-                                loja_id: lojaId
-                            });
+                        const token = emitirToken(usuario, {
+                            id: usuario.id,
+                            tipo: tipoUsuario,
+                            loja_id: lojaId
+                        }, manterConectado);
 
 
 
@@ -114,11 +123,10 @@ exports.login = (req, res) => {
                 // =========================
                 // CLIENTE / ADMIN / OUTROS
                 // =========================
-                const token = assinar(
-                    {
-                        id: usuario.id,
-                        tipo: tipoUsuario
-                    });
+                const token = emitirToken(usuario, {
+                    id: usuario.id,
+                    tipo: tipoUsuario
+                }, manterConectado);
 
                 return res.json({
                     mensagem: 'Login realizado com sucesso!',

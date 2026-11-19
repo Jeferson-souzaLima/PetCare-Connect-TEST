@@ -9,7 +9,7 @@ import {
 import {
   EVENTO_SESSAO_EXPIRADA,
   deixarAvisoParaLogin,
-  expiracaoDoToken,
+  esperaAteConferirToken,
   tokenExpirado
 } from "@/utils/sessao";
 
@@ -88,10 +88,14 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!token) return undefined;
 
-    const expiraEm = expiracaoDoToken(token);
-    if (expiraEm === null) return undefined;
+    let timer;
+    const agendar = () => {
+      const espera = esperaAteConferirToken(token);
+      if (espera === null) return;
+      timer = setTimeout(() => (tokenExpirado(token) ? encerrarSessaoExpirada() : agendar()), espera);
+    };
 
-    const timer = setTimeout(encerrarSessaoExpirada, Math.max(expiraEm - Date.now(), 0));
+    agendar();
     return () => clearTimeout(timer);
   }, [token, encerrarSessaoExpirada]);
 
