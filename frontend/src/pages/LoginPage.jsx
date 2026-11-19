@@ -1,9 +1,18 @@
 import { API_URL } from "@/services/apiUrl";
 import { useEffect, useState } from "react";
 import { lerAvisoParaLogin, limparAvisoParaLogin } from "@/utils/sessao";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { Lock, Mail } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import { FaEnvelope, FaLock } from "react-icons/fa";
+import { MolduraAutenticacao } from "@/components/autenticacao/MolduraAutenticacao";
+import {
+  AvisoAcesso,
+  BotaoAcesso,
+  CampoAcesso,
+  CampoSenhaAcesso,
+  ChamadaLojista,
+  LinkAcesso,
+} from "@/components/autenticacao/ElementosAcesso";
 
 const DESTINO_APOS_LOGIN = { lojista: "/perfil-lojista", admin: "/admin" };
 
@@ -13,6 +22,7 @@ export default function LoginPage() {
   const [erro, setErro] = useState("");
   const [aviso, setAviso] = useState(lerAvisoParaLogin);
   const [emailNaoVerificado, setEmailNaoVerificado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -26,6 +36,7 @@ export default function LoginPage() {
     setErro("");
     setAviso("");
     setEmailNaoVerificado(false);
+    setEnviando(true);
 
     try {
       const res = await fetch(`${API_URL}/auth/login`, {
@@ -35,8 +46,6 @@ export default function LoginPage() {
       });
       const data = await res.json();
 
-      
-
       if (!res.ok) {
         setErro(data.mensagem || "Erro ao logar");
         setEmailNaoVerificado(data.codigo === "EMAIL_NAO_VERIFICADO");
@@ -45,9 +54,10 @@ export default function LoginPage() {
 
       login(data.usuario, data.token);
       navigate(DESTINO_APOS_LOGIN[data.usuario.tipo] || "/perfil");
-      
     } catch {
       setErro("Erro ao conectar com o servidor");
+    } finally {
+      setEnviando(false);
     }
   };
 
@@ -75,79 +85,50 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-green-950 via-green-900 to-green-800">
-      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
-        {/* Logo */}
-        <div className="text-center mb-6">
-          <img
-            src="/logo.png"
-            alt="PetCare Connect"
-            className="mx-auto w-28 h-28"
+    <MolduraAutenticacao titulo="Que bom ter você aqui!" subtitulo="Entre na sua conta para continuar.">
+      <form onSubmit={handleLogin} className="space-y-4">
+        <CampoAcesso
+          id="login-email"
+          rotulo="E-mail"
+          icone={Mail}
+          type="email"
+          autoComplete="email"
+          placeholder="seu@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          obrigatorio
+        />
+        <div>
+          <CampoSenhaAcesso
+            id="login-senha"
+            rotulo="Senha"
+            icone={Lock}
+            autoComplete="current-password"
+            placeholder="Sua senha"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            obrigatorio
           />
-          <p className="text-gray-600 mt-2">Entre para cuidar do seu pet</p>
+          <div className="mt-2 text-right text-sm">
+            <LinkAcesso to="/esqueci-senha">Esqueci minha senha</LinkAcesso>
+          </div>
         </div>
 
-        {/* Formulário */}
-        <form onSubmit={handleLogin} className="space-y-5">
-          <div className="flex items-center border-2 border-[#0E5617] rounded-xl p-3 focus-within:ring-2 focus-within:ring-[#F0F2A0]">
-            <FaEnvelope className="text-[#0E5617] mr-3" />
-            <input
-              type="email"
-              placeholder="Digite seu e-mail"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 outline-none text-gray-700"
-              required
-            />
-          </div>
-
-          <div className="flex items-center border-2 border-[#0E5617] rounded-xl p-3 focus-within:ring-2 focus-within:ring-[#F0F2A0]">
-            <FaLock className="text-[#0E5617] mr-3" />
-            <input
-              type="password"
-              placeholder="Digite sua senha"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              className="flex-1 outline-none text-gray-700"
-              required
-            />
-          </div>
-
-          <div className="text-right">
-            <Link to="/esqueci-senha" className="text-sm font-semibold text-[#0E5617] hover:underline">
-              Esqueci minha senha
-            </Link>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-[#0E5617] text-white py-3 rounded-xl font-semibold hover:bg-green-800 transition"
-          >
-            Entrar
-          </button>
-        </form>
-
-        {erro && (
-          <p className="text-red-500 text-sm mt-3 text-center">{erro}</p>
-        )}
+        <AvisoAcesso erro={erro} aviso={aviso} />
         {emailNaoVerificado && (
-          <button type="button" onClick={reenviarConfirmacao} className="mt-3 w-full text-sm font-semibold text-green-800 hover:underline">
+          <button type="button" onClick={reenviarConfirmacao} className="w-full rounded text-sm font-semibold text-pc-verde-700 hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/40">
             Reenviar e-mail de confirmação
           </button>
         )}
-        {aviso && <p className="text-green-700 text-sm mt-3 text-center">{aviso}</p>}
 
-        {/* Link para cadastro */}
-        <p className="text-center text-sm text-gray-600 mt-6">
-          Ainda não tem conta?{" "}
-          <span
-            onClick={() => navigate("/register")}
-            className="text-[#0E5617] font-semibold cursor-pointer hover:underline"
-          >
-            Cadastre-se
-          </span>
-        </p>
-      </div>
-    </div>
+        <BotaoAcesso carregando={enviando} textoCarregando="Entrando...">Entrar</BotaoAcesso>
+      </form>
+
+      <p className="mt-6 text-center text-[15px] text-pc-texto-suave">
+        Ainda não tem conta? <LinkAcesso to="/register">Cadastre-se</LinkAcesso>
+      </p>
+
+      <ChamadaLojista />
+    </MolduraAutenticacao>
   );
 }

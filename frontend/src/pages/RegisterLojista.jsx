@@ -1,7 +1,26 @@
 import { API_URL } from "@/services/apiUrl";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Building2, FileText, Lock, Mail, MapPin, Phone, Store } from "lucide-react";
 import { CaixaAceiteTermos } from "@/components/legal/CaixaAceiteTermos";
+import { MolduraAutenticacao } from "@/components/autenticacao/MolduraAutenticacao";
+import {
+  AvisoAcesso,
+  BotaoAcesso,
+  CampoAcesso,
+  CampoSenhaAcesso,
+  LinkAcesso,
+  PainelConfirmeEmail,
+} from "@/components/autenticacao/ElementosAcesso";
+
+function Secao({ titulo, children }) {
+  return (
+    <fieldset className="space-y-4">
+      <legend className="mb-1 text-sm font-bold uppercase tracking-wide text-pc-verde-700">{titulo}</legend>
+      {children}
+    </fieldset>
+  );
+}
 
 export default function RegisterLojista() {
   const navigate = useNavigate();
@@ -76,133 +95,140 @@ export default function RegisterLojista() {
     }
   };
 
+  if (sucesso) {
+    return (
+      <MolduraAutenticacao titulo="Loja cadastrada!" publico="lojista">
+        <PainelConfirmeEmail mensagem={sucesso} aoIrParaLogin={() => navigate("/login")} />
+        <p className="mt-4 text-center text-sm text-pc-texto-suave">
+          Depois de confirmar o e-mail, você já pode cadastrar produtos e serviços. A loja aparece para os clientes
+          assim que nossa equipe aprovar o cadastro.
+        </p>
+      </MolduraAutenticacao>
+    );
+  }
+
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-green-950 via-green-900 to-green-800">
-      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
-        <h1 className="text-3xl font-bold mb-6 text-green-900 text-center">
-          Cadastro de Loja
-        </h1>
-
-        {erro && (
-          <p className="text-red-500 mb-4 text-sm text-center">{erro}</p>
-        )}
-        {sucesso && (
-          <div className="mb-4 rounded-xl bg-green-50 p-4 text-sm text-green-800 text-center">
-            <p>{sucesso}</p>
-            <button type="button" onClick={() => navigate("/login")} className="mt-2 font-semibold underline">
-              Ir para o login
-            </button>
-          </div>
-        )}
-
-        {!sucesso && (
-        <form onSubmit={handleRegister} className="space-y-4">
-          <input
-            type="text"
-            className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-900"
+    <MolduraAutenticacao
+      titulo="Cadastre sua loja"
+      subtitulo="Depois da análise da nossa equipe, sua loja aparece para os clientes."
+      publico="lojista"
+      larga
+    >
+      <form onSubmit={handleRegister} className="space-y-6">
+        <Secao titulo="Sua loja">
+          <CampoAcesso
+            id="loja-nome-fantasia"
+            rotulo="Nome fantasia"
+            icone={Store}
+            autoComplete="organization"
             value={nomeFantasia}
             onChange={(e) => setNomeFantasia(e.target.value)}
-            placeholder="Nome Fantasia"
+            obrigatorio
           />
-
-          <input
-            type="text"
-            className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-900"
-            value={razaoSocial}
-            onChange={(e) => setRazaoSocial(e.target.value)}
-            placeholder="Razão Social (opcional)"
-          />
-
-          <input
-            type="text"
-            className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-900"
-            value={cnpj}
-            onChange={(e) => setCnpj(e.target.value)}
-            placeholder="CNPJ"
-          />
-
-          <input
-            type="email"
-            className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-900"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-          />
-
-          <input
-            type="password"
-            className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-900"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            placeholder="Senha (mínimo 8 caracteres)"
-            autoComplete="new-password"
-          />
-
-          <input
-            type="password"
-            className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-900"
-            value={confirmacaoSenha}
-            onChange={(e) => setConfirmacaoSenha(e.target.value)}
-            placeholder="Confirme a senha"
-            autoComplete="new-password"
-          />
-
-          <input
-            type="text"
-            className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-900"
-            value={telefone}
-            onChange={(e) => setTelefone(e.target.value)}
-            placeholder="Telefone"
-          />
-
-          <div className="flex gap-4">
-            <input
-              type="text"
-              className="flex-1 p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-900"
-              value={cidade}
-              onChange={(e) => setCidade(e.target.value)}
-              placeholder="Cidade"
+          <div className="grid gap-4 sm:grid-cols-2">
+            <CampoAcesso
+              id="loja-cnpj"
+              rotulo="CNPJ"
+              icone={FileText}
+              inputMode="numeric"
+              placeholder="00.000.000/0000-00"
+              value={cnpj}
+              onChange={(e) => setCnpj(e.target.value)}
+              obrigatorio
             />
-            <input
-              type="text"
-              className="w-20 p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-900"
-              value={uf}
-              onChange={(e) => setUf(e.target.value)}
-              placeholder="UF"
-              maxLength={2}
+            <CampoAcesso
+              id="loja-telefone"
+              rotulo="Telefone"
+              icone={Phone}
+              type="tel"
+              autoComplete="tel"
+              placeholder="(11) 99999-9999"
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
             />
           </div>
-
-          <textarea
-            className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-900 resize-none"
+          <CampoAcesso
+            id="loja-razao-social"
+            rotulo="Razão social (opcional)"
+            icone={Building2}
+            value={razaoSocial}
+            onChange={(e) => setRazaoSocial(e.target.value)}
+          />
+          <div className="grid grid-cols-[1fr_96px] gap-4">
+            <CampoAcesso
+              id="loja-cidade"
+              rotulo="Cidade"
+              icone={MapPin}
+              autoComplete="address-level2"
+              value={cidade}
+              onChange={(e) => setCidade(e.target.value)}
+            />
+            <CampoAcesso
+              id="loja-uf"
+              rotulo="UF"
+              autoComplete="address-level1"
+              maxLength={2}
+              placeholder="SP"
+              value={uf}
+              onChange={(e) => setUf(e.target.value.toUpperCase())}
+            />
+          </div>
+          <CampoAcesso
+            id="loja-descricao"
+            rotulo="Descrição da loja (opcional)"
+            multilinha
+            rows={3}
+            placeholder="Conte o que sua loja oferece"
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
-            placeholder="Descrição da loja (opcional)"
-            rows={3}
           />
+        </Secao>
 
-          <CaixaAceiteTermos marcado={aceiteTermos} onChange={setAceiteTermos} />
+        <Secao titulo="Acesso à conta">
+          <CampoAcesso
+            id="loja-email"
+            rotulo="E-mail"
+            icone={Mail}
+            type="email"
+            autoComplete="email"
+            placeholder="contato@sualoja.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            obrigatorio
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <CampoSenhaAcesso
+              id="loja-senha"
+              rotulo="Senha"
+              icone={Lock}
+              autoComplete="new-password"
+              minLength={8}
+              dica="Mínimo de 8 caracteres."
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              obrigatorio
+            />
+            <CampoSenhaAcesso
+              id="loja-confirmacao"
+              rotulo="Confirme a senha"
+              icone={Lock}
+              autoComplete="new-password"
+              minLength={8}
+              value={confirmacaoSenha}
+              onChange={(e) => setConfirmacaoSenha(e.target.value)}
+              obrigatorio
+            />
+          </div>
+        </Secao>
 
-          <button
-            type="submit"
-            disabled={enviando}
-            className="w-full mt-6 bg-green-900 text-white py-3 rounded-xl font-semibold hover:bg-green-800 transition disabled:opacity-60"
-          >
-            {enviando ? "Cadastrando..." : "Cadastrar Loja"}
-          </button>
-        </form>
-        )}
+        <CaixaAceiteTermos marcado={aceiteTermos} onChange={setAceiteTermos} />
+        <AvisoAcesso erro={erro} />
+        <BotaoAcesso carregando={enviando} textoCarregando="Cadastrando...">Cadastrar loja</BotaoAcesso>
+      </form>
 
-        <p className="mt-6 text-sm text-gray-600 text-center">
-          Já tem conta?{" "}
-          <span
-            className="text-green-900 font-semibold cursor-pointer hover:underline"
-            onClick={() => navigate("/login")}
-          >
-            Faça login
-          </span>
-        </p>
-      </div>
-    </div>
+      <p className="mt-6 text-center text-[15px] text-pc-texto-suave">
+        Já tem conta? <LinkAcesso to="/login">Entrar</LinkAcesso>
+      </p>
+    </MolduraAutenticacao>
   );
 }
