@@ -1,26 +1,11 @@
 const db = require('../db');
+const { transacao } = require('../utils/transacao');
 
 const executar = (sql, valores = []) => new Promise((resolve, reject) => {
     db.query(sql, valores, (erro, resultado) =>
         erro ? reject(erro) : resolve(resultado)
     );
 });
-
-const iniciarTransacao = () => new Promise((resolve, reject) => {
-    db.beginTransaction(erro =>
-        erro ? reject(erro) : resolve()
-    );
-});
-
-const finalizar = () => new Promise((resolve, reject) => {
-    db.commit(erro =>
-        erro ? reject(erro) : resolve()
-    );
-});
-
-const desfazer = () => new Promise(resolve =>
-    db.rollback(resolve)
-);
 
 function distanciaKm(origemLat, origemLng, destinoLat, destinoLng) {
     const radianos = graus => graus * Math.PI / 180;
@@ -169,9 +154,9 @@ async function criarPedidoReservado({ usuarioId, dados }) {
         throw erro;
     }
 
-    await iniciarTransacao();
-
-    try {
+    // As consultas precisam rodar dentro do trabalho de transacao(): é ali que
+    // a conexão da transação fica disponível.
+    return transacao(async () => {
 
         const lojas = await executar(
             'SELECT * FROM lojas WHERE id = ? AND ativo = 1 FOR UPDATE',
@@ -377,8 +362,6 @@ async function criarPedidoReservado({ usuarioId, dados }) {
             [pedidoId]
         );
 
-        await finalizar();
-
         return {
             pedidoId,
             subtotal: Number(subtotal.toFixed(2)),
@@ -393,12 +376,7 @@ async function criarPedidoReservado({ usuarioId, dados }) {
             ),
             frete: Number(frete.toFixed(2))
         };
-
-    } catch (erro) {
-
-        await desfazer();
-        throw erro;
-    }
+    });
 }
 
 module.exports = {

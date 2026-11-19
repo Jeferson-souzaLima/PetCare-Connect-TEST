@@ -1,7 +1,7 @@
 const mysql = require('mysql2');
 const fs = require('fs');
 const path = require('path');
-const { AsyncLocalStorage } = require('async_hooks');
+const { AsyncLocalStorage, AsyncResource } = require('async_hooks');
 
 require('dotenv').config();
 
@@ -39,7 +39,23 @@ const pool = mysql.createPool({
     }
 });
 
+/*
+ * Conexão da transação em andamento, guardada por fluxo assíncrono.
+ *
+ * O mysql2 executa os callbacks no contexto do socket da conexão, e não no de
+ * quem fez a consulta. Por isso todo callback é devolvido ao contexto de quem
+ * chamou (AsyncResource). Sem isso, as consultas de uma transação caíam no
+ * pool, o commit falhava ("Nenhuma transação ativa") e a conexão nunca era
+ * devolvida, até o pool inteiro travar.
+ */
 const transactionContext = new AsyncLocalStorage();
+
+const noContextoDeQuemChamou = (callback) =>
+    (typeof callback === 'function' ? AsyncResource.bind(callback) : callback);
+
+/** Executa callback no contexto capturado, já sem a transação (conexão devolvida). */
+const foraDaTransacao = (contexto, callback, ...args) =>
+    contexto.runInAsyncScope(() => transactionContext.exit(() => callback?.(...args)));
 
 const db = {
     query(sql, values, callback) {
@@ -48,36 +64,43 @@ const db = {
             values = undefined;
         }
         const connection = transactionContext.getStore();
-        return (connection || pool).query(sql, values, callback);
+        return (connection || pool).query(sql, values, noContextoDeQuemChamou(callback));
     },
     beginTransaction(callback) {
+        const contexto = new AsyncResource('db.beginTransaction');
         pool.getConnection((acquireError, connection) => {
-            if (acquireError) return callback(acquireError);
-            transactionContext.run(connection, () => {
-                connection.beginTransaction((error) => {
-                    if (error) connection.release();
-                    callback(error);
-                });
+            if (acquireError) return contexto.runInAsyncScope(callback, null, acquireError);
+            connection.beginTransaction((error) => {
+                if (error) {
+                    connection.release();
+                    return contexto.runInAsyncScope(callback, null, error);
+                }
+                contexto.runInAsyncScope(() => transactionContext.run(connection, () => callback(null)));
             });
         });
     },
     commit(callback) {
         const connection = transactionContext.getStore();
         if (!connection) return callback(new Error('Nenhuma transação ativa.'));
+        const contexto = new AsyncResource('db.commit');
         connection.commit((error) => {
-            if (!error) connection.release();
-            callback(error);
+            // Com erro, a transação continua ativa para quem chamou poder desfazê-la.
+            if (error) return contexto.runInAsyncScope(callback, null, error);
+            connection.release();
+            foraDaTransacao(contexto, callback, null);
         });
     },
     rollback(callback) {
         const connection = transactionContext.getStore();
         if (!connection) return callback?.(new Error('Nenhuma transação ativa.'));
+        const contexto = new AsyncResource('db.rollback');
         connection.rollback((error) => {
             connection.release();
-            callback?.(error);
+            foraDaTransacao(contexto, callback, error);
         });
     },
     ping(callback) {
+        callback = noContextoDeQuemChamou(callback);
         pool.getConnection((error, connection) => {
             if (error) return callback(error);
             connection.ping((pingError) => {

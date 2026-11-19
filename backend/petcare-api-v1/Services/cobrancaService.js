@@ -2,7 +2,7 @@ const PagamentosModel = require('../Models/pagamentosModel');
 const MercadoPagoService = require('./mercadoPagoService');
 const MercadoPagoOAuthService = require('./mercadoPagoOAuthService');
 const { calcularComissao } = require('./comissaoService');
-const { consultar, emTransacao } = require('../utils/transacao');
+const { consultar, transacao } = require('../utils/transacao');
 const { registrarErroInterno, erroParaUsuario } = require('../utils/erroInterno');
 
 /*
@@ -13,9 +13,6 @@ const { registrarErroInterno, erroParaUsuario } = require('../utils/erroInterno'
  * external_reference aponte para ele ("pagamento:<id>"): o webhook encontra
  * exatamente esta tentativa, mesmo que o cliente tente pagar mais de uma vez.
  */
-
-const transacao = (trabalho) => new Promise((resolve, reject) =>
-    emTransacao(trabalho, (erro, resultado) => (erro ? reject(erro) : resolve(resultado))));
 
 /** Confirma antes de reservar algo que a loja consegue receber online. */
 async function garantirLojaRecebeOnline(lojaId) {
