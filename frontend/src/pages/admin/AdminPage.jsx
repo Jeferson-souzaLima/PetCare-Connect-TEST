@@ -6,6 +6,7 @@ import UsuariosAdmin from "@/components/admin/UsuariosAdmin";
 import PedidosAdmin from "@/components/admin/PedidosAdmin";
 import FinanceiroAdmin from "@/components/admin/FinanceiroAdmin";
 import RankingsAdmin from "@/components/admin/RankingsAdmin";
+import EstornosAdmin from "@/components/admin/EstornosAdmin";
 
 const ABAS = [
   { id: "lojas", rotulo: "Lojas", Componente: LojasAdmin },
@@ -13,6 +14,7 @@ const ABAS = [
   { id: "pedidos", rotulo: "Pedidos", Componente: PedidosAdmin },
   { id: "financeiro", rotulo: "Financeiro", Componente: FinanceiroAdmin },
   { id: "rankings", rotulo: "Rankings", Componente: RankingsAdmin },
+  { id: "estornos", rotulo: "Estornos", Componente: EstornosAdmin },
 ];
 
 export default function AdminPage() {

@@ -23,6 +23,7 @@ const mercadoPagoRoutes = require('./Routes/mercadoPago');
 const adminRoutes = require('./Routes/admin');
 const pedidosModel = require('./Models/pedidosModel');
 const agendamentosModel = require('./Models/agendamentosModel');
+const { reprocessarEstornosPendentes } = require('./Services/estornoService');
 const { PRAZO_PAGAMENTO_AGENDAMENTO_MIN, MARGEM_LIBERACAO_HORARIO_MIN } = require('./Config/financeiro');
 const cepRoutes = require('./Routes/cep');
 const { registrarErroInterno } = require('./utils/erroInterno');
@@ -87,6 +88,10 @@ setInterval(() => agendamentosModel.liberarHorariosNaoPagos(
         if (err) registrarErroInterno('app: liberar horários de agendamentos não pagos', err);
     }
 ), 60 * 1000).unref();
+
+// Tenta de novo os estornos recusados (ex.: loja sem saldo no Mercado Pago) até o dinheiro voltar ao cliente.
+setInterval(() => reprocessarEstornosPendentes()
+    .catch((err) => registrarErroInterno('app: reprocessar estornos pendentes', err)), 30 * 60 * 1000).unref();
 
 // Inicia o servidor
 const PORT = Number(process.env.PORT || 3000);

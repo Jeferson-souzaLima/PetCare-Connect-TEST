@@ -1,7 +1,8 @@
 const AdminModel = require('../Models/adminModel');
 const Indicadores = require('../Models/adminIndicadoresModel');
 const pedidosModel = require('../Models/pedidosModel');
-const { estornarVendaSePaga } = require('../Services/estornoService');
+const { estornarPagamento, estornarVendaSePaga } = require('../Services/estornoService');
+const PagamentosModel = require('../Models/pagamentosModel');
 const { responderErroInterno, responderErroDoServico, registrarErroInterno } = require('../utils/erroInterno');
 
 /*
@@ -211,5 +212,41 @@ exports.obterRankings = async (req, res) => {
         });
     } catch (erro) {
         return responderErroInterno(res, erro, 'adminController.obterRankings');
+    }
+};
+
+// ===============================
+// ESTORNOS RECUSADOS PELO MERCADO PAGO
+// ===============================
+
+exports.listarEstornos = async (req, res) => {
+    try {
+        const estornos = await PagamentosModel.listarEstornosComFalha();
+        return res.json(estornos.map((estorno) => ({
+            ...estorno,
+            valor: Number(estorno.valor),
+            pendente: estorno.estorno_pendente_desde !== null
+        })));
+    } catch (erro) {
+        return responderErroInterno(res, erro, 'adminController.listarEstornos');
+    }
+};
+
+/** Nova tentativa manual de um estorno pendente (a venda já não existe). */
+exports.tentarEstorno = async (req, res) => {
+    const pagamentoId = idValido(req.params.id);
+    if (!pagamentoId) return res.status(400).json({ mensagem: 'Pagamento inválido.' });
+
+    try {
+        const pagamento = await PagamentosModel.getComLoja(pagamentoId);
+        if (!pagamento) return res.status(404).json({ mensagem: 'Pagamento não encontrado.' });
+        if (pagamento.status !== 'aprovado' || !pagamento.estorno_pendente_desde) {
+            return res.status(400).json({ mensagem: 'Este pagamento não tem estorno pendente.' });
+        }
+
+        await estornarPagamento({ pagamento, obrigatorio: true });
+        return res.json({ mensagem: 'Estorno feito. O valor volta ao cliente pelo Mercado Pago.' });
+    } catch (erro) {
+        return responderErroDoServico(res, erro, 'adminController.tentarEstorno', 'Não foi possível estornar o pagamento.');
     }
 };
