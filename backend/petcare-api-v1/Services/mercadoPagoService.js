@@ -46,6 +46,11 @@ const MercadoPagoService = {
                 items: itens,
                 external_reference: referenciaExterna,
                 marketplace_fee: marketplaceFee,
+                // Boleto e pagamento em lotérica compensam em dias, e a reserva dura minutos:
+                // o pagamento chegaria depois do prazo e seria estornado.
+                payment_methods: {
+                    excluded_payment_types: [{ id: 'ticket' }, { id: 'atm' }]
+                },
                 ...expiracao,
                 notification_url: buildWebhookNotificationUrl(process.env.MP_WEBHOOK_URL),
                 back_urls: {

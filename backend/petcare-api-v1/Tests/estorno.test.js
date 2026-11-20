@@ -34,7 +34,11 @@ const regrasPagamento = (pagamento = pagamentoAprovado()) => [
     [/FROM pagamentos\s+WHERE tipo_referencia = \?/, [pagamento]],
     [/FROM pagamentos p\s+LEFT JOIN/, [pagamento]],
     [/FROM lojas_mercadopago/, CONTA_LOJA],
-    [/UPDATE pagamentos\s+SET status = \?/, { affectedRows: 1 }]
+    [/UPDATE pagamentos\s+SET status = \?/, { affectedRows: 1 }],
+    // Estorno recusado: registro da falha e contatos para o alerta.
+    [/SET estorno_ultima_falha_em = NOW\(\)/, { affectedRows: 1 }],
+    [/FROM usuarios WHERE tipo = 'admin'/, []],
+    [/FROM lojas l INNER JOIN usuarios u/, []]
 ];
 
 // ---------------------------------------------------------------
@@ -51,7 +55,7 @@ test('estorno do split usa o token da loja, chave de idempotência e marca estor
     assert.equal(chamada.this.config.accessToken, 'APP_USR-loja-2');
     assert.equal(chamada.arguments[0].payment_id, '999');
     assert.equal(chamada.arguments[0].requestOptions.idempotencyKey, 'estorno-pagamento-31');
-    assert.deepEqual(consultas.at(-1).values, ['estornado', 31]);
+    assert.deepEqual(consultas.at(-1).values, ['estornado', 'estornado', 31]);
 });
 
 test('pagamento antigo (antes do split) é estornado pela conta da plataforma', async (t) => {
@@ -124,7 +128,7 @@ test('se o estorno falhar, o pedido pago não é cancelado (502)', async (t) => 
     await comServidor('/pedidos', pedidosRoutes, async (base) => {
         const r = await pedir(base, 'POST', '/pedidos/5/cancelar', USUARIOS.cliente);
         assert.equal(r.status, 502);
-        assert.match(r.body.mensagem, /estornar/);
+        assert.match(r.body.mensagem, /devolver o pagamento/);
     });
 
     assert.ok(!consultas.some(c => /UPDATE pedidos SET status = 'cancelado'/.test(c.sql)));
@@ -220,7 +224,7 @@ test('estorno de agendamento falhou: agendamento continua confirmado (502)', asy
     await comServidor('/agendamentos', agendamentosRoutes, async (base) => {
         const r = await pedir(base, 'PUT', '/agendamentos/9/cancelar', USUARIOS.cliente);
         assert.equal(r.status, 502);
-        assert.match(r.body.message, /estornar/);
+        assert.match(r.body.message, /devolver o pagamento/);
     });
 
     assert.ok(!consultas.some(c => /UPDATE agendamentos/.test(c.sql)));

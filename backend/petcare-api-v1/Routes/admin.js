@@ -14,5 +14,7 @@ router.get('/pedidos', adminController.listarPedidos);
 router.post('/pedidos/:id/cancelar', adminController.cancelarPedido);
 router.get('/financeiro', adminController.obterFinanceiro);
 router.get('/rankings', adminController.obterRankings);
+router.get('/estornos', adminController.listarEstornos);
+router.post('/estornos/:id/tentar', adminController.tentarEstorno);
 
 module.exports = router;

@@ -44,7 +44,8 @@ function valorConfere(valorPago, valorEsperado) {
 /*
  * Pagamento aprovado que não confirmou a venda (prazo vencido, ou o cliente
  * pagou duas tentativas): o dinheiro não pode ficar com a loja sem a venda.
- * Estorna automaticamente; se falhar, fica registrado para ação manual.
+ * Estorna automaticamente; se falhar, fica pendente: o sistema tenta de novo
+ * a cada 30 minutos e avisa os administradores e a loja.
  */
 function estornarPagamentoSemVenda(pagamentoInterno, motivo, concluir) {
     console.warn(`${motivo} Estornando pagamento.`, {
@@ -52,8 +53,8 @@ function estornarPagamentoSemVenda(pagamentoInterno, motivo, concluir) {
         referencia_id: pagamentoInterno.referencia_id
     });
 
-    EstornoService.estornarPagamento({ pagamento: pagamentoInterno })
-        .catch(erro => registrarErroInterno(`pagamentoStatusService: ESTORNO MANUAL NECESSÁRIO (pagamento ${pagamentoInterno.id})`, erro))
+    EstornoService.estornarPagamento({ pagamento: pagamentoInterno, obrigatorio: true })
+        .catch(erro => registrarErroInterno(`pagamentoStatusService: estorno pendente (pagamento ${pagamentoInterno.id})`, erro))
         .finally(concluir);
 }
 

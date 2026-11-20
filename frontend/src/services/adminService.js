@@ -34,3 +34,13 @@ export async function obterRankingsAdmin({ ano, mes }) {
   const { data } = await api.get("/admin/rankings", { params: { ano, mes: mes || undefined } });
   return data;
 }
+
+export async function listarEstornosAdmin() {
+  const { data } = await api.get("/admin/estornos");
+  return data;
+}
+
+export async function tentarEstornoAdmin(pagamentoId) {
+  const { data } = await api.post(`/admin/estornos/${pagamentoId}/tentar`);
+  return data;
+}

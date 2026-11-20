@@ -148,11 +148,11 @@ test('pagamento aprovado depois do prazo não reconfirma o agendamento e é esto
     );
 });
 
-test('pedido aprovado com reserva vencida é estornado; falha no estorno fica no log', (t, done) => {
+test('pedido aprovado com reserva vencida é estornado como obrigatório; falha fica pendente e no log', (t, done) => {
     silenciarLogs(t);
     simularModelos(t);
     t.mock.method(PedidosModel, 'confirmarPagamento', (id, cb) => cb(null, { affectedRows: 0 }));
-    t.mock.method(EstornoService, 'estornarPagamento', async () => { throw new Error('mp fora'); });
+    const estornar = t.mock.method(EstornoService, 'estornarPagamento', async () => { throw new Error('mp fora'); });
 
     servico.registrarResultadoPagamento(
         { id: 7, tipo_referencia: 'pedido', referencia_id: 42 },
@@ -160,7 +160,8 @@ test('pedido aprovado com reserva vencida é estornado; falha no estorno fica no
         'aprovado',
         () => {
             const logs = console.error.mock.calls.map(c => String(c.arguments[0]));
-            assert.ok(logs.some(l => /ESTORNO MANUAL NECESSÁRIO/.test(l)));
+            assert.ok(logs.some(l => /estorno pendente \(pagamento 7\)/.test(l)));
+            assert.equal(estornar.mock.calls[0].arguments[0].obrigatorio, true);
             done();
         }
     );
