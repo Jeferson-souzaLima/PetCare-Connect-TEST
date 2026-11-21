@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { FaixaAdmin } from "@/components/navigation/FaixaAdmin";
 import { LogoPetCare } from "@/components/ui/LogoPetCare";
 import { AcoesCabecalho } from "./AcoesCabecalho";
 import { BuscaHome } from "./BuscaHome";
@@ -10,8 +11,10 @@ import { CidadeAtual } from "./CidadeAtual";
  */
 export function HomeHeader({ usuario, logout, pagina = false }) {
   return (
-    // No celular o verde vai de ponta a ponta, inclusive sob a barra de status (safe-area),
-    // e continua abaixo da busca, onde a folha clara da página e o banner sobem sobre ele.
+    <>
+    <FaixaAdmin />
+    {/* No celular o verde vai de ponta a ponta, inclusive sob a barra de status (safe-area),
+        e continua abaixo da busca, onde a folha clara da página e o banner sobem sobre ele. */}
     <header
       className={`bg-gradient-to-b from-pc-verde-900 to-pc-verde-700 px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] md:px-6 md:pb-3 md:pt-3 ${
         pagina ? "pb-3" : "pb-[4.5rem]"
@@ -34,5 +37,6 @@ export function HomeHeader({ usuario, logout, pagina = false }) {
         </div>
       </div>
     </header>
+    </>
   );
 }

@@ -1,10 +1,12 @@
 import { Outlet } from "react-router-dom";
 import { Header } from "../components/layout/Header";
 import { BarraInferiorCliente } from "../components/navigation/BarraInferiorCliente";
+import { FaixaAdmin } from "../components/navigation/FaixaAdmin";
 
 export default function Layout({ children }) {
   return (
     <>
+      <FaixaAdmin />
       <Header />
 
       {/* Espaço para a barra inferior flutuante (altura + distância da borda + safe-area). */}
