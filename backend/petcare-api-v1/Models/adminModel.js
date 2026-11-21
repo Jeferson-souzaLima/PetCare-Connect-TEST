@@ -70,3 +70,41 @@ exports.listarPedidos = () => consultar(
      ORDER BY p.id DESC
      LIMIT 200`
 );
+
+/** Loja com logo e produtos (com as imagens), para o admin cuidar das imagens do catálogo. */
+exports.catalogoDaLoja = async (lojaId) => {
+    const [loja] = await consultar('SELECT id, nome_fantasia, imagem FROM lojas WHERE id = ?', [lojaId]);
+    if (!loja) return null;
+
+    const produtos = await consultar(
+        'SELECT id, nome, ativo FROM produtos WHERE loja_id = ? ORDER BY nome LIMIT 500',
+        [lojaId]
+    );
+    const imagens = produtos.length
+        ? await consultar(
+            'SELECT id, produto_id, caminho, principal FROM produtoimagens WHERE produto_id IN (?) ORDER BY principal DESC, id',
+            [produtos.map((produto) => produto.id)]
+        )
+        : [];
+
+    return {
+        ...loja,
+        produtos: produtos.map((produto) => ({
+            ...produto,
+            ativo: Boolean(produto.ativo),
+            imagens: imagens
+                .filter((imagem) => imagem.produto_id === produto.id)
+                .map(({ id, caminho, principal }) => ({ id, caminho, principal: Boolean(principal) }))
+        }))
+    };
+};
+
+exports.buscarProduto = async (produtoId) => {
+    const [produto] = await consultar('SELECT id, loja_id FROM produtos WHERE id = ?', [produtoId]);
+    return produto || null;
+};
+
+exports.buscarLoja = async (lojaId) => {
+    const [loja] = await consultar('SELECT id, imagem FROM lojas WHERE id = ?', [lojaId]);
+    return loja || null;
+};

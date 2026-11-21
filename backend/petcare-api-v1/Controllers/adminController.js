@@ -3,6 +3,7 @@ const Indicadores = require('../Models/adminIndicadoresModel');
 const pedidosModel = require('../Models/pedidosModel');
 const { estornarPagamento, estornarVendaSePaga } = require('../Services/estornoService');
 const PagamentosModel = require('../Models/pagamentosModel');
+const { adicionarImagensAoProduto, trocarImagemDaLoja } = require('../Services/imagensCatalogoService');
 const { responderErroInterno, responderErroDoServico, registrarErroInterno } = require('../utils/erroInterno');
 
 /*
@@ -248,5 +249,50 @@ exports.tentarEstorno = async (req, res) => {
         return res.json({ mensagem: 'Estorno feito. O valor volta ao cliente pelo Mercado Pago.' });
     } catch (erro) {
         return responderErroDoServico(res, erro, 'adminController.tentarEstorno', 'Não foi possível estornar o pagamento.');
+    }
+};
+
+// ===============================
+// IMAGENS DO CATÁLOGO (produtos e logo de qualquer loja)
+// ===============================
+exports.obterCatalogoDaLoja = async (req, res) => {
+    const lojaId = idValido(req.params.id);
+    if (!lojaId) return res.status(400).json({ mensagem: 'Loja inválida.' });
+
+    try {
+        const catalogo = await AdminModel.catalogoDaLoja(lojaId);
+        if (!catalogo) return res.status(404).json({ mensagem: 'Loja não encontrada.' });
+        return res.json(catalogo);
+    } catch (erro) {
+        return responderErroInterno(res, erro, 'adminController.obterCatalogoDaLoja');
+    }
+};
+
+exports.enviarImagensProduto = async (req, res) => {
+    const produtoId = idValido(req.params.id);
+    if (!produtoId) return res.status(400).json({ mensagem: 'Produto inválido.' });
+
+    try {
+        if (!(await AdminModel.buscarProduto(produtoId))) {
+            return res.status(404).json({ mensagem: 'Produto não encontrado.' });
+        }
+        const imagens = await adicionarImagensAoProduto(produtoId, req.files);
+        return res.json({ mensagem: 'Imagens enviadas.', imagens });
+    } catch (erro) {
+        return responderErroDoServico(res, erro, 'adminController.enviarImagensProduto', 'Não foi possível enviar as imagens.');
+    }
+};
+
+exports.enviarImagemLoja = async (req, res) => {
+    const lojaId = idValido(req.params.id);
+    if (!lojaId) return res.status(400).json({ mensagem: 'Loja inválida.' });
+
+    try {
+        const loja = await AdminModel.buscarLoja(lojaId);
+        if (!loja) return res.status(404).json({ mensagem: 'Loja não encontrada.' });
+        const imagem = await trocarImagemDaLoja({ lojaId, imagemAtual: loja.imagem, arquivo: req.file });
+        return res.json({ mensagem: 'Logo da loja atualizado.', imagem });
+    } catch (erro) {
+        return responderErroDoServico(res, erro, 'adminController.enviarImagemLoja', 'Não foi possível enviar a imagem.');
     }
 };

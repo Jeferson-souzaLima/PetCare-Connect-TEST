@@ -2,7 +2,7 @@ const db = require('../db');
 const { buscarCoordenadas } = require("../Services/geocodingService");
 
 const { validarDadosLoja: validarDados } = require("../utils/validacaoLoja");
-const { enviarImagem, removerImagem } = require("../utils/imagens");
+const { trocarImagemDaLoja } = require("../Services/imagensCatalogoService");
 const { responderErroInterno, responderErroDoServico } = require("../utils/erroInterno");
 
 function buscarPorUsuario(usuarioId, callback) {
@@ -140,24 +140,15 @@ exports.carregarMinhaLoja = (req, res, next) => {
 };
 
 exports.atualizarImagemMinhaLoja = async (req, res) => {
-    if (!req.file) return res.status(400).json({ mensagem: 'Selecione uma imagem para enviar.' });
-
-    let imagem;
     try {
-        imagem = await enviarImagem(req.file, 'lojas');
-    } catch (erro) {
-        return responderErroDoServico(res, erro, 'minhaLojaController.atualizarImagemMinhaLoja - envio', 'Não foi possível enviar a imagem.');
-    }
-
-    db.query('UPDATE lojas SET imagem = ? WHERE id = ? AND usuario_id = ?', [imagem, req.loja.id, req.usuario.id], async (err, result) => {
-        if (err || !result.affectedRows) {
-            await removerImagem(imagem);
-            if (err) return responderErroInterno(res, err, 'minhaLojaController.atualizarImagemMinhaLoja');
-            return res.status(404).json({ mensagem: 'Loja não encontrada.' });
-        }
-
-        // A imagem anterior só é apagada depois que a nova foi salva.
-        await removerImagem(req.loja.imagem);
+        const imagem = await trocarImagemDaLoja({
+            lojaId: req.loja.id,
+            imagemAtual: req.loja.imagem,
+            arquivo: req.file,
+            usuarioId: req.usuario.id
+        });
         return res.json({ mensagem: 'Imagem da loja atualizada com sucesso.', imagem });
-    });
+    } catch (erro) {
+        return responderErroDoServico(res, erro, 'minhaLojaController.atualizarImagemMinhaLoja', 'Não foi possível enviar a imagem.');
+    }
 };
