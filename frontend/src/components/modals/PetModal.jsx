@@ -1,5 +1,6 @@
 import { useState } from "react";
 import petService from "../../services/petService";
+import { prepararImagem } from "@/utils/prepararImagem";
 
 export default function PetModal({ token, onClose, onPetSalvo, petExistente = null }) {
   const [novoPet, setNovoPet] = useState(
@@ -21,14 +22,14 @@ export default function PetModal({ token, onClose, onPetSalvo, petExistente = nu
       formData.append("idade", novoPet.idade);
 
       if (novoPet.imagem instanceof File) {
-        formData.append("imagem", novoPet.imagem);
+        formData.append("imagem", await prepararImagem(novoPet.imagem));
       }
 
       let response;
 
       if (petExistente) {
         // ATUALIZAR
-        response = await petService.atualizarPet(petExistente.id, formData, token);
+        response = await petService.atualizar(petExistente.id, formData, token);
       } else {
         // CRIAR
         response = await petService.criar(formData, token);
@@ -38,7 +39,7 @@ export default function PetModal({ token, onClose, onPetSalvo, petExistente = nu
       onClose();
 
     } catch (error) {
-      alert(error.response?.data?.mensagem || "Erro ao salvar o pet.");
+      alert(error.response?.data?.mensagem || error.message || "Erro ao salvar o pet.");
     } finally {
       setSalvandoPet(false);
     }

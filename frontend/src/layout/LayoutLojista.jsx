@@ -6,6 +6,7 @@ import { obterPainelLojista } from "@/services/painelLojistaService";
 import { CabecalhoLojista } from "@/components/lojista/CabecalhoLojista";
 import { MenuLateralLojista } from "@/components/lojista/MenuLateralLojista";
 import { BarraInferiorLojista } from "@/components/lojista/BarraInferiorLojista";
+import { FaixaAdmin } from "@/components/navigation/FaixaAdmin";
 
 /*
  * Moldura da área do lojista: cabeçalho, menu lateral (telas grandes) e barra
@@ -49,6 +50,7 @@ export default function LayoutLojista() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
+      <FaixaAdmin />
       <CabecalhoLojista loja={loja} pendencias={pendencias} aoSair={sair} />
       <div className="mx-auto flex max-w-[1600px]">
         <MenuLateralLojista pendencias={pendencias} />

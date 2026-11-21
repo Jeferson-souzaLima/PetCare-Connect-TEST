@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { buscarMinhaLoja, salvarMinhaLoja, enviarImagemMinhaLoja } from "../../services/lojaService";
 import RecebimentosMercadoPago from "@/components/perfil/RecebimentosMercadoPago";
+import { prepararImagem } from "@/utils/prepararImagem";
 
 const initialForm = {
   nome_fantasia: "",
@@ -115,7 +116,7 @@ function validarFormulario(form) {
 }
 
 export default function DadosLojaPage() {
-  const { token } = useAuth();
+  const { token, usuario } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const [lojaExiste, setLojaExiste] = useState(false);
@@ -216,7 +217,7 @@ export default function DadosLojaPage() {
 
       const imagemResult =
         await enviarImagemMinhaLoja(
-          imagem,
+          await prepararImagem(imagem),
           token
         );
 
@@ -348,11 +349,16 @@ export default function DadosLojaPage() {
       </Section>
       
       <Section icon={<FaImage />} title="Imagem da loja">
-       <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center">{imagemAtual ? <img src={getMediaUrl(imagemAtual)} alt="Logo da loja" className="h-24 w-24 rounded-2xl object-cover" /> : <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-green-100 text-3xl text-green-900"><FaBuilding /></div>}<div><input type="file" accept="image/jpeg,image/png" onChange={(event) => setImagem(event.target.files?.[0] || null)} className="block text-sm text-gray-600" /><p className="mt-2 text-xs text-gray-500">PNG ou JPG, até 5 MB. A imagem é enviada ao salvar.</p></div></div></Section>
+       <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center">{imagemAtual ? <img src={getMediaUrl(imagemAtual)} alt="Logo da loja" className="h-24 w-24 rounded-2xl object-cover" /> : <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-green-100 text-3xl text-green-900"><FaBuilding /></div>}<div><input type="file" accept="image/*" onChange={(event) => setImagem(event.target.files?.[0] || null)} className="block text-sm text-gray-600" /><p className="mt-2 text-xs text-gray-500">Foto ou logo (fotos grandes ou em outros formatos são convertidas para JPG). A imagem é enviada ao salvar.</p></div></div></Section>
       
       <button type="submit" disabled={salvando} className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-900 py-3 font-semibold text-white transition hover:bg-green-800 disabled:opacity-60"><FaSave /> {salvando ? "Salvando..." : "Salvar dados da loja"}</button>
     </form>
-    {lojaExiste && <div className="px-4 sm:px-6"><RecebimentosMercadoPago /></div>}
+    {lojaExiste && !usuario?.gerenciado_por_admin && <div className="px-4 sm:px-6"><RecebimentosMercadoPago /></div>}
+    {lojaExiste && usuario?.gerenciado_por_admin && (
+      <p className="mx-4 rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600 sm:mx-6">
+        A conta Mercado Pago (recebimentos) só pode ser vista e alterada pelo próprio lojista.
+      </p>
+    )}
   </div>;
 }
 

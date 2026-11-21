@@ -24,6 +24,10 @@ const assinar = (payload, { manterConectado = false } = {}) => jwt.sign(payload,
     algorithm: ALGORITMO,
     expiresIn: manterConectado ? DURACAO_MANTER_CONECTADO : DURACAO_SESSAO
 });
+// Admin gerenciando uma loja: acesso curto, sem "manter conectado".
+const DURACAO_GERENCIAMENTO = '2h';
+const assinarGerenciamento = (payload) => jwt.sign(payload, secret, { algorithm: ALGORITMO, expiresIn: DURACAO_GERENCIAMENTO });
+
 const verificar = (token) => jwt.verify(token, secret, { algorithms: [ALGORITMO] });
 
-module.exports = { assinar, verificar };
+module.exports = { assinar, assinarGerenciamento, verificar };

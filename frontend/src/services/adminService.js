@@ -67,3 +67,9 @@ export async function enviarLogoLojaAdmin(lojaId, arquivo) {
   });
   return data;
 }
+
+/** Acesso temporário (2 h) à área do lojista da loja, sem a conta Mercado Pago. */
+export async function gerenciarLojaAdmin(lojaId) {
+  const { data } = await api.post(`/admin/lojas/${lojaId}/gerenciar`);
+  return data;
+}

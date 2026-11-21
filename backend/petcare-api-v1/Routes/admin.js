@@ -17,6 +17,7 @@ router.get('/financeiro', adminController.obterFinanceiro);
 router.get('/rankings', adminController.obterRankings);
 router.get('/estornos', adminController.listarEstornos);
 router.post('/estornos/:id/tentar', adminController.tentarEstorno);
+router.post('/lojas/:id/gerenciar', adminController.gerenciarLoja);
 router.get('/lojas/:id/catalogo', adminController.obterCatalogoDaLoja);
 router.post('/lojas/:id/imagem', upload.single('imagem'), adminController.enviarImagemLoja);
 router.post('/produtos/:id/imagens', upload.array('imagens', 10), adminController.enviarImagensProduto);

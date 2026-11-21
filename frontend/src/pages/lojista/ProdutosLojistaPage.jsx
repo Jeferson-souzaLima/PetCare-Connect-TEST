@@ -4,6 +4,7 @@ import api from "@/services/api";
 import { useAuth } from "../../hooks/useAuth";
 import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaImage } from "react-icons/fa"; 
 import { useNavigate } from "react-router-dom";
+import { prepararImagens } from "@/utils/prepararImagem";
 
 export default function ProdutosLojistaPage() {
   const { usuario, token } = useAuth();
@@ -107,7 +108,7 @@ export default function ProdutosLojistaPage() {
       if (imagensFiles.length > 0) {
         const formData = new FormData();
 
-        imagensFiles.forEach((file) => {
+        (await prepararImagens(imagensFiles)).forEach((file) => {
           formData.append("imagens", file);
         });
 
@@ -118,8 +119,8 @@ export default function ProdutosLojistaPage() {
 
       setShowModal(false);
       carregarProdutos();
-    } catch {
-      alert("Erro ao salvar produto");
+    } catch (erro) {
+      alert(erro.response?.data?.mensagem || erro.message || "Erro ao salvar produto");
     }
   };
 

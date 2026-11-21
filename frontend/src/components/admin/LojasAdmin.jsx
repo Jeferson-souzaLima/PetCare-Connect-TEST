@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import MensagemStatus from "@/components/ui/MensagemStatus";
-import { definirSituacaoLoja, listarLojasAdmin } from "@/services/adminService";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { definirSituacaoLoja, gerenciarLojaAdmin, listarLojasAdmin } from "@/services/adminService";
 import { formatarDataHora } from "@/utils/formatadores";
 import ImagensLojaAdmin from "./ImagensLojaAdmin";
 import { mensagemDeErro } from "./mensagemDeErro";
@@ -25,6 +27,18 @@ export default function LojasAdmin() {
   const [carregando, setCarregando] = useState(true);
   const [mensagem, setMensagem] = useState(null);
   const [lojaComImagensAbertas, setLojaComImagensAbertas] = useState(null);
+  const { iniciarGerenciamento } = useAuth();
+  const navigate = useNavigate();
+
+  async function gerenciar(loja) {
+    try {
+      const { usuario, token } = await gerenciarLojaAdmin(loja.id);
+      iniciarGerenciamento(usuario, token);
+      navigate("/perfil-lojista");
+    } catch (erro) {
+      setMensagem({ tipo: "erro", texto: mensagemDeErro(erro, "Não foi possível abrir a loja para gerenciar.") });
+    }
+  }
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -90,6 +104,13 @@ export default function LojasAdmin() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => gerenciar(loja)}
+                  className="rounded-xl bg-green-900 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800"
+                >
+                  Gerenciar loja
+                </button>
                 <button
                   type="button"
                   aria-expanded={lojaComImagensAbertas === loja.id}
