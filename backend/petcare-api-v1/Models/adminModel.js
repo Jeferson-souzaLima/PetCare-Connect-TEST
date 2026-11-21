@@ -108,3 +108,14 @@ exports.buscarLoja = async (lojaId) => {
     const [loja] = await consultar('SELECT id, imagem FROM lojas WHERE id = ?', [lojaId]);
     return loja || null;
 };
+
+/** Loja e dono, para o admin gerenciar a loja com o acesso do lojista. */
+exports.donoDaLoja = async (lojaId) => {
+    const [linha] = await consultar(
+        `SELECT l.id AS loja_id, l.nome_fantasia, u.id AS usuario_id, u.nome, u.email
+         FROM lojas l INNER JOIN usuarios u ON u.id = l.usuario_id
+         WHERE l.id = ? AND u.tipo = 'lojista'`,
+        [lojaId]
+    );
+    return linha || null;
+};

@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import MensagemStatus from "@/components/ui/MensagemStatus";
 import { enviarImagensProdutoAdmin, enviarLogoLojaAdmin, obterCatalogoLojaAdmin } from "@/services/adminService";
 import { getMediaUrl, IMAGEM_PADRAO_LOJA, IMAGEM_PADRAO_PRODUTO } from "@/services/mediaUrl";
+import { prepararImagem, prepararImagens } from "@/utils/prepararImagem";
 import { mensagemDeErro } from "./mensagemDeErro";
 
-const TIPOS_ACEITOS = "image/jpeg,image/png";
+const TIPOS_ACEITOS = "image/*";
 
 /** Botão de envio: abre o seletor de arquivos e envia na hora. */
 function BotaoEnviar({ rotulo, multiplo = false, ocupado, aoEscolher }) {
@@ -51,7 +52,8 @@ export default function ImagensLojaAdmin({ lojaId }) {
       setMensagem({ tipo: "sucesso", texto: resposta.mensagem });
       await carregar();
     } catch (erro) {
-      setMensagem({ tipo: "erro", texto: mensagemDeErro(erro, textoErro) });
+      // Sem resposta da API, o erro veio do preparo da imagem no navegador.
+      setMensagem({ tipo: "erro", texto: mensagemDeErro(erro, erro?.response ? textoErro : erro?.message || textoErro) });
     } finally {
       setEnviando(null);
     }
@@ -79,7 +81,7 @@ export default function ImagensLojaAdmin({ lojaId }) {
           <BotaoEnviar
             rotulo={catalogo.imagem ? "Trocar logo" : "Enviar logo"}
             ocupado={enviando === "logo"}
-            aoEscolher={([arquivo]) => enviar("logo", () => enviarLogoLojaAdmin(lojaId, arquivo), "Não foi possível enviar o logo.")}
+            aoEscolher={([arquivo]) => enviar("logo", async () => enviarLogoLojaAdmin(lojaId, await prepararImagem(arquivo)), "Não foi possível enviar o logo.")}
           />
         </div>
       </div>
@@ -107,12 +109,12 @@ export default function ImagensLojaAdmin({ lojaId }) {
                 rotulo="Enviar imagens"
                 multiplo
                 ocupado={enviando === `produto-${produto.id}`}
-                aoEscolher={(arquivos) => enviar(`produto-${produto.id}`, () => enviarImagensProdutoAdmin(produto.id, arquivos), "Não foi possível enviar as imagens.")}
+                aoEscolher={(arquivos) => enviar(`produto-${produto.id}`, async () => enviarImagensProdutoAdmin(produto.id, await prepararImagens(arquivos)), "Não foi possível enviar as imagens.")}
               />
             </li>
           ))}
         </ul>
-        <p className="mt-2 text-xs text-gray-500">JPG ou PNG, até 5 MB cada e até 10 por vez. Num produto sem imagens, a primeira enviada vira a principal.</p>
+        <p className="mt-2 text-xs text-gray-500">Até 10 por vez; fotos grandes ou em outros formatos (WEBP, por exemplo) são convertidas para JPG. Num produto sem imagens, a primeira enviada vira a principal.</p>
       </div>
     </div>
   );

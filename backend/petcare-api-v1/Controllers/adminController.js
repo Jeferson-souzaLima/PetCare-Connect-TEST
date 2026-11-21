@@ -4,6 +4,7 @@ const pedidosModel = require('../Models/pedidosModel');
 const { estornarPagamento, estornarVendaSePaga } = require('../Services/estornoService');
 const PagamentosModel = require('../Models/pagamentosModel');
 const { adicionarImagensAoProduto, trocarImagemDaLoja } = require('../Services/imagensCatalogoService');
+const { assinarGerenciamento } = require('../Config/jwt');
 const { responderErroInterno, responderErroDoServico, registrarErroInterno } = require('../utils/erroInterno');
 
 /*
@@ -294,5 +295,37 @@ exports.enviarImagemLoja = async (req, res) => {
         return res.json({ mensagem: 'Logo da loja atualizado.', imagem });
     } catch (erro) {
         return responderErroDoServico(res, erro, 'adminController.enviarImagemLoja', 'Não foi possível enviar a imagem.');
+    }
+};
+
+// ===============================
+// GERENCIAR LOJA (admin usa a área do lojista daquela loja)
+// ===============================
+exports.gerenciarLoja = async (req, res) => {
+    const lojaId = idValido(req.params.id);
+    if (!lojaId) return res.status(400).json({ mensagem: 'Loja inválida.' });
+
+    try {
+        const dono = await AdminModel.donoDaLoja(lojaId);
+        if (!dono) return res.status(404).json({ mensagem: 'Loja não encontrada.' });
+
+        // Áreas liberadas e bloqueadas: Middlewares/sessaoToken.js (permitidoNoGerenciamento).
+        const token = assinarGerenciamento({ id: dono.usuario_id, tipo: 'lojista', loja_id: dono.loja_id, admin_id: req.usuario.id });
+        console.log('Admin gerenciando loja:', { admin_id: req.usuario.id, loja_id: dono.loja_id });
+
+        return res.json({
+            token,
+            usuario: {
+                id: dono.usuario_id,
+                nome: dono.nome,
+                email: dono.email,
+                tipo: 'lojista',
+                loja_id: dono.loja_id,
+                nome_loja: dono.nome_fantasia,
+                gerenciado_por_admin: true
+            }
+        });
+    } catch (erro) {
+        return responderErroInterno(res, erro, 'adminController.gerenciarLoja');
     }
 };

@@ -15,6 +15,20 @@ import {
 
 const AuthContext = createContext();
 
+// Sessão do admin guardada enquanto ele gerencia uma loja (volta para ela depois).
+const CHAVE_SESSAO_ADMIN = "sessao_admin";
+
+function lerSessaoAdminGuardada() {
+  try {
+    const salva = JSON.parse(localStorage.getItem(CHAVE_SESSAO_ADMIN) || "null");
+    if (salva?.usuario?.tipo === "admin" && salva.token && !tokenExpirado(salva.token)) return salva;
+  } catch {
+    console.warn("Sessão de administrador guardada inválida.");
+  }
+  localStorage.removeItem(CHAVE_SESSAO_ADMIN);
+  return null;
+}
+
 /*
  * Lê a sessão salva de forma síncrona, antes da primeira renderização.
  * Assim o PrivateRoute já recebe o usuário em uma recarga (F5) ou link direto,
@@ -76,14 +90,35 @@ export function AuthProvider({ children }) {
     setToken(null);
     localStorage.removeItem("usuario");
     localStorage.removeItem("token");
+    localStorage.removeItem(CHAVE_SESSAO_ADMIN);
   }, []);
+
+  /** Admin passa a usar a área do lojista de uma loja (acesso de 2 horas emitido pela API). */
+  const iniciarGerenciamento = useCallback((usuarioDaLoja, tokenDaLoja) => {
+    localStorage.setItem(CHAVE_SESSAO_ADMIN, JSON.stringify({ usuario, token }));
+    login(usuarioDaLoja, tokenDaLoja);
+  }, [usuario, token]);
+
+  /** Volta para a sessão do admin. Devolve false se ela já expirou (aí sai de tudo). */
+  const encerrarGerenciamento = useCallback(() => {
+    const sessaoAdmin = lerSessaoAdminGuardada();
+    localStorage.removeItem(CHAVE_SESSAO_ADMIN);
+    if (!sessaoAdmin) {
+      logout();
+      return false;
+    }
+    login(sessaoAdmin.usuario, sessaoAdmin.token);
+    return true;
+  }, [logout]);
 
   // Encerra a sessão quando o token vence ou a API o recusa (401),
   // em vez de manter a pessoa "logada" com chamadas falhando.
   const encerrarSessaoExpirada = useCallback(() => {
+    // Fim do gerenciamento de uma loja: volta para o admin, se a sessão dele ainda vale.
+    if (usuario?.gerenciado_por_admin && encerrarGerenciamento()) return;
     deixarAvisoParaLogin("Sua sessão expirou. Entre novamente para continuar.");
     logout();
-  }, [logout]);
+  }, [logout, usuario, encerrarGerenciamento]);
 
   useEffect(() => {
     if (!token) return undefined;
@@ -113,7 +148,9 @@ export function AuthProvider({ children }) {
         token,
         login,
         logout,
-        atualizarUsuario
+        atualizarUsuario,
+        iniciarGerenciamento,
+        encerrarGerenciamento
       }}
     >
       {children}
