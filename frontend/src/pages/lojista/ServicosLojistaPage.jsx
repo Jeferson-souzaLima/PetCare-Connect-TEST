@@ -11,6 +11,7 @@ export default function ServicosLojistaPage() {
   const [servicos, setServicos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [salvando, setSalvando] = useState(false);
   const [servicoEditando, setServicoEditando] = useState(null);
 
   const [form, setForm] = useState({
@@ -65,7 +66,9 @@ export default function ServicosLojistaPage() {
   // ===============================
   const salvarServico = async (e) => {
     e.preventDefault();
+    if (salvando) return;
 
+    setSalvando(true);
     try {
       if (servicoEditando) {
         await api.put(`/servicos/${servicoEditando.id}`, form);
@@ -75,8 +78,11 @@ export default function ServicosLojistaPage() {
 
       setShowModal(false);
       carregarServicos();
-    } catch {
-      alert("Erro ao salvar serviço");
+    } catch (erro) {
+      // A API de serviços responde em "message"; as demais, em "mensagem".
+      alert(erro.response?.data?.message || erro.response?.data?.mensagem || "Erro ao salvar serviço.");
+    } finally {
+      setSalvando(false);
     }
   };
 
@@ -219,6 +225,9 @@ export default function ServicosLojistaPage() {
 
               <input
                 type="number"
+                step="0.01"
+                min="0"
+                inputMode="decimal"
                 placeholder="Preço"
                 value={form.preco}
                 onChange={(e) =>
@@ -230,6 +239,8 @@ export default function ServicosLojistaPage() {
 
               <input
                 type="number"
+                min="1"
+                step="1"
                 placeholder="Duração (minutos)"
                 value={form.duracao_min}
                 onChange={(e) =>
@@ -259,9 +270,10 @@ export default function ServicosLojistaPage() {
 
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#0E5617] text-white"
+                  disabled={salvando}
+                  className="px-4 py-2 rounded-xl bg-[#0E5617] text-white disabled:opacity-60"
                 >
-                  Salvar
+                  {salvando ? "Salvando..." : "Salvar"}
                 </button>
               </div>
 

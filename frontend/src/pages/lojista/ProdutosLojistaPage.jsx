@@ -6,12 +6,18 @@ import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaImage } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { prepararImagens } from "@/utils/prepararImagem";
 
+/** Mensagem da API ("mensagem" ou "message") ou do preparo da imagem. */
+function mensagemDoErro(erro) {
+  return erro?.response?.data?.mensagem || erro?.response?.data?.message || erro?.message || "Erro ao salvar produto.";
+}
+
 export default function ProdutosLojistaPage() {
   const { usuario, token } = useAuth();
   const navigate = useNavigate();
   const [produtos, setProdutos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [salvando, setSalvando] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState(null);
 
   const [form, setForm] = useState({
@@ -88,39 +94,46 @@ export default function ProdutosLojistaPage() {
   const salvarProduto = async (e) => {
     e.preventDefault();
 
+    if (salvando) return;
+
     if (!produtoEditando && imagensFiles.length === 0) {
       alert("Adicione pelo menos uma imagem.");
       return;
     }
 
+    setSalvando(true);
     try {
-      let produtoId;
+      // Prepara as imagens antes de criar o produto: se uma não puder ser usada, nada é criado.
+      const imagensProntas = await prepararImagens(imagensFiles);
 
+      let produtoId = produtoEditando?.id;
       if (produtoEditando) {
-        await api.put(`/produtos/${produtoEditando.id}`, form);
-        produtoId = produtoEditando.id;
+        await api.put(`/produtos/${produtoId}`, form);
       } else {
         const res = await api.post("/produtos", form);
         produtoId = res.data.id;
       }
 
-      // Upload imagem se existir
-      if (imagensFiles.length > 0) {
-        const formData = new FormData();
-
-        (await prepararImagens(imagensFiles)).forEach((file) => {
-          formData.append("imagens", file);
-        });
-
-        await api.post(`/produtos/${produtoId}/imagens`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+      if (imagensProntas.length > 0) {
+        try {
+          const formData = new FormData();
+          imagensProntas.forEach((file) => formData.append("imagens", file));
+          await api.post(`/produtos/${produtoId}/imagens`, formData);
+        } catch (erroImagem) {
+          // O produto já foi salvo: a tela passa a editá-lo, para tentar só a imagem de novo sem duplicar.
+          if (!produtoEditando) setProdutoEditando({ ...form, id: produtoId, imagens: [] });
+          carregarProdutos();
+          alert(`Produto salvo, mas as imagens não foram enviadas: ${mensagemDoErro(erroImagem)} Escolha as imagens e salve de novo.`);
+          return;
+        }
       }
 
       setShowModal(false);
       carregarProdutos();
     } catch (erro) {
-      alert(erro.response?.data?.mensagem || erro.message || "Erro ao salvar produto");
+      alert(mensagemDoErro(erro));
+    } finally {
+      setSalvando(false);
     }
   };
 
@@ -315,6 +328,9 @@ export default function ProdutosLojistaPage() {
 
               <input
                 type="number"
+                step="0.01"
+                min="0"
+                inputMode="decimal"
                 placeholder="Preço"
                 value={form.preco}
                 onChange={(e) => setForm({ ...form, preco: e.target.value })}
@@ -324,6 +340,8 @@ export default function ProdutosLojistaPage() {
 
               <input
                 type="number"
+                min="0"
+                step="1"
                 placeholder="Estoque"
                 value={form.estoque}
                 onChange={(e) => setForm({ ...form, estoque: e.target.value })}
@@ -431,9 +449,10 @@ export default function ProdutosLojistaPage() {
 
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#0E5617] text-white"
+                  disabled={salvando}
+                  className="px-4 py-2 rounded-xl bg-[#0E5617] text-white disabled:opacity-60"
                 >
-                  Salvar
+                  {salvando ? "Salvando..." : "Salvar"}
                 </button>
               </div>
             </form>
