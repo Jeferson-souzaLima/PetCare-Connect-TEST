@@ -44,3 +44,26 @@ export async function tentarEstornoAdmin(pagamentoId) {
   const { data } = await api.post(`/admin/estornos/${pagamentoId}/tentar`);
   return data;
 }
+
+export async function obterCatalogoLojaAdmin(lojaId) {
+  const { data } = await api.get(`/admin/lojas/${lojaId}/catalogo`);
+  return data;
+}
+
+export async function enviarImagensProdutoAdmin(produtoId, arquivos) {
+  const form = new FormData();
+  for (const arquivo of arquivos) form.append("imagens", arquivo);
+  const { data } = await api.post(`/admin/produtos/${produtoId}/imagens`, form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
+export async function enviarLogoLojaAdmin(lojaId, arquivo) {
+  const form = new FormData();
+  form.append("imagem", arquivo);
+  const { data } = await api.post(`/admin/lojas/${lojaId}/imagem`, form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}

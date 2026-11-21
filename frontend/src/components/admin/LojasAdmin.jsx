@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import MensagemStatus from "@/components/ui/MensagemStatus";
 import { definirSituacaoLoja, listarLojasAdmin } from "@/services/adminService";
 import { formatarDataHora } from "@/utils/formatadores";
+import ImagensLojaAdmin from "./ImagensLojaAdmin";
 import { mensagemDeErro } from "./mensagemDeErro";
 
 const FILTROS = [
@@ -23,6 +24,7 @@ export default function LojasAdmin() {
   const [lojas, setLojas] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [mensagem, setMensagem] = useState(null);
+  const [lojaComImagensAbertas, setLojaComImagensAbertas] = useState(null);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -87,16 +89,27 @@ export default function LojasAdmin() {
                   <Selo ativo={loja.recebe_online} textoSim="Mercado Pago conectado" textoNao="Mercado Pago não conectado" />
                 </div>
               </div>
-              {loja.ativo ? (
-                <button type="button" onClick={() => alterarSituacao(loja, false)} className="rounded-xl border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50">
-                  Suspender
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  aria-expanded={lojaComImagensAbertas === loja.id}
+                  onClick={() => setLojaComImagensAbertas(lojaComImagensAbertas === loja.id ? null : loja.id)}
+                  className="rounded-xl border border-green-900 px-4 py-2 text-sm font-semibold text-green-900 hover:bg-green-50"
+                >
+                  {lojaComImagensAbertas === loja.id ? "Fechar imagens" : "Imagens"}
                 </button>
-              ) : (
-                <button type="button" onClick={() => alterarSituacao(loja, true)} className="rounded-xl bg-green-900 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800">
-                  Aprovar
-                </button>
-              )}
+                {loja.ativo ? (
+                  <button type="button" onClick={() => alterarSituacao(loja, false)} className="rounded-xl border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50">
+                    Suspender
+                  </button>
+                ) : (
+                  <button type="button" onClick={() => alterarSituacao(loja, true)} className="rounded-xl bg-green-900 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800">
+                    Aprovar
+                  </button>
+                )}
+              </div>
             </div>
+            {lojaComImagensAbertas === loja.id && <ImagensLojaAdmin lojaId={loja.id} />}
           </li>
         ))}
       </ul>

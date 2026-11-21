@@ -2,21 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const produtosModel = require('../Models/produtosModel');
 const r2Storage = require('../Services/r2Storage');
+const { adicionarImagensAoProduto } = require('../Services/imagensCatalogoService');
 const { responderErroInterno, responderErroDoServico } = require('../utils/erroInterno');
 const { filtrosProdutos } = require('../utils/filtrosCatalogo');
 
-const saveImagens = (imagens) => new Promise((resolve, reject) => {
-    produtosModel.saveImagens(imagens, (err, result) => err ? reject(err) : resolve(result));
-});
-
-async function removerObjetosR2(objetos) {
-    const resultados = await Promise.allSettled(objetos.map(({ key }) => r2Storage.deleteByKey(key)));
-    resultados.forEach((resultado) => {
-        if (resultado.status === 'rejected') {
-            console.error('Falha ao remover objeto de imagem do R2:', resultado.reason?.name || 'R2_DELETE_ERROR');
-        }
-    });
-}
 
 //
 // ===============================
@@ -204,24 +193,12 @@ exports.uploadImagensProduto = async (req, res) => {
             return res.status(400).json({ mensagem: 'Nenhuma imagem enviada.' });
         }
 
-        const uploads = await Promise.allSettled(req.files.map((file) => r2Storage.upload(file)));
-        const criados = uploads.filter((resultado) => resultado.status === 'fulfilled').map((resultado) => resultado.value);
-        const falhaUpload = uploads.find((resultado) => resultado.status === 'rejected');
-        if (falhaUpload) {
-            await removerObjetosR2(criados);
-            console.error('Falha no upload de imagem de produto:', falhaUpload.reason?.name || 'R2_UPLOAD_ERROR');
-            return res.status(500).json({ mensagem: 'Não foi possível enviar as imagens.' });
-        }
-
-        const imagens = criados.map((objeto) => ({ produto_id: produtoId, caminho: objeto.url }));
         try {
-            await saveImagens(imagens);
-        } catch (saveError) {
-            await removerObjetosR2(criados);
-            console.error('Falha ao salvar imagens do produto:', saveError?.code || 'DATABASE_ERROR');
-            return res.status(500).json({ mensagem: 'Não foi possível salvar as imagens.' });
+            const imagens = await adicionarImagensAoProduto(produtoId, req.files);
+            return res.status(200).json({ mensagem: 'Imagens atualizadas com sucesso!', imagens });
+        } catch (erro) {
+            return responderErroDoServico(res, erro, 'produtosController.uploadImagensProduto', 'Não foi possível enviar as imagens.');
         }
-        return res.status(200).json({ mensagem: 'Imagens atualizadas com sucesso!', imagens });
     });
 };
 
