@@ -14,7 +14,6 @@ test("itemAtivo: o destaque acompanha a página, e não fica preso em Início", 
     "/meus-agendamentos": "agenda",
     "/meus-pedidos": "pedidos",
     "/pagamento/sucesso": "pedidos",
-    "/carrinho": "carrinho",
     "/perfil": "conta",
     "/favoritos": "conta",
     "/perfil/": "conta",
@@ -25,7 +24,7 @@ test("itemAtivo: o destaque acompanha a página, e não fica preso em Início", 
 });
 
 test("itemAtivo: páginas fora da barra não destacam nada", () => {
-  for (const caminho of ["/admin", "/login", "/produtosfalsos", "/termos"]) {
+  for (const caminho of ["/admin", "/carrinho", "/login", "/produtosfalsos", "/termos"]) {
     assert.equal(itemAtivo(caminho), null, caminho);
   }
   assert.equal(itemAtivo(""), "inicio");
