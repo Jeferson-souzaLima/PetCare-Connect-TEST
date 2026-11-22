@@ -27,7 +27,7 @@ export default function NovaHomePage() {
         Pular para o conteúdo
       </a>
 
-      <HomeHeader />
+      <HomeHeader recolhivel />
 
       {/* Celular: o verde do cabeçalho desce pelos lados do banner e se dissolve na cor do fundo;
           o conteúdo sobe ao abrir (sem animação com "reduzir movimento"). A partir de 768 px o

@@ -12,8 +12,9 @@ const ROTAS = {
 
 /**
  * Busca do cabeçalho único do site (HomeHeader), com sugestões e teclado (↑ ↓ Enter Esc).
+ * `compacto`: versão baixa do cabeçalho recolhível da home (mesmo campo, menor).
  */
-export function BuscaHome() {
+export function BuscaHome({ compacto = false }) {
   const navigate = useNavigate();
   const formRef = useRef(null);
   const { busca, setBusca, resultados, loading, dropdownAberto, fecharBusca, limparBusca } = useBusca();
@@ -86,38 +87,48 @@ export function BuscaHome() {
   }
 
   return (
-    <form ref={formRef} role="search" onSubmit={aoEnviar} className="relative w-full">
+    // No compacto o campo é estreito: as sugestões se abrem na largura do cabeçalho (o elemento
+    // posicionado mais próximo passa a ser ele), alinhadas às margens do conteúdo.
+    <form ref={formRef} role="search" onSubmit={aoEnviar} className={compacto ? "w-full" : "relative w-full"}>
       <label htmlFor="busca-home" className="sr-only">
         Buscar produtos, lojas, serviços e clínicas
       </label>
-      <Search size={20} aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-pc-texto-suave" />
-      <input
-        id="busca-home"
-        type="search"
-        value={busca}
-        onChange={(e) => {
-          setBusca(e.target.value);
-          setSelecionado(-1);
-        }}
-        onKeyDown={aoTeclar}
-        autoComplete="off"
-        placeholder="Buscar produtos, lojas, serviços, clínicas..."
-        className="h-12 w-full rounded-pc-pill border-0 bg-white pl-12 pr-4 text-sm text-pc-texto shadow-pc-card placeholder:text-pc-texto-suave focus:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/60"
-      />
+      <div className="relative">
+        <Search
+          size={compacto ? 18 : 20}
+          aria-hidden="true"
+          className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-pc-texto-suave ${compacto ? "left-3" : "left-4"}`}
+        />
+        <input
+          id="busca-home"
+          type="search"
+          value={busca}
+          onChange={(e) => {
+            setBusca(e.target.value);
+            setSelecionado(-1);
+          }}
+          onKeyDown={aoTeclar}
+          autoComplete="off"
+          placeholder={compacto ? "Buscar..." : "Buscar produtos, lojas, serviços, clínicas..."}
+          className={`${compacto ? "h-10 pl-9 pr-2" : "h-12 pl-12 pr-4"} w-full rounded-pc-pill border-0 bg-white text-sm text-pc-texto shadow-pc-card transition-[height] duration-300 placeholder:text-pc-texto-suave focus:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/60`}
+        />
+      </div>
       <button id="busca-home-enviar" type="submit" className="sr-only">
         Buscar
       </button>
       {dropdownAberto && resultados && (
-        <SearchDropdown
-          busca={busca}
-          resultados={resultados}
-          loading={loading}
-          itemSelecionado={selecionado}
-          onProdutoClick={(produto) => irPara(ROTAS.produto(produto))}
-          onLojaClick={(loja) => irPara(ROTAS.loja(loja))}
-          onServicoClick={(servico) => irPara(ROTAS.servico(servico))}
-          onVerTodos={verTodos}
-        />
+        <div className={compacto ? "absolute inset-x-4 top-full" : undefined}>
+          <SearchDropdown
+            busca={busca}
+            resultados={resultados}
+            loading={loading}
+            itemSelecionado={selecionado}
+            onProdutoClick={(produto) => irPara(ROTAS.produto(produto))}
+            onLojaClick={(loja) => irPara(ROTAS.loja(loja))}
+            onServicoClick={(servico) => irPara(ROTAS.servico(servico))}
+            onVerTodos={verTodos}
+          />
+        </div>
       )}
     </form>
   );
