@@ -98,7 +98,7 @@ export function HeroCarousel() {
     <section
       aria-roledescription="carousel"
       aria-label="Destaques do PetCare Connect"
-      className="relative overflow-hidden rounded-pc-card border-2 border-white/70 bg-white shadow-pc-card"
+      className="relative overflow-hidden rounded-pc-card bg-white shadow-pc-card max-md:rounded-[22px] max-md:p-1.5"
       onPointerEnter={(e) => e.pointerType === "mouse" && setPausaTemporaria(true)}
       onPointerLeave={(e) => e.pointerType === "mouse" && setPausaTemporaria(false)}
       onFocus={() => setPausaTemporaria(true)}
@@ -112,7 +112,7 @@ export function HeroCarousel() {
         aria-roledescription="slide"
         aria-label={`${indice + 1} de ${total}`}
         aria-live={passando ? "off" : "polite"}
-        className="h-[244px] sm:h-[260px] md:h-auto md:aspect-[1440/525]"
+        className="h-[244px] overflow-hidden rounded-pc-card sm:h-[260px] md:h-auto md:aspect-[1440/525] md:rounded-none"
         style={{ touchAction: "pan-y" }}
         onTouchStart={aoTocar}
         onTouchEnd={aoSoltar}
@@ -142,7 +142,7 @@ export function HeroCarousel() {
       </div>
 
       {varios && (
-        <div className="absolute inset-x-0 bottom-1.5 z-20 flex justify-center md:static md:px-2 md:py-1">
+        <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center md:static md:px-2 md:py-1">
           <div className="flex items-center gap-0.5 rounded-full bg-black/25 px-1.5 backdrop-blur-sm md:gap-1 md:bg-transparent md:p-0 md:backdrop-blur-none">
           <button type="button" onClick={() => irPara(indice - 1)} aria-label="Slide anterior" className={`${CONTROLE} hidden text-pc-verde-700 hover:bg-pc-fundo md:flex`}>
             <ChevronLeft size={20} aria-hidden="true" />
