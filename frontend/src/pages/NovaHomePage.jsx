@@ -31,7 +31,7 @@ export default function NovaHomePage() {
 
       {/* Celular: a página é uma folha clara de cantos arredondados que sobe sobre o verde do
           cabeçalho ao abrir (sem animação com "reduzir movimento"). O banner fica no topo da
-          folha e avança sobre o fim do verde. A partir de 768 px o layout é o de antes. */}
+          folha. A partir de 768 px o layout é o de antes. */}
       <main
         id="conteudo-home"
         className="max-md:relative max-md:-mt-7 max-md:rounded-t-[28px] max-md:bg-pc-fundo max-md:motion-safe:animate-pc-folha"
@@ -42,9 +42,8 @@ export default function NovaHomePage() {
           <HomeSidebar />
 
           <div className="min-w-0 flex-1 space-y-5">
-            {/* Celular: o verde do cabeçalho desce até o fim do banner e a folha clara recomeça logo
-                abaixo dele, com cantos arredondados (altura = espaço até as categorias). */}
-            <div className="relative max-md:-mt-7 max-md:before:absolute max-md:before:-inset-x-4 max-md:before:top-0 max-md:before:-bottom-5 max-md:before:bg-pc-verde-700 max-md:after:absolute max-md:after:-inset-x-4 max-md:after:top-full max-md:after:h-5 max-md:after:rounded-t-[20px] max-md:after:bg-pc-fundo">
+            {/* Celular: o banner abre a folha clara; a moldura branca fica para fora do alinhamento do conteúdo. */}
+            <div className="relative max-md:-mx-1.5">
               <HeroCarousel />
             </div>
             <AtalhosCategorias />
