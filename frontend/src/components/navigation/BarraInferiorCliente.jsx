@@ -1,28 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { CalendarDays, Home, Package, Search, ShoppingCart, User } from "lucide-react";
-import { useCarrinho } from "@/context/CarrinhoContext";
+import { CalendarDays, Home, Package, Search, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToqueProlongado } from "@/hooks/useToqueProlongado";
-import { itemAtivo, rotuloContador, unidadesNoCarrinho } from "@/utils/navegacaoInferior";
+import { itemAtivo } from "@/utils/navegacaoInferior";
 import { AvisoCarrinho } from "./AvisoCarrinho";
 import { PainelExplorar } from "./PainelExplorar";
 import { JanelaRapida } from "./mobile/JanelaRapida";
-import { MiniCarrinho } from "./mobile/MiniCarrinho";
 import { ResumoAgenda, ResumoConta, ResumoPedidos } from "./mobile/ResumosRapidos";
 
 const JANELA_ID = "janela-barra-inferior";
 
 /*
- * Toque rápido: vai para `destino`; o carrinho (sem destino) abre o mini carrinho.
- * Toque prolongado: abre a `janela` sem sair da página. Início não tem janela.
+ * Toque rápido: vai para `destino`. Toque prolongado: abre a `janela` sem sair da página.
+ * Início fica no centro e não tem janela. O carrinho fica no cabeçalho.
  */
 const ITENS = [
   { id: "explorar", rotulo: "Explorar", destino: "/produtos", icone: Search, janela: PainelExplorar, titulo: "Explorar" },
   { id: "agenda", rotulo: "Agenda", destino: "/meus-agendamentos", icone: CalendarDays, janela: ResumoAgenda, titulo: "Próximos agendamentos" },
   { id: "inicio", rotulo: "Início", destino: "/", icone: Home },
   { id: "pedidos", rotulo: "Pedidos", destino: "/meus-pedidos", icone: Package, janela: ResumoPedidos, titulo: "Pedidos recentes" },
-  { id: "carrinho", rotulo: "Carrinho", icone: ShoppingCart, janela: MiniCarrinho, titulo: "Carrinho" },
   { id: "conta", rotulo: "Conta", destino: "/perfil", icone: User, janela: ResumoConta, titulo: "Sua conta" },
 ];
 
@@ -41,7 +38,6 @@ function classeItem({ ativo, aberto }) {
  */
 export function BarraInferiorCliente() {
   const { usuario } = useAuth();
-  const { carrinho } = useCarrinho();
   const { pathname } = useLocation();
   const [janela, setJanela] = useState(null);
   const navRef = useRef(null);
@@ -68,18 +64,12 @@ export function BarraInferiorCliente() {
   const aberto = ITENS.find((item) => item.id === janela);
   const Conteudo = aberto?.janela;
   const fechar = () => setJanela(null);
-  const unidades = unidadesNoCarrinho(carrinho);
 
   // Com uma janela aberta, tocar no ícone dela só fecha; tocar em outro fecha e segue para a página.
   function aoTocarItem(evento, id) {
     if (!janela) return;
     if (janela === id) evento.preventDefault();
     fechar();
-  }
-
-  // O carrinho abre e fecha o mini carrinho no toque rápido.
-  function aoTocarCarrinho() {
-    setJanela((atual) => (atual === "carrinho" ? null : "carrinho"));
   }
 
   return (
@@ -98,56 +88,33 @@ export function BarraInferiorCliente() {
             <Conteudo aoFechar={fechar} />
           </JanelaRapida>
         )}
-        <ul className="grid grid-cols-6 items-center gap-0.5">
+        <ul className="grid grid-cols-5 items-center gap-0.5">
           {ITENS.map(({ id, rotulo, destino, icone: Icone, janela: temJanela }) => {
             const ativo = itemAtivo(pathname) === id;
-            const comuns = {
-              "data-item": id,
-              "aria-current": ativo ? "page" : undefined,
-              "aria-expanded": temJanela ? janela === id : undefined,
-              "aria-controls": temJanela && janela === id ? JANELA_ID : undefined,
-              className: classeItem({ ativo, aberto: janela === id }),
-              ...(temJanela ? propsDe(id) : {}),
-            };
-            const conteudo = (
-              <>
-                {/* Enche enquanto o dedo segura: mostra que vai abrir a janela. */}
-                {temJanela && (
-                  <span
-                    aria-hidden="true"
-                    className={`pointer-events-none absolute inset-0 origin-left rounded-pc-pill bg-pc-verde-700/15 transition-transform ease-linear ${
-                      pressionando === id ? "scale-x-100 duration-[450ms]" : "scale-x-0 duration-0"
-                    }`}
-                  />
-                )}
-                <span className="relative">
-                  <Icone size={22} aria-hidden="true" />
-                  {id === "carrinho" && unidades > 0 && (
-                    <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-pc-lima px-1 text-[10px] font-bold leading-none text-pc-verde-900">
-                      {rotuloContador(unidades)}
-                    </span>
-                  )}
-                </span>
-                <span className="relative">{rotulo}</span>
-              </>
-            );
-
             return (
               <li key={id}>
-                {destino ? (
-                  <Link to={destino} onClick={(evento) => aoTocarItem(evento, id)} {...comuns}>
-                    {conteudo}
-                  </Link>
-                ) : (
-                  <button
-                    type="button"
-                    aria-label={unidades ? `${rotulo} (${unidades} ${unidades === 1 ? "item" : "itens"})` : rotulo}
-                    onClick={aoTocarCarrinho}
-                    {...comuns}
-                  >
-                    {conteudo}
-                  </button>
-                )}
+                <Link
+                  to={destino}
+                  data-item={id}
+                  aria-current={ativo ? "page" : undefined}
+                  aria-expanded={temJanela ? janela === id : undefined}
+                  aria-controls={temJanela && janela === id ? JANELA_ID : undefined}
+                  className={classeItem({ ativo, aberto: janela === id })}
+                  onClick={(evento) => aoTocarItem(evento, id)}
+                  {...(temJanela ? propsDe(id) : {})}
+                >
+                  {/* Enche enquanto o dedo segura: mostra que vai abrir a janela. */}
+                  {temJanela && (
+                    <span
+                      aria-hidden="true"
+                      className={`pointer-events-none absolute inset-0 origin-left rounded-pc-pill bg-pc-verde-700/15 transition-transform ease-linear ${
+                        pressionando === id ? "scale-x-100 duration-[450ms]" : "scale-x-0 duration-0"
+                      }`}
+                    />
+                  )}
+                  <Icone size={22} aria-hidden="true" className="relative" />
+                  <span className="relative">{rotulo}</span>
+                </Link>
               </li>
             );
           })}

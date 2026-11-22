@@ -5,7 +5,6 @@ const ROTAS = [
   ["explorar", /^\/(lojas|produtos|servicos|busca|agendar)(\/|$)/],
   ["agenda", /^\/meus-agendamentos(\/|$)/],
   ["pedidos", /^\/(meus-pedidos|pagamento)(\/|$)/],
-  ["carrinho", /^\/carrinho(\/|$)/],
   ["conta", /^\/(perfil|favoritos)(\/|$)/],
 ];
 
