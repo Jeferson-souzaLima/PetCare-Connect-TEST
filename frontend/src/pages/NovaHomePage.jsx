@@ -42,7 +42,9 @@ export default function NovaHomePage() {
           <HomeSidebar />
 
           <div className="min-w-0 flex-1 space-y-5">
-            <div className="relative max-md:-mt-7">
+            {/* Celular: o verde do cabeçalho desce até o fim do banner e a folha clara recomeça logo
+                abaixo dele, com cantos arredondados (altura = espaço até as categorias). */}
+            <div className="relative max-md:-mt-7 max-md:before:absolute max-md:before:-inset-x-4 max-md:before:top-0 max-md:before:-bottom-5 max-md:before:bg-pc-verde-700 max-md:after:absolute max-md:after:-inset-x-4 max-md:after:top-full max-md:after:h-5 max-md:after:rounded-t-[20px] max-md:after:bg-pc-fundo">
               <HeroCarousel />
             </div>
             <AtalhosCategorias />
