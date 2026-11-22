@@ -98,7 +98,7 @@ export function HeroCarousel() {
     <section
       aria-roledescription="carousel"
       aria-label="Destaques do PetCare Connect"
-      className="relative overflow-hidden rounded-pc-card bg-white shadow-pc-card"
+      className="relative overflow-hidden rounded-pc-card border-2 border-white/70 bg-white shadow-pc-card"
       onPointerEnter={(e) => e.pointerType === "mouse" && setPausaTemporaria(true)}
       onPointerLeave={(e) => e.pointerType === "mouse" && setPausaTemporaria(false)}
       onFocus={() => setPausaTemporaria(true)}
