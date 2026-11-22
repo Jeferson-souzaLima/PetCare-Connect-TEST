@@ -1,3 +1,4 @@
+import { normalizarTexto } from "./formatadores.js";
 import { urlMidiaSite } from "./home.js";
 
 /**
@@ -21,14 +22,12 @@ const IMAGENS_PADRAO = {
   passeio: { alt: "Passeador caminhando no parque com três cachorros", foco: "object-[center_70%]" },
 };
 
-// Sem acento e em minúsculas, como a comparação do MySQL (collation *_ai_ci) no filtro da API.
-const normalizar = (texto) => texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const contemAlguma = (nome, palavras) => palavras.some((palavra) => nome.includes(palavra));
 
 /** "banho" | "tosa" | "vacina" | "veterinario" | "passeio" pelo nome do serviço, ou null quando o nome não se encaixa. */
 export function tipoImagemServico(nome) {
   if (typeof nome !== "string" || !nome.trim()) return null;
-  const texto = normalizar(nome);
+  const texto = normalizarTexto(nome);
   if (contemAlguma(texto, PALAVRAS_POR_TIPO_SERVICO.banho_tosa)) return texto.includes("banho") ? "banho" : "tosa";
   if (contemAlguma(texto, PALAVRAS_POR_TIPO_SERVICO.saude)) return texto.includes("vacin") ? "vacina" : "veterinario";
   if (contemAlguma(texto, PALAVRAS_PASSEIO)) return "passeio";

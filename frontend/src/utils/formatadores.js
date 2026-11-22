@@ -22,3 +22,8 @@ export function formatarDataHora(data) {
     timeStyle: "short",
   });
 }
+
+/** Sem acento e em minúsculas, para comparar textos digitados (ex.: "Ração" e "racao"). */
+export function normalizarTexto(texto) {
+  return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
