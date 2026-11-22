@@ -34,16 +34,16 @@ export default function NovaHomePage() {
           folha. A partir de 768 px o layout é o de antes. */}
       <main
         id="conteudo-home"
-        className="max-md:relative max-md:-mt-7 max-md:rounded-t-[28px] max-md:bg-pc-fundo max-md:motion-safe:animate-pc-folha"
+        className="max-md:relative max-md:-mt-8 max-md:rounded-t-[32px] max-md:bg-pc-fundo max-md:motion-safe:animate-pc-folha"
       >
         <h1 className="sr-only">PetCare Connect: produtos e serviços para o seu pet</h1>
 
-        <div className="mx-auto flex max-w-pc-pagina gap-6 px-4 pb-6 pt-0 md:px-6 md:pb-10 md:pt-4">
+        <div className="mx-auto flex max-w-pc-pagina gap-6 px-4 pb-6 pt-4 md:px-6 md:pb-10">
           <HomeSidebar />
 
           <div className="min-w-0 flex-1 space-y-5">
-            {/* Celular: o banner abre a folha clara; a moldura branca fica para fora do alinhamento do conteúdo. */}
-            <div className="relative max-md:-mx-1.5">
+            {/* Celular: o banner se encaixa na curva da folha (raio da folha = raio do banner + 16 px de folga). */}
+            <div className="relative">
               <HeroCarousel />
             </div>
             <AtalhosCategorias />

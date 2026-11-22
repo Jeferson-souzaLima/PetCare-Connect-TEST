@@ -39,7 +39,7 @@ export function HomeHeader({ busca = true, faixaBanner = false }) {
           </div>
         </div>
       </header>
-      {faixaBanner && <div aria-hidden="true" className="h-7 bg-pc-verde-700 md:hidden" />}
+      {faixaBanner && <div aria-hidden="true" className="h-8 bg-pc-verde-700 md:hidden" />}
     </>
   );
 }
