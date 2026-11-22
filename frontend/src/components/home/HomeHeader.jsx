@@ -10,8 +10,8 @@ import { CidadeAtual } from "./CidadeAtual";
  * Cabeçalho único do site (cliente, visitante e admin), fixo no topo durante a rolagem.
  * - `busca={false}`: sem a busca geral (Lojas, Produtos e Serviços têm a sua).
  * - Com o mini carrinho aberto o cabeçalho sobe acima da barra inferior (toque nela só fecha a janela).
- * - `faixaBanner`: só na home; no celular o verde continua abaixo do cabeçalho, onde a folha
- *   clara da página e o banner sobem sobre ele. A faixa fica fora do cabeçalho fixo para que
+ * - `faixaBanner`: só na home; no celular o verde continua abaixo do cabeçalho, atrás dos cantos
+ *   arredondados da folha clara. A faixa fica fora do cabeçalho fixo para que
  *   ele tenha sempre a mesma altura (sem saltos na rolagem).
  */
 export function HomeHeader({ busca = true, faixaBanner = false }) {
@@ -39,7 +39,7 @@ export function HomeHeader({ busca = true, faixaBanner = false }) {
           </div>
         </div>
       </header>
-      {faixaBanner && <div aria-hidden="true" className="h-[3.75rem] bg-pc-verde-700 md:hidden" />}
+      {faixaBanner && <div aria-hidden="true" className="h-7 bg-pc-verde-700 md:hidden" />}
     </>
   );
 }
