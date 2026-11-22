@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 
 /** Moldura dos blocos da coluna direita, com carregando, vazio e erro. */
-export function BlocoResumo({ titulo, icone: Icone, estado, link, vazio, children }) {
+export function BlocoResumo({ titulo, icone: Icone, estado, link, vazio, children, className = "rounded-pc-card bg-white p-4 shadow-pc-card" }) {
   const idTitulo = `resumo-${link.destino.replace(/[^a-z0-9]+/gi, "")}`;
   return (
-    <section aria-labelledby={idTitulo} className="rounded-pc-card bg-white p-4 shadow-pc-card">
+    <section aria-labelledby={idTitulo} className={className}>
       <div className="mb-3 flex items-center justify-between">
         <h2 id={idTitulo} className="flex items-center gap-2 text-base font-bold text-pc-texto">
           <Icone size={20} aria-hidden="true" className="text-pc-verde-700" />

@@ -29,7 +29,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 pb-12">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 pb-12">
       <header className="flex flex-wrap items-center justify-between gap-4 rounded-b-3xl bg-gradient-to-r from-green-200 to-green-300 p-8 shadow-md">
         <div>
           <h1 className="text-3xl font-bold text-green-900">Administração</h1>

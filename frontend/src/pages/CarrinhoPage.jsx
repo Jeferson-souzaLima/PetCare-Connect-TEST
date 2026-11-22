@@ -31,11 +31,11 @@ export default function CarrinhoPage() {
     aumentarQuantidade,
     diminuirQuantidade,
     removerItem,
+    modalidadeEntrega: retirada,
+    setModalidadeEntrega: setRetirada,
   } = useCarrinho();
 
   const { usuario, token, atualizarUsuario } = useAuth();
-
-  const [retirada, setRetirada] = useState("retirada");
 
   const [contato, setContato] = useState({
     nome: usuario?.nome || "",
@@ -432,13 +432,16 @@ export default function CarrinhoPage() {
   return (
     <div className="bg-[#EBE9E9] min-h-screen flex flex-col">
       <main className="flex-1">
-        <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
+        <div className="max-w-6xl mx-auto px-4 py-6 md:px-6 md:py-8">
 
           <CabecalhoCarrinho
             quantidadeItens={quantidadeItens}
             nomeLoja={nomeLoja}
           />
 
+          {/* Desktop: itens e dados à esquerda; resumo e pagamento fixos à direita. */}
+          <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-8">
+          <div className="min-w-0">
           {/* ITENS */}
           <section>
             <div className="space-y-4">
@@ -496,6 +499,9 @@ export default function CarrinhoPage() {
             />
           )}
 
+          </div>
+
+          <div className="lg:sticky lg:top-24 lg:[&>section:first-child]:mt-0">
           <AvisoPagamento />
 
           <ResumoPedido
@@ -509,6 +515,8 @@ export default function CarrinhoPage() {
             finalizando={finalizando}
             onFinalizar={finalizarPedido}
           />
+          </div>
+          </div>
         </div>
       </main>
 

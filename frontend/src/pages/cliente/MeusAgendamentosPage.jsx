@@ -62,7 +62,7 @@ export default function MeusAgendamentosPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
 
       {/* CABEÇALHO */}
       <header className="bg-gradient-to-r from-green-200 to-green-300 shadow-md rounded-b-3xl p-6">

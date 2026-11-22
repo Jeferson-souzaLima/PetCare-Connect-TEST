@@ -192,6 +192,7 @@ exports.getById = (id, callback) => {
             l.id AS loja_id,
             l.nome_fantasia AS loja_nome,
             l.imagem AS loja_logo,
+            l.entrega_ativa AS loja_entrega_ativa,
 
             pi.id AS imagem_id,
             pi.caminho AS imagem_caminho,
@@ -547,6 +548,10 @@ function agruparProdutos(results) {
                     logo: row.loja_logo
                 }
             };
+            // Só a consulta de um produto (getById) traz se a loja faz entrega.
+            if (row.loja_entrega_ativa !== undefined) {
+                produtosMap[row.produto_id].loja.entrega_ativa = Number(row.loja_entrega_ativa) === 1;
+            }
         }
 
         if (row.imagem_id) {

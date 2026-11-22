@@ -11,8 +11,7 @@ const ROTAS = {
 };
 
 /**
- * Busca da home: mesmas sugestões e teclado (↑ ↓ Enter Esc) do cabeçalho atual.
- * Quando o novo cabeçalho for aplicado ao site, esta lógica e a do Header viram um hook só.
+ * Busca do cabeçalho único do site (HomeHeader), com sugestões e teclado (↑ ↓ Enter Esc).
  */
 export function BuscaHome() {
   const navigate = useNavigate();

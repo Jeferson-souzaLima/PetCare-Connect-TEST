@@ -125,7 +125,7 @@ export default function MeusPedidosPage() {
 
   if (carregando) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-10">
+      <div className="max-w-7xl mx-auto px-4 py-10">
         <div className="flex items-center justify-center py-20">
           <FaSyncAlt className="animate-spin text-green-900 text-2xl mr-3" />
 
@@ -139,7 +139,7 @@ export default function MeusPedidosPage() {
 
   if (erro) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-10">
+      <div className="max-w-7xl mx-auto px-4 py-10">
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
           <p className="text-red-700 font-medium">
             {erro}
@@ -157,7 +157,7 @@ export default function MeusPedidosPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto pb-12">
+    <div className="max-w-7xl mx-auto pb-12">
 
       <CabecalhoPedidos
         onVoltar={() => navigate("/perfil-lojista")}

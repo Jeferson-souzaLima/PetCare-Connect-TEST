@@ -21,7 +21,7 @@ export function FaixaAdmin() {
 
   return (
     <div className="bg-pc-lima px-4 pb-1.5 pt-[calc(0.375rem+env(safe-area-inset-top))] text-pc-verde-900 md:px-6">
-      <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-2 text-sm">
+      <div className="mx-auto flex max-w-pc-pagina flex-wrap items-center justify-between gap-2 text-sm">
         <p className="flex items-center gap-2 font-medium">
           <ShieldCheck aria-hidden="true" className="h-4 w-4" />
           {gerenciando

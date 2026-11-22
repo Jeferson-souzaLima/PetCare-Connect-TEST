@@ -91,7 +91,7 @@ export default function ResultadosBuscaPage() {
 
   return (
     <div className="bg-[#EBE9E9] min-h-screen flex flex-col">
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
+      <main className="flex-1 max-w-pc-pagina mx-auto w-full px-4 py-8">
 
       {/* Cabeçalho */}
 
@@ -199,7 +199,7 @@ export default function ResultadosBuscaPage() {
 
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
 
                 {produtos.map((produto) => (
                   <ProductCard

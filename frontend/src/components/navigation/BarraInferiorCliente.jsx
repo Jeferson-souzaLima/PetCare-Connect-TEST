@@ -1,115 +1,148 @@
 import { useEffect, useRef, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
-import { CalendarDays, Home, Package, Search, User } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { CalendarDays, Home, Package, Search, ShoppingCart, User } from "lucide-react";
+import { useCarrinho } from "@/context/CarrinhoContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useToqueProlongado } from "@/hooks/useToqueProlongado";
+import { itemAtivo, rotuloContador, unidadesNoCarrinho } from "@/utils/navegacaoInferior";
 import { AvisoCarrinho } from "./AvisoCarrinho";
 import { PainelExplorar } from "./PainelExplorar";
+import { JanelaRapida } from "./mobile/JanelaRapida";
+import { MiniCarrinho } from "./mobile/MiniCarrinho";
+import { ResumoAgenda, ResumoConta, ResumoPedidos } from "./mobile/ResumosRapidos";
 
-const PAINEL_ID = "painel-explorar";
+const JANELA_ID = "janela-barra-inferior";
 
-// Páginas em que o "Explorar" aparece como ativo.
-const ROTAS_EXPLORAR = /^\/(lojas|produtos|servicos|busca|agendar)(\/|$)/;
+/*
+ * Toque rápido: vai para `destino` (o carrinho abre o mini carrinho).
+ * Toque prolongado: abre a `janela` sem sair da página. Início não tem janela.
+ */
+const ITENS = [
+  { id: "inicio", rotulo: "Início", destino: "/", icone: Home },
+  { id: "explorar", rotulo: "Explorar", destino: "/produtos", icone: Search, janela: PainelExplorar, titulo: "Explorar" },
+  { id: "agenda", rotulo: "Agenda", destino: "/meus-agendamentos", icone: CalendarDays, janela: ResumoAgenda, titulo: "Próximos agendamentos" },
+  { id: "pedidos", rotulo: "Pedidos", destino: "/meus-pedidos", icone: Package, janela: ResumoPedidos, titulo: "Pedidos recentes" },
+  { id: "carrinho", rotulo: "Carrinho", icone: ShoppingCart, janela: MiniCarrinho, titulo: "Carrinho" },
+  { id: "conta", rotulo: "Conta", destino: "/perfil", icone: User, janela: ResumoConta, titulo: "Sua conta" },
+];
 
 const ITEM =
-  "flex min-h-[52px] w-full flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-pc-pill text-[10px] font-medium tracking-tight max-[359px]:text-[9.5px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pc-verde-700 focus-visible:ring-offset-2";
+  "relative flex min-h-[52px] w-full select-none flex-col items-center justify-center gap-0.5 overflow-hidden whitespace-nowrap rounded-pc-pill text-[10px] font-medium tracking-tight transition-colors [-webkit-touch-callout:none] max-[359px]:text-[9.5px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pc-verde-700 focus-visible:ring-offset-2";
 
-const corItem = (ativo) => (ativo ? "bg-pc-verde-100 text-pc-verde-900" : "text-pc-texto-suave");
-
-function ItemLink({ rotulo, destino, icone: Icone, extraAtivo }) {
-  return (
-    <NavLink to={destino} className={({ isActive }) => `${ITEM} ${corItem(isActive || extraAtivo)}`}>
-      <Icone size={22} aria-hidden="true" />
-      {rotulo}
-    </NavLink>
-  );
+function corItem({ ativo, aberto }) {
+  if (ativo) return "bg-pc-verde-700 text-white shadow-sm";
+  if (aberto) return "bg-pc-verde-100 text-pc-verde-900";
+  return "text-pc-texto-suave";
 }
 
 /**
- * Barra inferior do cliente e do visitante (abaixo de 768 px), igual em todas as páginas:
- * Explorar | Agendamentos | Início (no centro, em destaque) | Pedidos | Conta.
- * O carrinho fica no cabeçalho. O lojista não vê esta barra.
+ * Barra inferior flutuante do cliente e do visitante (abaixo de 768 px), igual em todas as páginas.
+ * O destaque verde acompanha a página atual. O lojista não vê esta barra.
  */
 export function BarraInferiorCliente() {
   const { usuario } = useAuth();
+  const { carrinho } = useCarrinho();
   const { pathname } = useLocation();
-  const [painelAberto, setPainelAberto] = useState(false);
+  const [janela, setJanela] = useState(null);
   const navRef = useRef(null);
-  const explorarRef = useRef(null);
+  const { pressionando, propsDe } = useToqueProlongado(setJanela);
 
-  // Fecha o painel ao trocar de página.
+  // Fecha a janela ao trocar de página.
   useEffect(() => {
-    setPainelAberto(false);
+    setJanela(null);
   }, [pathname]);
 
   useEffect(() => {
-    if (!painelAberto) return undefined;
+    if (!janela) return undefined;
     function aoTeclar(evento) {
-      if (evento.key === "Escape") {
-        setPainelAberto(false);
-        explorarRef.current?.focus();
-      }
-    }
-    function aoTocarFora(evento) {
-      if (!navRef.current?.contains(evento.target)) setPainelAberto(false);
+      if (evento.key !== "Escape") return;
+      setJanela(null);
+      navRef.current?.querySelector(`[data-item="${janela}"]`)?.focus();
     }
     document.addEventListener("keydown", aoTeclar);
-    document.addEventListener("pointerdown", aoTocarFora);
-    return () => {
-      document.removeEventListener("keydown", aoTeclar);
-      document.removeEventListener("pointerdown", aoTocarFora);
-    };
-  }, [painelAberto]);
+    return () => document.removeEventListener("keydown", aoTeclar);
+  }, [janela]);
 
   if (usuario?.tipo === "lojista") return null;
 
-  const explorarAtivo = ROTAS_EXPLORAR.test(pathname);
+  const ativo = itemAtivo(pathname);
+  const unidades = unidadesNoCarrinho(carrinho);
+  const aberto = ITENS.find((item) => item.id === janela);
+  const Conteudo = aberto?.janela;
+  const fechar = () => setJanela(null);
 
   return (
     <>
-      <AvisoCarrinho />
+      {/* Com uma janela aberta o aviso ficaria sobre ela (ex.: "Finalizar compra" do mini carrinho). */}
+      {!Conteudo && <AvisoCarrinho />}
+      {/* Toque fora da janela só a fecha: a camada recebe o toque, que não chega ao que está atrás. */}
+      {Conteudo && <div aria-hidden="true" onClick={fechar} className="fixed inset-0 z-40 md:hidden" />}
       <nav
         ref={navRef}
         aria-label="Navegação principal"
-        className="fixed inset-x-3 max-[359px]:inset-x-2 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md rounded-pc-pill border border-black/5 bg-white/95 p-1.5 shadow-[0_8px_24px_rgba(2,63,30,0.18)] backdrop-blur md:hidden"
+        className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md rounded-pc-pill border border-black/5 bg-white/95 p-1.5 shadow-[0_8px_24px_rgba(2,63,30,0.18)] backdrop-blur max-[359px]:inset-x-2 md:hidden"
       >
-        {painelAberto && <PainelExplorar id={PAINEL_ID} aoFechar={() => setPainelAberto(false)} />}
-        <ul className="grid grid-cols-[1fr_1fr_64px_1fr_1fr] items-center gap-0.5">
-          <li>
-            <button
-              ref={explorarRef}
-              type="button"
-              aria-expanded={painelAberto}
-              aria-controls={PAINEL_ID}
-              onClick={() => setPainelAberto((aberto) => !aberto)}
-              className={`${ITEM} ${corItem(explorarAtivo || painelAberto)}`}
-            >
-              <Search size={22} aria-hidden="true" />
-              Explorar
-            </button>
-          </li>
-          <li>
-            <ItemLink rotulo="Agendamentos" destino="/meus-agendamentos" icone={CalendarDays} />
-          </li>
-          <li className="flex justify-center">
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                `flex h-[60px] w-[60px] flex-col items-center justify-center gap-0.5 rounded-full text-[10px] font-semibold tracking-tight shadow-md ring-4 ring-white focus-visible:outline-none focus-visible:ring-pc-lima ${
-                  isActive ? "bg-pc-verde-900 text-white" : "bg-pc-verde-700 text-white"
-                }`
-              }
-            >
-              <Home size={22} aria-hidden="true" />
-              Início
-            </NavLink>
-          </li>
-          <li>
-            <ItemLink rotulo="Pedidos" destino="/meus-pedidos" icone={Package} />
-          </li>
-          <li>
-            <ItemLink rotulo="Conta" destino="/perfil" icone={User} extraAtivo={pathname === "/favoritos"} />
-          </li>
+        {Conteudo && (
+          <JanelaRapida key={aberto.id} id={JANELA_ID} rotulo={aberto.titulo}>
+            <Conteudo aoFechar={fechar} />
+          </JanelaRapida>
+        )}
+        <ul className="grid grid-cols-6 items-center gap-0.5">
+          {ITENS.map(({ id, rotulo, destino, icone: Icone, janela: temJanela }) => {
+            const estado = { ativo: ativo === id, aberto: janela === id };
+            const classe = `${ITEM} ${corItem(estado)}`;
+            const toque = temJanela ? propsDe(id) : {};
+            const conteudo = (
+              <>
+                {/* Enche enquanto o dedo segura: mostra que vai abrir a janela. */}
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute inset-0 origin-left rounded-pc-pill bg-pc-verde-700/15 transition-transform ease-linear ${
+                    pressionando === id ? "scale-x-100 duration-[450ms]" : "scale-x-0 duration-0"
+                  }`}
+                />
+                <span className="relative">
+                  <Icone size={22} aria-hidden="true" />
+                  {id === "carrinho" && unidades > 0 && (
+                    <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-pc-lima px-1 text-[10px] font-bold leading-none text-pc-verde-900">
+                      {rotuloContador(unidades)}
+                    </span>
+                  )}
+                </span>
+                <span className="relative">{rotulo}</span>
+              </>
+            );
+
+            return (
+              <li key={id}>
+                {destino ? (
+                  <Link
+                    to={destino}
+                    data-item={id}
+                    aria-current={estado.ativo ? "page" : undefined}
+                    className={classe}
+                    {...toque}
+                  >
+                    {conteudo}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    data-item={id}
+                    aria-label={unidades ? `${rotulo} (${unidades} ${unidades === 1 ? "item" : "itens"})` : rotulo}
+                    aria-expanded={estado.aberto}
+                    aria-controls={JANELA_ID}
+                    aria-current={estado.ativo ? "page" : undefined}
+                    onClick={() => setJanela((atual) => (atual === id ? null : id))}
+                    className={classe}
+                    {...toque}
+                  >
+                    {conteudo}
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </nav>
     </>

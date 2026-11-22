@@ -3,12 +3,13 @@ import { formatarMoeda } from "@/utils/formatadores";
 import { formatarStatus } from "@/utils/statusPedido";
 import { BlocoResumo } from "./BlocoResumo";
 
-export function PedidosRecentes({ estado, itens }) {
+export function PedidosRecentes({ estado, itens, className }) {
   return (
     <BlocoResumo
       titulo="Meus Pedidos"
       icone={Package}
       estado={estado}
+      className={className}
       link={{ destino: "/meus-pedidos", rotulo: "Ver todos" }}
       vazio={<p className="text-sm text-pc-texto-suave">Nenhum pedido ainda.</p>}
     >

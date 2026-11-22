@@ -4,6 +4,9 @@ import { Link } from "react-router-dom";
 import { ShoppingCart, Check } from "lucide-react";
 import { FavoriteButton } from "../ui/FavoriteButton";
 import { useCarrinho } from "../../context/CarrinhoContext";
+import { VisualizacaoRapidaProduto } from "@/components/modals/visualizacao-produto/VisualizacaoRapidaProduto";
+import { useVisualizacaoRapida } from "@/hooks/useVisualizacaoRapida";
+import { itemDoCarrinho } from "@/utils/produtoRapido";
 
 export function ProductCard({
   produto,
@@ -12,6 +15,7 @@ export function ProductCard({
   const { adicionarItem } = useCarrinho();
 
   const [adicionado, setAdicionado] = useState(false);
+  const rapida = useVisualizacaoRapida();
 
   const imagemProduto = getMediaUrl(
     produto.imagens?.[0]?.caminho,
@@ -33,16 +37,7 @@ export function ProductCard({
       return;
     }
 
-    const entrou = adicionarItem({
-      tipo: "produto",
-      item_id: produto.id,
-      nome_item: produto.nome,
-      preco_unitario: produto.preco,
-      quantidade: 1,
-      loja_id: produto.loja.id,
-      loja_nome: produto.loja.nome,
-      imagem: produto.imagens?.[0]?.caminho || null,
-    });
+    const entrou = adicionarItem(itemDoCarrinho(produto, 1));
 
     if (!entrou) return;
 
@@ -80,6 +75,7 @@ export function ProductCard({
         {/* Produto */}
         <Link
           to={`/produtos/${produto.id}`}
+          onClick={(evento) => rapida.aoClicarProduto(evento, produto.id)}
           className="flex flex-col flex-1"
         >
           {/* Imagem */}
@@ -151,6 +147,8 @@ export function ProductCard({
           </button>
         </div>
       </article>
+
+      {rapida.produtoId && <VisualizacaoRapidaProduto produtoId={rapida.produtoId} aoFechar={rapida.fechar} />}
 
       {/* Feedback */}
       {adicionado && (

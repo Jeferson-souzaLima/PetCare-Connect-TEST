@@ -1,13 +1,11 @@
 import { Outlet } from "react-router-dom";
-import { Header } from "../components/layout/Header";
+import { HomeHeader } from "../components/home/HomeHeader";
 import { BarraInferiorCliente } from "../components/navigation/BarraInferiorCliente";
-import { FaixaAdmin } from "../components/navigation/FaixaAdmin";
 
 export default function Layout({ children }) {
   return (
     <>
-      <FaixaAdmin />
-      <Header />
+      <HomeHeader />
 
       {/* Espaço para a barra inferior flutuante (altura + distância da borda + safe-area). */}
       <main className="pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-0">

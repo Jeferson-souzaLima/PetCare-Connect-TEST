@@ -17,6 +17,7 @@ import {
 import { FavoriteButton } from "../components/ui/FavoriteButton";
 import { useCarrinho } from "../context/CarrinhoContext";
 import { Footer } from "../components/layout/Footer";
+import { itemDoCarrinho } from "../utils/produtoRapido";
 
 export default function ProdutoDetalhes() {
   const { id } = useParams();
@@ -150,16 +151,7 @@ export default function ProdutoDetalhes() {
   }
 
   function handleAdicionarAoCarrinho() {
-    const entrou = adicionarItem({
-      tipo: "produto",
-      item_id: produto.id,
-      nome_item: produto.nome,
-      preco_unitario: produto.preco,
-      quantidade,
-      loja_id: produto.loja.id,
-      loja_nome: produto.loja.nome,
-      imagem: produto.imagens?.[0]?.caminho || null,
-    });
+    const entrou = adicionarItem(itemDoCarrinho(produto, quantidade));
 
     if (!entrou) return;
 
@@ -171,16 +163,7 @@ export default function ProdutoDetalhes() {
   }
 
   function handleComprarAgora() {
-    const entrou = adicionarItem({
-      tipo: "produto",
-      item_id: produto.id,
-      nome_item: produto.nome,
-      preco_unitario: produto.preco,
-      quantidade,
-      loja_id: produto.loja.id,
-      loja_nome: produto.loja.nome,
-      imagem: produto.imagens?.[0]?.caminho || null,
-    });
+    const entrou = adicionarItem(itemDoCarrinho(produto, quantidade));
 
     if (entrou) navigate("/carrinho");
   }
@@ -188,7 +171,7 @@ export default function ProdutoDetalhes() {
   return (
     <div className="bg-[#EBE9E9] min-h-screen flex flex-col">
       <main className="flex-1">
-        <div className="max-w-7xl mx-auto px-4 py-5 md:py-8">
+        <div className="max-w-7xl mx-auto px-4 py-5 md:px-6 md:py-8">
           {/* VOLTAR */}
           <button
             type="button"
