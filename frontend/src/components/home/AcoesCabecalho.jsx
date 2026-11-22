@@ -1,14 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronDown, Heart, LayoutDashboard, ShoppingCart, User } from "lucide-react";
-import { useCarrinho } from "@/context/CarrinhoContext";
-import { rotuloContador, unidadesNoCarrinho } from "@/utils/navegacaoInferior";
+import { ChevronDown, Heart, LayoutDashboard, User } from "lucide-react";
+import { CarrinhoCabecalho } from "./CarrinhoCabecalho";
 
-// Ícones do cabeçalho. Para ativar notificações, adicione um item aqui.
-const ACOES = [
-  { id: "favoritos", rotulo: "Favoritos", icone: Heart, destino: "/favoritos" },
-  { id: "carrinho", rotulo: "Carrinho", icone: ShoppingCart, destino: "/carrinho", contador: "carrinho" },
-];
+// Ícones-link do cabeçalho (o carrinho vem depois deles e abre o mini carrinho).
+const ACOES = [{ id: "favoritos", rotulo: "Favoritos", icone: Heart, destino: "/favoritos" }];
 // O lojista não compra pelo site: no lugar dos ícones, o atalho para o painel da loja.
 const ACOES_LOJISTA = [{ id: "painel", rotulo: "Painel da loja", icone: LayoutDashboard, destino: "/perfil-lojista" }];
 
@@ -88,24 +84,16 @@ function MenuUsuario({ usuario, aoSair }) {
 
 export function AcoesCabecalho({ usuario, logout }) {
   const navigate = useNavigate();
-  const { carrinho } = useCarrinho();
-  const contadores = { carrinho: unidadesNoCarrinho(carrinho) };
+  const lojista = usuario?.tipo === "lojista";
 
   return (
     <div className="flex items-center gap-1">
-      {(usuario?.tipo === "lojista" ? ACOES_LOJISTA : ACOES).map(({ id, rotulo, icone: Icone, destino, contador }) => {
-        const valor = contador ? contadores[contador] : 0;
-        return (
-          <Link key={id} to={destino} className={BOTAO_ICONE} aria-label={valor ? `${rotulo} (${valor} ${valor === 1 ? "item" : "itens"})` : rotulo}>
-            <Icone size={22} aria-hidden="true" />
-            {valor > 0 && (
-              <span aria-hidden="true" className="absolute right-0.5 top-0.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-pc-lima px-1 text-xs font-bold text-pc-verde-900">
-                {rotuloContador(valor)}
-              </span>
-            )}
-          </Link>
-        );
-      })}
+      {(lojista ? ACOES_LOJISTA : ACOES).map(({ id, rotulo, icone: Icone, destino }) => (
+        <Link key={id} to={destino} className={BOTAO_ICONE} aria-label={rotulo}>
+          <Icone size={22} aria-hidden="true" />
+        </Link>
+      ))}
+      {!lojista && <CarrinhoCabecalho classeBotao={BOTAO_ICONE} />}
       {usuario ? (
         <MenuUsuario
           usuario={usuario}

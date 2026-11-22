@@ -48,7 +48,7 @@ function ItemMiniCarrinho({ item, aumentar, diminuir, remover }) {
   );
 }
 
-/** Mini carrinho da barra inferior: edita o carrinho sem sair da página; "Finalizar compra" leva ao carrinho completo. */
+/** Mini carrinho do ícone do cabeçalho: edita o carrinho sem sair da página; "Finalizar compra" leva ao carrinho completo. */
 export function MiniCarrinho({ aoFechar }) {
   const { carrinho, aumentarQuantidade, diminuirQuantidade, removerItem } = useCarrinho();
   const unidades = unidadesNoCarrinho(carrinho);
