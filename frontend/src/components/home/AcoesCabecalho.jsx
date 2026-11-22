@@ -22,7 +22,7 @@ const LINKS_MENU = {
 };
 
 const BOTAO_ICONE =
-  "relative flex h-11 w-11 items-center justify-center rounded-full text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/60";
+  "relative flex items-center justify-center rounded-full text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/60";
 
 function MenuUsuario({ usuario, aoSair }) {
   const [aberto, setAberto] = useState(false);
@@ -82,18 +82,20 @@ function MenuUsuario({ usuario, aoSair }) {
   );
 }
 
-export function AcoesCabecalho({ usuario, logout }) {
+/** Ícones e menu do cabeçalho. `compacto`: botões um pouco menores no cabeçalho recolhível. */
+export function AcoesCabecalho({ usuario, logout, compacto = false }) {
   const navigate = useNavigate();
   const lojista = usuario?.tipo === "lojista";
+  const classeBotao = `${BOTAO_ICONE} ${compacto ? "h-10 w-10" : "h-11 w-11"}`;
 
   return (
     <div className="flex items-center gap-1">
       {(lojista ? ACOES_LOJISTA : ACOES).map(({ id, rotulo, icone: Icone, destino }) => (
-        <Link key={id} to={destino} className={BOTAO_ICONE} aria-label={rotulo}>
+        <Link key={id} to={destino} className={classeBotao} aria-label={rotulo}>
           <Icone size={22} aria-hidden="true" />
         </Link>
       ))}
-      {!lojista && <CarrinhoCabecalho classeBotao={BOTAO_ICONE} />}
+      {!lojista && <CarrinhoCabecalho classeBotao={classeBotao} />}
       {usuario ? (
         <MenuUsuario
           usuario={usuario}
