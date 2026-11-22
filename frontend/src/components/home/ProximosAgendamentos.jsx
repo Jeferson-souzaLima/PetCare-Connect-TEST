@@ -3,12 +3,13 @@ import { CalendarDays } from "lucide-react";
 import { formatarDataHora } from "@/utils/formatadores";
 import { BlocoResumo } from "./BlocoResumo";
 
-export function ProximosAgendamentos({ estado, itens }) {
+export function ProximosAgendamentos({ estado, itens, className }) {
   return (
     <BlocoResumo
       titulo="Próximos Agendamentos"
       icone={CalendarDays}
       estado={estado}
+      className={className}
       link={{ destino: "/meus-agendamentos", rotulo: "Ver todos" }}
       vazio={
         <p className="text-sm text-pc-texto-suave">

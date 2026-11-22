@@ -40,7 +40,7 @@ export default function FavoritosPage() {
 
   if (loading) {
     return (
-      <main className="max-w-7xl mx-auto px-4 py-10">
+      <main className="max-w-pc-pagina mx-auto px-4 py-10">
         <div className="text-center text-gray-500">
           Carregando favoritos...
         </div>
@@ -54,7 +54,7 @@ export default function FavoritosPage() {
     favoritos.servicos.length === 0;
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-8">
+    <main className="max-w-pc-pagina mx-auto px-4 py-8">
 
       <div className="mb-10">
         <h1 className="text-3xl font-bold text-gray-800">

@@ -7,7 +7,7 @@ import { ProximosAgendamentos } from "./ProximosAgendamentos";
 /** Coluna direita da home no desktop (a partir de 1280 px). */
 export function HomeAside({ resumo, logado }) {
   return (
-    <aside aria-label="Resumo da sua conta" className="hidden w-80 shrink-0 space-y-4 xl:block">
+    <aside aria-label="Resumo da sua conta" className="hidden w-80 shrink-0 space-y-4 self-start xl:sticky xl:top-[5.5rem] xl:block xl:max-h-[calc(100vh-6.5rem)] xl:overflow-y-auto">
       {logado && resumo.pets.estado !== "inativo" ? (
         <>
           <MeusPetsResumo {...resumo.pets} />

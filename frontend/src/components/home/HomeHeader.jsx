@@ -1,42 +1,44 @@
 import { Link } from "react-router-dom";
 import { FaixaAdmin } from "@/components/navigation/FaixaAdmin";
 import { LogoPetCare } from "@/components/ui/LogoPetCare";
+import { useAuth } from "@/hooks/useAuth";
 import { AcoesCabecalho } from "./AcoesCabecalho";
 import { BuscaHome } from "./BuscaHome";
 import { CidadeAtual } from "./CidadeAtual";
 
 /**
- * Cabeçalho da nova home. Com `pagina` (Lojas, Produtos e Serviços), fica sem a busca geral,
- * porque a página tem a sua, e sem o espaço extra para o banner subir.
+ * Cabeçalho único do site (cliente, visitante e admin), fixo no topo durante a rolagem.
+ * - `busca={false}`: sem a busca geral (Lojas, Produtos e Serviços têm a sua).
+ * - `faixaBanner`: só na home; no celular o verde continua abaixo do cabeçalho, onde a folha
+ *   clara da página e o banner sobem sobre ele. A faixa fica fora do cabeçalho fixo para que
+ *   ele tenha sempre a mesma altura (sem saltos na rolagem).
  */
-export function HomeHeader({ usuario, logout, pagina = false }) {
+export function HomeHeader({ busca = true, faixaBanner = false }) {
+  const { usuario, logout } = useAuth();
+
   return (
     <>
-    <FaixaAdmin />
-    {/* No celular o verde vai de ponta a ponta, inclusive sob a barra de status (safe-area),
-        e continua abaixo da busca, onde a folha clara da página e o banner sobem sobre ele. */}
-    <header
-      className={`bg-gradient-to-b from-pc-verde-900 to-pc-verde-700 px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] md:px-6 md:pb-3 md:pt-3 ${
-        pagina ? "pb-3" : "pb-[4.5rem]"
-      }`}
-    >
-      <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-3 gap-y-3">
-        <Link to="/" className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/60" aria-label="PetCare Connect, página inicial">
-          <LogoPetCare alt="" className="h-10 md:h-12" />
-        </Link>
-        <CidadeAtual usuario={usuario} />
-        {pagina ? (
-          <div className="hidden md:block md:flex-1" />
-        ) : (
-          <div className="order-last w-full md:order-none md:w-auto md:flex-1 md:px-4">
-            <BuscaHome />
+      <FaixaAdmin />
+      {/* No celular o verde vai de ponta a ponta, inclusive sob a barra de status (safe-area). */}
+      <header className="sticky top-0 z-40 bg-gradient-to-b from-pc-verde-900 to-pc-verde-700 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] shadow-[0_2px_12px_rgba(2,63,30,0.18)] md:px-6 md:pt-3">
+        <div className="mx-auto flex max-w-pc-pagina flex-wrap items-center gap-x-3 gap-y-3">
+          <Link to="/" className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/60" aria-label="PetCare Connect, página inicial">
+            <LogoPetCare alt="" className="h-10 md:h-12" />
+          </Link>
+          <CidadeAtual usuario={usuario} />
+          {busca ? (
+            <div className="order-last w-full md:order-none md:w-auto md:flex-1 md:px-4">
+              <BuscaHome />
+            </div>
+          ) : (
+            <div className="hidden md:block md:flex-1" />
+          )}
+          <div className="ml-auto md:ml-0">
+            <AcoesCabecalho usuario={usuario} logout={logout} />
           </div>
-        )}
-        <div className="ml-auto md:ml-0">
-          <AcoesCabecalho usuario={usuario} logout={logout} />
         </div>
-      </div>
-    </header>
+      </header>
+      {faixaBanner && <div aria-hidden="true" className="h-[3.75rem] bg-pc-verde-700 md:hidden" />}
     </>
   );
 }

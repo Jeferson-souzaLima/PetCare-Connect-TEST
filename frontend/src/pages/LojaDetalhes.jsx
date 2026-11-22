@@ -14,10 +14,13 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useCarrinho } from "../context/CarrinhoContext";
+import { VisualizacaoRapidaProduto } from "../components/modals/visualizacao-produto/VisualizacaoRapidaProduto";
+import { useVisualizacaoRapida } from "../hooks/useVisualizacaoRapida";
 
 export default function LojaDetalhes() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const rapida = useVisualizacaoRapida();
   const { adicionarItem } = useCarrinho();
 
   const [loja, setLoja] = useState(null);
@@ -201,7 +204,7 @@ export default function LojaDetalhes() {
   if (loading) {
     return (
       <div className="bg-[#EBE9E9] min-h-screen">
-        <main className="max-w-6xl mx-auto px-4 py-12">
+        <main className="max-w-7xl mx-auto px-4 py-12">
           <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-10 text-center">
             <div className="w-10 h-10 border-4 border-green-100 border-t-[#0E5617] rounded-full animate-spin mx-auto" />
 
@@ -259,7 +262,7 @@ export default function LojaDetalhes() {
 
   return (
     <div className="bg-[#EBE9E9] min-h-screen">
-      <main className="max-w-6xl mx-auto px-4 py-5 md:py-8">
+      <main className="max-w-7xl mx-auto px-4 py-5 md:py-8">
 
         {/* VOLTAR */}
         <button
@@ -449,7 +452,7 @@ export default function LojaDetalhes() {
           {!carregandoItens &&
             itens.length > 0 &&
             abaAtiva === "produtos" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                 {itens.map((item) => {
                   const qtd = quantidades[item.id] || 0;
 
@@ -477,8 +480,8 @@ export default function LojaDetalhes() {
                       {/* IMAGEM */}
                       <button
                         type="button"
-                        onClick={() =>
-                          navigate(`/produtos/${item.id}`)
+                        onClick={(evento) =>
+                          rapida.aoClicarProduto(evento, item.id) || navigate(`/produtos/${item.id}`)
                         }
                         className="h-48 bg-gray-50 flex items-center justify-center overflow-hidden"
                       >
@@ -493,8 +496,8 @@ export default function LojaDetalhes() {
                       <div className="p-4 flex flex-col flex-1">
                         <button
                           type="button"
-                          onClick={() =>
-                            navigate(`/produtos/${item.id}`)
+                          onClick={(evento) =>
+                            rapida.aoClicarProduto(evento, item.id) || navigate(`/produtos/${item.id}`)
                           }
                           className="text-left"
                         >
@@ -635,7 +638,7 @@ export default function LojaDetalhes() {
           {!carregandoItens &&
             itens.length > 0 &&
             abaAtiva === "servicos" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                 {itens.map((item) => (
                   <article
                     key={item.id}
@@ -711,6 +714,8 @@ export default function LojaDetalhes() {
             )}
         </section>
       </main>
+
+      {rapida.produtoId && <VisualizacaoRapidaProduto produtoId={rapida.produtoId} aoFechar={rapida.fechar} />}
 
       {/* NOTIFICAÇÃO */}
       {notificacao && (

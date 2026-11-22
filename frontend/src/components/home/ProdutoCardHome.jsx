@@ -4,13 +4,17 @@ import { Check, Package, ShoppingCart } from "lucide-react";
 import { useCarrinho } from "@/context/CarrinhoContext";
 import { FavoriteButton } from "@/components/ui/FavoriteButton";
 import { getMediaUrl } from "@/services/mediaUrl";
+import { VisualizacaoRapidaProduto } from "@/components/modals/visualizacao-produto/VisualizacaoRapidaProduto";
+import { useVisualizacaoRapida } from "@/hooks/useVisualizacaoRapida";
 import { formatarMoeda } from "@/utils/formatadores";
+import { itemDoCarrinho } from "@/utils/produtoRapido";
 
 /** Card de produto da vitrine. O coração aparece só para quem está logado. */
 export function ProdutoCardHome({ produto, logado }) {
   const { adicionarItem } = useCarrinho();
   const [adicionado, setAdicionado] = useState(false);
   const [imagemFalhou, setImagemFalhou] = useState(false);
+  const rapida = useVisualizacaoRapida();
   const imagem = getMediaUrl(produto.imagens?.[0]?.caminho);
   const podeComprar = Boolean(produto?.id && produto?.loja?.id);
 
@@ -22,24 +26,14 @@ export function ProdutoCardHome({ produto, logado }) {
 
   function adicionar() {
     if (!podeComprar) return;
-    // Mesmo formato de item usado pelo ProductCard.
-    const entrou = adicionarItem({
-      tipo: "produto",
-      item_id: produto.id,
-      nome_item: produto.nome,
-      preco_unitario: produto.preco,
-      quantidade: 1,
-      loja_id: produto.loja.id,
-      loja_nome: produto.loja.nome,
-      imagem: produto.imagens?.[0]?.caminho || null,
-    });
+    const entrou = adicionarItem(itemDoCarrinho(produto, 1));
     if (entrou) setAdicionado(true);
   }
 
   return (
     <article className="relative flex h-full flex-col rounded-pc-card bg-white p-3 shadow-pc-card">
       {logado && <FavoriteButton tipo="produto" referenciaId={produto.id} className="absolute right-2 top-2 z-10" />}
-      <Link to={`/produtos/${produto.id}`} className="flex flex-1 flex-col rounded-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-verde-700/40">
+      <Link to={`/produtos/${produto.id}`} onClick={(evento) => rapida.aoClicarProduto(evento, produto.id)} className="flex flex-1 flex-col rounded-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-verde-700/40">
         <span className="flex h-28 items-center justify-center">
           {imagem && !imagemFalhou ? (
             <img src={imagem} alt="" loading="lazy" className="h-full w-full object-contain" onError={() => setImagemFalhou(true)} />
@@ -62,6 +56,7 @@ export function ProdutoCardHome({ produto, logado }) {
           {adicionado ? <Check size={20} aria-hidden="true" /> : <ShoppingCart size={20} aria-hidden="true" />}
         </button>
       </div>
+      {rapida.produtoId && <VisualizacaoRapidaProduto produtoId={rapida.produtoId} aoFechar={rapida.fechar} />}
       <span className="sr-only" aria-live="polite">{adicionado ? "Produto adicionado ao carrinho." : ""}</span>
     </article>
   );

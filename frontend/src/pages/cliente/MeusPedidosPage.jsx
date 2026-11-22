@@ -101,7 +101,7 @@ export default function MeusPedidosPage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 pb-12">
+    <div className="mx-auto max-w-6xl space-y-6 pb-12">
       <header className="rounded-b-3xl bg-gradient-to-r from-green-200 to-green-300 p-6 shadow-md">
         <button
           type="button"

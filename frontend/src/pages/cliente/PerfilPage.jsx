@@ -245,7 +245,7 @@ export default function PerfilPage() {
 
   return (
     <div className="bg-[#EBE9E9] min-h-screen flex flex-col">
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 md:px-6 py-6 md:py-8 space-y-6">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 md:px-6 py-6 md:py-8 space-y-6">
 
         <PerfilCabecalho
           usuario={usuario}

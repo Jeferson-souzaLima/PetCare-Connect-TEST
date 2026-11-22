@@ -12,7 +12,7 @@ import { useResumoCliente } from "@/hooks/useResumoCliente";
 
 /** Home do cliente e do visitante. A do lojista é o painel (PainelLojistaPage). */
 export default function NovaHomePage() {
-  const { usuario, logout } = useAuth();
+  const { usuario } = useAuth();
   const resumo = useResumoCliente();
 
   return (
@@ -27,7 +27,7 @@ export default function NovaHomePage() {
         Pular para o conteúdo
       </a>
 
-      <HomeHeader usuario={usuario} logout={logout} />
+      <HomeHeader faixaBanner />
 
       {/* Celular: a página é uma folha clara de cantos arredondados que sobe sobre o verde do
           cabeçalho ao abrir (sem animação com "reduzir movimento"). O banner fica no topo da
@@ -38,7 +38,7 @@ export default function NovaHomePage() {
       >
         <h1 className="sr-only">PetCare Connect: produtos e serviços para o seu pet</h1>
 
-        <div className="mx-auto flex max-w-[1440px] gap-6 px-4 pb-6 pt-0 md:px-6 md:pb-10 md:pt-4">
+        <div className="mx-auto flex max-w-pc-pagina gap-6 px-4 pb-6 pt-0 md:px-6 md:pb-10 md:pt-4">
           <HomeSidebar />
 
           <div className="min-w-0 flex-1 space-y-5">

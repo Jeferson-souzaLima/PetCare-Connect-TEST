@@ -35,7 +35,7 @@ function Esqueleto({ tipo }) {
 
 /** Páginas /lojas, /produtos e /servicos: busca, lista em cards e "carregar mais", no visual da nova home. */
 export default function ExplorarPage({ tipo }) {
-  const { usuario, logout } = useAuth();
+  const { usuario } = useAuth();
   const { localizacao } = useLocalizacao();
   const [searchParams, setSearchParams] = useSearchParams();
   const termoUrl = searchParams.get("q") ?? "";
@@ -87,9 +87,9 @@ export default function ExplorarPage({ tipo }) {
 
   return (
     <div className="min-h-screen bg-pc-fundo pb-[calc(7rem+env(safe-area-inset-bottom))] text-pc-texto md:pb-0">
-      <HomeHeader usuario={usuario} logout={logout} pagina />
+      <HomeHeader busca={false} />
 
-      <main className="mx-auto max-w-7xl px-4 pb-10 pt-5 md:px-6">
+      <main className="mx-auto max-w-pc-pagina px-4 pb-10 pt-5 md:px-6">
         <h1 className="text-2xl font-bold">{config.titulo}</h1>
 
         <nav aria-label="Tipo de conteúdo" className="mt-3 flex gap-2 overflow-x-auto">

@@ -10,6 +10,8 @@ export function CarrinhoProvider({ children }) {
   const carrinhoRef = useRef(CARRINHO_VAZIO);
 
   const [ultimoItemAdicionado, setUltimoItemAdicionado] = useState(null);
+  // "retirada" ou "entrega": escolhida na visualização rápida do produto ou no próprio carrinho.
+  const [modalidadeEntrega, setModalidadeEntrega] = useState("retirada");
 
   const setCarrinho = useCallback((atualizar) => {
     const novo = typeof atualizar === "function" ? atualizar(carrinhoRef.current) : atualizar;
@@ -103,6 +105,8 @@ export function CarrinhoProvider({ children }) {
         removerItem,
         limparCarrinho,
         ultimoItemAdicionado,
+        modalidadeEntrega,
+        setModalidadeEntrega,
       }}
     >
       {children}
