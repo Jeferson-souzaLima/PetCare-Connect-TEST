@@ -27,24 +27,24 @@ export default function NovaHomePage() {
         Pular para o conteúdo
       </a>
 
-      <HomeHeader faixaBanner />
+      <HomeHeader />
 
-      {/* Celular: a página é uma folha clara de cantos arredondados que sobe sobre o verde do
-          cabeçalho ao abrir (sem animação com "reduzir movimento"). O banner fica no topo da
-          folha. A partir de 768 px o layout é o de antes. */}
+      {/* Celular: o verde do cabeçalho desce pelos lados do banner e se dissolve na cor do fundo;
+          o conteúdo sobe ao abrir (sem animação com "reduzir movimento"). A partir de 768 px o
+          layout é o de antes. */}
       <main
         id="conteudo-home"
-        className="max-md:relative max-md:-mt-7 max-md:rounded-t-[24px] sm:max-md:rounded-t-[28px] max-md:bg-pc-fundo max-md:motion-safe:animate-pc-folha"
+        className="max-md:relative max-md:bg-[linear-gradient(to_bottom,#0B5A24_0,#0B5A24_7rem,#F8F8F8_16rem)] max-md:motion-safe:animate-pc-folha"
       >
         <h1 className="sr-only">PetCare Connect: produtos e serviços para o seu pet</h1>
 
-        <div className="mx-auto flex max-w-pc-pagina gap-6 px-4 pb-6 pt-2 sm:pt-3 md:px-6 md:pb-10 md:pt-4">
+        <div className="mx-auto flex max-w-pc-pagina gap-6 px-4 pb-6 pt-0 md:px-6 md:pb-10 md:pt-4">
           <HomeSidebar />
 
           <div className="min-w-0 flex-1 space-y-5">
-            {/* Celular: o banner fica a 8 px do verde (12 px a partir de 640), o mesmo espaço entre as
-                categorias; o raio da folha é o do banner + esse espaço, para as curvas acompanharem. */}
-            <div className="relative">
+            {/* Celular: moldura da cor do fundo a 8 px do banner (12 px a partir de 640), o mesmo espaço
+                entre as categorias, com raio = raio do banner + esse espaço, para as curvas acompanharem. */}
+            <div className="relative max-md:-mx-2 max-md:-mb-2 max-md:rounded-[24px] max-md:bg-pc-fundo max-md:p-2 sm:max-md:-mx-3 sm:max-md:-mb-3 sm:max-md:rounded-[28px] sm:max-md:p-3">
               <HeroCarousel />
             </div>
             <AtalhosCategorias />
