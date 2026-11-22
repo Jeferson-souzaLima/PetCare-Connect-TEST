@@ -27,7 +27,7 @@ const OCULTO = "pointer-events-none invisible opacity-0";
 
 /**
  * Cabeçalho único do site (cliente, visitante e admin), fixo no topo durante a rolagem.
- * - `busca={false}`: sem a busca geral (Lojas, Produtos e Serviços têm a sua).
+ * - `busca={false}`: sem a busca geral, que fica na home e em /busca (Lojas, Produtos e Serviços têm a sua).
  * - `recolhivel`: só na home; no celular fica compacto ao rolar (busca entre a localização e os
  *   ícones), depois vira uma aba; tocar na aba reabre no compacto; no topo volta ao completo.
  * - Com o mini carrinho aberto o cabeçalho sobe acima da barra inferior (toque nela só fecha a janela).
