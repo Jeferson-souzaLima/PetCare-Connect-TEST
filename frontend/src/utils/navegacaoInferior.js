@@ -1,11 +1,10 @@
-// Regras da barra inferior do celular (sem React), testadas em navegacaoInferior.test.js.
+// Regras da barra inferior do celular e do selo do carrinho (sem React), testadas em navegacaoInferior.test.js.
 
 const ROTAS = [
   ["inicio", /^\/$/],
   ["explorar", /^\/(lojas|produtos|servicos|busca|agendar)(\/|$)/],
   ["agenda", /^\/meus-agendamentos(\/|$)/],
   ["pedidos", /^\/(meus-pedidos|pagamento)(\/|$)/],
-  ["carrinho", /^\/carrinho(\/|$)/],
   ["conta", /^\/(perfil|favoritos)(\/|$)/],
 ];
 

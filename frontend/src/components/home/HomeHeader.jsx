@@ -9,6 +9,7 @@ import { CidadeAtual } from "./CidadeAtual";
 /**
  * Cabeçalho único do site (cliente, visitante e admin), fixo no topo durante a rolagem.
  * - `busca={false}`: sem a busca geral (Lojas, Produtos e Serviços têm a sua).
+ * - Com o mini carrinho aberto o cabeçalho sobe acima da barra inferior (toque nela só fecha a janela).
  * - `faixaBanner`: só na home; no celular o verde continua abaixo do cabeçalho, onde a folha
  *   clara da página e o banner sobem sobre ele. A faixa fica fora do cabeçalho fixo para que
  *   ele tenha sempre a mesma altura (sem saltos na rolagem).
@@ -20,7 +21,7 @@ export function HomeHeader({ busca = true, faixaBanner = false }) {
     <>
       <FaixaAdmin />
       {/* No celular o verde vai de ponta a ponta, inclusive sob a barra de status (safe-area). */}
-      <header className="sticky top-0 z-40 bg-gradient-to-b from-pc-verde-900 to-pc-verde-700 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] shadow-[0_2px_12px_rgba(2,63,30,0.18)] md:px-6 md:pt-3">
+      <header className="sticky top-0 z-40 has-[[data-janela-aberta]]:z-50 bg-gradient-to-b from-pc-verde-900 to-pc-verde-700 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] shadow-[0_2px_12px_rgba(2,63,30,0.18)] md:px-6 md:pt-3">
         <div className="mx-auto flex max-w-pc-pagina flex-wrap items-center gap-x-3 gap-y-3">
           <Link to="/" className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/60" aria-label="PetCare Connect, página inicial">
             <LogoPetCare alt="" className="h-10 md:h-12" />
