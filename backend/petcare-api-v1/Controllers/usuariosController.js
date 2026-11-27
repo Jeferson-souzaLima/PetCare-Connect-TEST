@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const { CUSTO_BCRYPT } = require('../Config/senha');
 const { emTransacao, erroDeNegocio } = require('../utils/transacao');
-const { removerImagem } = require('../utils/imagens');
+const { enviarImagem, removerImagem } = require('../utils/imagens');
 const {
     registrarErroInterno,
     responderErroInterno,
@@ -206,5 +206,52 @@ exports.excluirMinhaConta = async (req, res) => {
         });
     } catch (err) {
         return responderErroInterno(res, err, 'usuariosController.excluirMinhaConta');
+    }
+};
+
+// =====================================================================
+// Foto de perfil (só a própria; o id vem do token)
+// =====================================================================
+
+/**
+ * Troca a foto de perfil. A imagem nova vai para o R2 (conteúdo validado lá);
+ * se a gravação no banco falhar, ela é apagada. A anterior só sai depois de salvar a nova.
+ */
+exports.atualizarMinhaFoto = async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ mensagem: 'Envie uma imagem JPEG ou PNG.' });
+    }
+
+    let novaUrl = null;
+    let gravada = false;
+    try {
+        const anterior = await usuarioModel.buscarFoto(req.usuario.id);
+        if (anterior === undefined) return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
+
+        novaUrl = await enviarImagem(req.file, 'usuarios');
+        await usuarioModel.atualizarFoto(req.usuario.id, novaUrl);
+        gravada = true;
+
+        if (anterior) await removerImagem(anterior);
+        return res.json({ mensagem: 'Foto de perfil atualizada.', foto: novaUrl });
+    } catch (erro) {
+        if (novaUrl && !gravada) await removerImagem(novaUrl);
+        return responderErroDoServico(res, erro, 'usuariosController.atualizarMinhaFoto', 'Não foi possível salvar a foto agora.');
+    }
+};
+
+/** Remove a foto de perfil (volta às iniciais). Sem foto, não faz nada. */
+exports.removerMinhaFoto = async (req, res) => {
+    try {
+        const anterior = await usuarioModel.buscarFoto(req.usuario.id);
+        if (anterior === undefined) return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
+
+        if (anterior) {
+            await usuarioModel.atualizarFoto(req.usuario.id, null);
+            await removerImagem(anterior);
+        }
+        return res.json({ mensagem: 'Foto de perfil removida.', foto: null });
+    } catch (erro) {
+        return responderErroInterno(res, erro, 'usuariosController.removerMinhaFoto');
     }
 };

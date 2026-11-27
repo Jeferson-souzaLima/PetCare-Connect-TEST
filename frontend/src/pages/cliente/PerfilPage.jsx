@@ -6,10 +6,14 @@ import { FaUser } from "react-icons/fa";
 import PetModal from "../../components/modals/PetModal";
 import PerfilCabecalho from "../../components/perfil/PerfilCabecalho";
 import AcessosRapidos from "../../components/perfil/AcessosRapidos";
-import DadosConta from "../../components/perfil/DadosConta";
+import ConfiguracoesConta from "../../components/perfil/ConfiguracoesConta";
 import ListaPets from "../../components/perfil/ListaPets";
+import MenuLateralPerfil from "../../components/perfil/MenuLateralPerfil";
 import PrivacidadeConta from "../../components/perfil/PrivacidadeConta";
+import { useListasPerfil } from "@/hooks/useListasPerfil";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { deixarAvisoParaLogin } from "@/utils/sessao";
+import { contadoresPerfil } from "@/utils/perfil";
 import petService from "../../services/petService";
 import api from "../../services/api";
 import { Footer } from "../../components/layout/Footer";
@@ -42,7 +46,11 @@ export default function PerfilPage() {
   const [pets, setPets] = useState([]);
   const [loadingPets, setLoadingPets] = useState(true);
 
-  const [showUserData, setShowUserData] = useState(false);
+  // Celular: a gaveta de configurações sob o cartão verde. Item aberto: "dados" | "endereco" | null.
+  const desktop = useMediaQuery("(min-width: 1024px)");
+  const [configAberta, setConfigAberta] = useState(false);
+  const [secaoConfig, setSecaoConfig] = useState(null);
+  const listas = useListasPerfil();
 
   const [showModalPet, setShowModalPet] = useState(false);
   const [petParaEditar, setPetParaEditar] = useState(null);
@@ -213,13 +221,38 @@ export default function PerfilPage() {
     );
   }
 
-  function alternarDadosConta() {
-    setShowUserData(!showUserData);
+  // Ao fechar um item (ou a gaveta), descarta a edição em andamento dele.
+  function fecharEdicoes() {
+    cancelarEdicao();
+    cancelarEdicaoEndereco();
+  }
 
-    if (showUserData) {
-      cancelarEdicao();
-      cancelarEdicaoEndereco();
+  function alternarSecao(id) {
+    fecharEdicoes();
+    setSecaoConfig((atual) => (atual === id ? null : id));
+  }
+
+  function alternarConfig() {
+    if (configAberta) {
+      fecharEdicoes();
+      setSecaoConfig(null);
     }
+    setConfigAberta(!configAberta);
+  }
+
+  function irPara(secao) {
+    if (secao === "topo") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    document.getElementById(secao)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // Desktop: "Editar perfil" abre os dados pessoais no cartão de configurações.
+  function editarPerfil() {
+    fecharEdicoes();
+    setSecaoConfig("dados");
+    irPara("configuracoes");
   }
 
   function sairDaConta() {
@@ -239,76 +272,98 @@ export default function PerfilPage() {
     navigate("/login");
   }
 
+  const contadores = contadoresPerfil({ ...listas, pets: loadingPets ? null : pets });
+
+  const configuracoes = (
+    <ConfiguracoesConta
+      comTitulo={desktop}
+      secaoAberta={secaoConfig}
+      onAlternarSecao={alternarSecao}
+      dadosPessoais={{
+        usuario,
+        campoEditando,
+        valorEditando,
+        setValorEditando,
+        iniciarEdicao,
+        cancelarEdicao,
+        salvarCampo,
+        salvandoPerfil,
+      }}
+      endereco={{
+        usuario,
+        editandoEndereco,
+        onAlternarEdicao: () => {
+          if (editandoEndereco) {
+            cancelarEdicaoEndereco();
+          } else {
+            iniciarEdicaoEndereco();
+          }
+        },
+        enderecoForm,
+        setEnderecoForm,
+        buscarCep,
+        buscandoCep,
+        mensagemEndereco,
+        salvarEndereco,
+        salvandoEndereco,
+        usandoLocalizacao,
+        cancelarEdicaoEndereco,
+      }}
+      mensagemPerfil={mensagemPerfil}
+      onSair={sairDaConta}
+    />
+  );
+
   // =========================================================
   // RENDER
   // =========================================================
 
   return (
-    <div className="bg-[#EBE9E9] min-h-screen flex flex-col">
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 md:px-6 py-6 md:py-8 space-y-6">
+    <div className="bg-pc-fundo min-h-screen flex flex-col">
+      <div className="flex-1 mx-auto w-full max-w-pc-pagina px-4 py-5 md:px-6 md:py-8 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-6">
+        {desktop && (
+          <aside>
+            <MenuLateralPerfil onIrPara={irPara} />
+          </aside>
+        )}
 
-        <PerfilCabecalho
-          usuario={usuario}
-          showUserData={showUserData}
-          onAlternarDados={alternarDadosConta}
-        />
+        <div className="min-w-0 space-y-6">
+          <PerfilCabecalho
+            usuario={usuario}
+            desktop={desktop}
+            configAberta={configAberta}
+            onConfig={desktop ? editarPerfil : alternarConfig}
+          >
+            {!desktop && <div className="p-3">{configuracoes}</div>}
+          </PerfilCabecalho>
 
-        <AcessosRapidos onNavegar={navigate} />
+          <AcessosRapidos contadores={contadores} onIrParaPets={() => irPara("meus-pets")} />
 
-        <DadosConta
-          showUserData={showUserData}
-          onAlternarDados={alternarDadosConta}
-          dadosPessoais={{
-            usuario,
-            campoEditando,
-            valorEditando,
-            setValorEditando,
-            iniciarEdicao,
-            cancelarEdicao,
-            salvarCampo,
-            salvandoPerfil,
-          }}
-          endereco={{
-            usuario,
-            editandoEndereco,
-            onAlternarEdicao: () => {
-              if (editandoEndereco) {
-                cancelarEdicaoEndereco();
-              } else {
-                iniciarEdicaoEndereco();
-              }
-            },
-            enderecoForm,
-            setEnderecoForm,
-            buscarCep,
-            buscandoCep,
-            mensagemEndereco,
-            salvarEndereco,
-            salvandoEndereco,
-            usandoLocalizacao,
-            cancelarEdicaoEndereco,
-          }}
-          mensagemPerfil={mensagemPerfil}
-          onSair={sairDaConta}
-        />
+          <div className="space-y-6 lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-start lg:gap-6 lg:space-y-0">
+            <ListaPets
+              pets={pets}
+              loadingPets={loadingPets}
+              onEditarPet={(pet) => {
+                setPetParaEditar(pet);
+                setShowModalPet(true);
+              }}
+              onRemoverPet={removerPet}
+              onAdicionarPet={() => {
+                setPetParaEditar(null);
+                setShowModalPet(true);
+              }}
+            />
 
-        <ListaPets
-          pets={pets}
-          loadingPets={loadingPets}
-          onEditarPet={(pet) => {
-            setPetParaEditar(pet);
-            setShowModalPet(true);
-          }}
-          onRemoverPet={removerPet}
-          onAdicionarPet={() => {
-            setPetParaEditar(null);
-            setShowModalPet(true);
-          }}
-        />
+            {desktop && (
+              <section id="configuracoes" className="scroll-mt-28 rounded-pc-card bg-white p-5 shadow-pc-card">
+                {configuracoes}
+              </section>
+            )}
+          </div>
 
-        <PrivacidadeConta onContaExcluida={contaExcluida} />
-
-      </main>
+          <PrivacidadeConta onContaExcluida={contaExcluida} />
+        </div>
+      </div>
 
       {showModalPet && (
         <PetModal

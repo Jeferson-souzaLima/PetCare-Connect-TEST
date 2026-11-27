@@ -113,6 +113,7 @@ exports.login = (req, res) => {
                                 id: usuario.id,
                                 nome: usuario.nome,
                                 email: usuario.email,
+                                foto: usuario.foto || null,
                                 tipo: tipoUsuario,
                                 loja_id: lojaId
                             }
@@ -135,6 +136,7 @@ exports.login = (req, res) => {
                         id: usuario.id,
                         nome: usuario.nome,
                         email: usuario.email,
+                        foto: usuario.foto || null,
                         tipo: tipoUsuario
                     }
                 });
@@ -150,7 +152,7 @@ exports.me = (req, res) => {
     const userId = req.usuario.id;
 
     db.query(
-        `SELECT id, nome, email, telefone, tipo, cidade, uf, cep, logradouro,
+        `SELECT id, nome, email, telefone, foto, tipo, cidade, uf, cep, logradouro,
                 numero, complemento, bairro, latitude, longitude
          FROM usuarios WHERE id = ?`,
         [userId],

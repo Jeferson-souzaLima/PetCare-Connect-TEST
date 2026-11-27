@@ -70,7 +70,8 @@ export default function PrivacidadeConta({ onContaExcluida }) {
   }
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 md:p-6 space-y-4">
+    <section id="privacidade" className="scroll-mt-28 bg-white rounded-2xl shadow-pc-card p-5 md:p-6 space-y-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-green-50 text-[#0E5617] flex items-center justify-center shrink-0">
           <FaShieldAlt />
@@ -87,9 +88,7 @@ export default function PrivacidadeConta({ onContaExcluida }) {
         </div>
       </div>
 
-      <MensagemStatus mensagem={mensagem} />
-
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 lg:shrink-0">
         <button
           type="button"
           onClick={exportarDados}
@@ -111,6 +110,9 @@ export default function PrivacidadeConta({ onContaExcluida }) {
           </button>
         )}
       </div>
+      </div>
+
+      <MensagemStatus mensagem={mensagem} />
 
       {confirmandoExclusao && (
         <form onSubmit={excluirConta} className="rounded-xl border border-red-200 bg-red-50 p-4 space-y-3">

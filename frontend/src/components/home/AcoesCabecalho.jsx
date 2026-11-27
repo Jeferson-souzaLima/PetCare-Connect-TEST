@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronDown, Heart, LayoutDashboard, User } from "lucide-react";
+import { getMediaUrl } from "@/services/mediaUrl";
 import { CarrinhoCabecalho } from "./CarrinhoCabecalho";
 
 // Ícones-link do cabeçalho (o carrinho vem depois deles e abre o mini carrinho).
@@ -60,8 +61,8 @@ function MenuUsuario({ usuario, aoSair }) {
         onClick={() => setAberto((a) => !a)}
         className="flex min-h-[44px] items-center gap-2 rounded-pc-pill px-3 text-sm font-medium text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pc-lima/60"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-pc-lima text-pc-verde-900">
-          <User size={18} aria-hidden="true" />
+        <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-pc-lima text-pc-verde-900">
+          {usuario.foto ? <img src={getMediaUrl(usuario.foto)} alt="" className="h-full w-full object-cover" /> : <User size={18} aria-hidden="true" />}
         </span>
         <span>Olá, {primeiroNome}</span>
         <ChevronDown size={16} aria-hidden="true" />
