@@ -30,7 +30,7 @@ function EntrarParaVer({ texto, aoFechar }) {
   );
 }
 
-/** Próximos agendamentos (segurar "Agenda"). */
+/** Próximos agendamentos (toque em "Agenda"). */
 export function ResumoAgenda({ aoFechar }) {
   const { usuario } = useAuth();
   const resumo = useResumoCliente();
@@ -38,7 +38,7 @@ export function ResumoAgenda({ aoFechar }) {
   return <ProximosAgendamentos {...resumo.agendamentos} className={SEM_MOLDURA} />;
 }
 
-/** Pedidos recentes e status (segurar "Pedidos"). */
+/** Pedidos recentes e status (toque em "Pedidos"). */
 export function ResumoPedidos({ aoFechar }) {
   const { usuario } = useAuth();
   const resumo = useResumoCliente();

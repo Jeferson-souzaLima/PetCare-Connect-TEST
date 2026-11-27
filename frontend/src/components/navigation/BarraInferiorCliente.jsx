@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CalendarDays, Home, Package, Search, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToqueProlongado } from "@/hooks/useToqueProlongado";
@@ -12,14 +12,16 @@ import { ResumoAgenda, ResumoConta, ResumoPedidos } from "./mobile/ResumosRapido
 const JANELA_ID = "janela-barra-inferior";
 
 /*
- * Toque rápido: vai para `destino`. Toque prolongado: abre a `janela` sem sair da página.
- * Início fica no centro e não tem janela. O carrinho fica no cabeçalho.
+ * Explorar e Conta: toque rápido vai para `destino`; segurar abre a `janela` sem sair da página.
+ * Agenda e Pedidos (`toqueAbreJanela`), como o carrinho do cabeçalho: toque rápido abre/fecha a
+ * janela (que tem "Ver todos" para a página); segurar vai direto para a página.
+ * Início fica no centro e não tem janela.
  */
 const ITENS = [
   { id: "explorar", rotulo: "Explorar", destino: "/produtos", icone: Search, janela: PainelExplorar, titulo: "Explorar" },
-  { id: "agenda", rotulo: "Agenda", destino: "/meus-agendamentos", icone: CalendarDays, janela: ResumoAgenda, titulo: "Próximos agendamentos" },
+  { id: "agenda", rotulo: "Agenda", destino: "/meus-agendamentos", icone: CalendarDays, janela: ResumoAgenda, titulo: "Próximos agendamentos", toqueAbreJanela: true },
   { id: "inicio", rotulo: "Início", destino: "/", icone: Home },
-  { id: "pedidos", rotulo: "Pedidos", destino: "/meus-pedidos", icone: Package, janela: ResumoPedidos, titulo: "Pedidos recentes" },
+  { id: "pedidos", rotulo: "Pedidos", destino: "/meus-pedidos", icone: Package, janela: ResumoPedidos, titulo: "Pedidos recentes", toqueAbreJanela: true },
   { id: "conta", rotulo: "Conta", destino: "/perfil", icone: User, janela: ResumoConta, titulo: "Sua conta" },
 ];
 
@@ -39,9 +41,18 @@ function classeItem({ ativo, aberto }) {
 export function BarraInferiorCliente() {
   const { usuario } = useAuth();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [janela, setJanela] = useState(null);
   const navRef = useRef(null);
-  const { pressionando, propsDe } = useToqueProlongado(setJanela);
+  const { pressionando, propsDe } = useToqueProlongado((id) => {
+    const item = ITENS.find((i) => i.id === id);
+    if (item?.toqueAbreJanela) {
+      setJanela(null);
+      navigate(item.destino);
+    } else {
+      setJanela(id);
+    }
+  });
 
   // Fecha a janela ao trocar de página.
   useEffect(() => {
@@ -65,10 +76,16 @@ export function BarraInferiorCliente() {
   const Conteudo = aberto?.janela;
   const fechar = () => setJanela(null);
 
-  // Com uma janela aberta, tocar no ícone dela só fecha; tocar em outro fecha e segue para a página.
-  function aoTocarItem(evento, id) {
+  // Agenda e Pedidos: o toque abre/fecha a própria janela (troca, se outra estiver aberta).
+  // Nos demais, com uma janela aberta, tocar no ícone dela só fecha; tocar em outro fecha e segue.
+  function aoTocarItem(evento, item) {
+    if (item.toqueAbreJanela) {
+      evento.preventDefault();
+      setJanela((atual) => (atual === item.id ? null : item.id));
+      return;
+    }
     if (!janela) return;
-    if (janela === id) evento.preventDefault();
+    if (janela === item.id) evento.preventDefault();
     fechar();
   }
 
@@ -81,6 +98,10 @@ export function BarraInferiorCliente() {
       <nav
         ref={navRef}
         aria-label="Navegação principal"
+        // Qualquer link dentro da janela a fecha (ex.: "Ver todos" estando já na própria página).
+        onClickCapture={(evento) => {
+          if (evento.target.closest?.(`#${JANELA_ID} a`)) fechar();
+        }}
         className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md rounded-pc-pill border border-black/5 bg-white/95 p-1.5 shadow-[0_8px_24px_rgba(2,63,30,0.18)] backdrop-blur max-[359px]:inset-x-2 md:hidden"
       >
         {Conteudo && (
@@ -89,7 +110,8 @@ export function BarraInferiorCliente() {
           </JanelaRapida>
         )}
         <ul className="grid grid-cols-5 items-center gap-0.5">
-          {ITENS.map(({ id, rotulo, destino, icone: Icone, janela: temJanela }) => {
+          {ITENS.map((item) => {
+            const { id, rotulo, destino, icone: Icone, janela: temJanela } = item;
             const ativo = itemAtivo(pathname) === id;
             return (
               <li key={id}>
@@ -100,10 +122,10 @@ export function BarraInferiorCliente() {
                   aria-expanded={temJanela ? janela === id : undefined}
                   aria-controls={temJanela && janela === id ? JANELA_ID : undefined}
                   className={classeItem({ ativo, aberto: janela === id })}
-                  onClick={(evento) => aoTocarItem(evento, id)}
+                  onClick={(evento) => aoTocarItem(evento, item)}
                   {...(temJanela ? propsDe(id) : {})}
                 >
-                  {/* Enche enquanto o dedo segura: mostra que vai abrir a janela. */}
+                  {/* Enche enquanto o dedo segura: mostra que algo vai acontecer (janela ou página). */}
                   {temJanela && (
                     <span
                       aria-hidden="true"
