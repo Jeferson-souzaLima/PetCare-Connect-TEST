@@ -12,9 +12,9 @@ import { ResumoAgenda, ResumoConta, ResumoPedidos } from "./mobile/ResumosRapido
 const JANELA_ID = "janela-barra-inferior";
 
 /*
- * Explorar e Conta: toque rápido vai para `destino`; segurar abre a `janela` sem sair da página.
- * Agenda e Pedidos (`toqueAbreJanela`), como o carrinho do cabeçalho: toque rápido abre/fecha a
- * janela (que tem "Ver todos" para a página); segurar vai direto para a página.
+ * Explorar: toque rápido vai para `destino`; segurar abre a `janela` sem sair da página.
+ * Agenda, Pedidos e Conta (`toqueAbreJanela`), como o carrinho do cabeçalho: toque rápido
+ * abre/fecha a janela (com links para as páginas); segurar vai direto para a página.
  * Início fica no centro e não tem janela.
  */
 const ITENS = [
@@ -22,7 +22,7 @@ const ITENS = [
   { id: "agenda", rotulo: "Agenda", destino: "/meus-agendamentos", icone: CalendarDays, janela: ResumoAgenda, titulo: "Próximos agendamentos", toqueAbreJanela: true },
   { id: "inicio", rotulo: "Início", destino: "/", icone: Home },
   { id: "pedidos", rotulo: "Pedidos", destino: "/meus-pedidos", icone: Package, janela: ResumoPedidos, titulo: "Pedidos recentes", toqueAbreJanela: true },
-  { id: "conta", rotulo: "Conta", destino: "/perfil", icone: User, janela: ResumoConta, titulo: "Sua conta" },
+  { id: "conta", rotulo: "Conta", destino: "/perfil", icone: User, janela: ResumoConta, titulo: "Sua conta", toqueAbreJanela: true },
 ];
 
 const ITEM =
@@ -76,7 +76,7 @@ export function BarraInferiorCliente() {
   const Conteudo = aberto?.janela;
   const fechar = () => setJanela(null);
 
-  // Agenda e Pedidos: o toque abre/fecha a própria janela (troca, se outra estiver aberta).
+  // Agenda, Pedidos e Conta: o toque abre/fecha a própria janela (troca, se outra estiver aberta).
   // Nos demais, com uma janela aberta, tocar no ícone dela só fecha; tocar em outro fecha e segue.
   function aoTocarItem(evento, item) {
     if (item.toqueAbreJanela) {
@@ -93,8 +93,9 @@ export function BarraInferiorCliente() {
     <>
       {/* Com uma janela aberta o aviso ficaria sobre ela. */}
       {!Conteudo && <AvisoCarrinho />}
-      {/* Toque fora da janela só a fecha: a camada recebe o toque, que não chega ao que está atrás. */}
-      {Conteudo && <div aria-hidden="true" onClick={fechar} className="fixed inset-0 z-40 md:hidden" />}
+      {/* Toque fora da janela só a fecha: a camada recebe o toque, que não chega ao que está atrás.
+          Escurece e desfoca o fundo, como a janela de localização; a barra fica por cima, nítida. */}
+      {Conteudo && <div aria-hidden="true" onClick={fechar} className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden" />}
       <nav
         ref={navRef}
         aria-label="Navegação principal"

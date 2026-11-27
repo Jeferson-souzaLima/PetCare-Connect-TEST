@@ -46,7 +46,7 @@ export function ResumoPedidos({ aoFechar }) {
   return <PedidosRecentes {...resumo.pedidos} className={SEM_MOLDURA} />;
 }
 
-/** Atalhos da conta (segurar "Conta"). */
+/** Atalhos da conta (toque em "Conta"). */
 export function ResumoConta({ aoFechar }) {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();

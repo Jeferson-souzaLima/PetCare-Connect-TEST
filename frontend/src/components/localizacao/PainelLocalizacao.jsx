@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Home, LoaderCircle, LocateFixed, Search, X } from "lucide-react";
 import api from "@/services/api";
 import { buscarCidadePorCoordenadas, buscarLocal } from "@/services/geolocalizacaoService";
@@ -118,8 +119,9 @@ export function PainelLocalizacao({ usuario, aoFechar }) {
   const ocupado = Boolean(estado.carregando);
   const iconeCarregando = <LoaderCircle size={20} aria-hidden="true" className="animate-spin motion-reduce:animate-none" />;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 md:items-center" onPointerDown={(e) => e.target === e.currentTarget && aoFechar()}>
+  // Portal no <body>: dentro do cabeçalho (camada z-40) a janela ficava atrás do menu flutuante.
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm md:items-center" onPointerDown={(e) => e.target === e.currentTarget && aoFechar()}>
       <div
         ref={painelRef}
         role="dialog"
@@ -212,6 +214,7 @@ export function PainelLocalizacao({ usuario, aoFechar }) {
           </a>
         </p>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

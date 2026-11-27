@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { temMidiaExterna, urlBanner } from "@/utils/home";
 import { INTERVALO_SLIDES_MS, SLIDE_RESERVA, SLIDES_HOME } from "./slidesHome";
@@ -48,7 +48,6 @@ export function HeroCarousel() {
   const menosMovimento = useMediaQuery("(prefers-reduced-motion: reduce)");
   const [falhas, setFalhas] = useState(() => new Set());
   const [atual, setAtual] = useState(0);
-  const [pausadoPeloUsuario, setPausadoPeloUsuario] = useState(false);
   const [pausaTemporaria, setPausaTemporaria] = useState(false);
 
   const registrarFalha = useCallback((id) => {
@@ -64,7 +63,7 @@ export function HeroCarousel() {
   const total = slides.length;
   const indice = total ? atual % total : 0;
   const varios = total > 1;
-  const passando = varios && !menosMovimento && !pausadoPeloUsuario && !pausaTemporaria;
+  const passando = varios && !menosMovimento && !pausaTemporaria;
 
   const irPara = useCallback((novo) => setAtual(((novo % total) + total) % total), [total]);
 
@@ -166,17 +165,6 @@ export function HeroCarousel() {
           <button type="button" onClick={() => irPara(indice + 1)} aria-label="Próximo slide" className={`${CONTROLE} hidden text-pc-verde-700 hover:bg-pc-fundo md:flex`}>
             <ChevronRight size={20} aria-hidden="true" />
           </button>
-          {!menosMovimento && (
-            <button
-              type="button"
-              onClick={() => setPausadoPeloUsuario((p) => !p)}
-              aria-pressed={pausadoPeloUsuario}
-              aria-label={pausadoPeloUsuario ? "Continuar a troca automática" : "Pausar a troca automática"}
-              className="flex h-6 w-6 items-center justify-center rounded-full text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white md:h-11 md:w-11 md:text-pc-verde-700 md:hover:bg-pc-fundo md:focus-visible:ring-pc-verde-700 md:focus-visible:ring-offset-2"
-            >
-              {pausadoPeloUsuario ? <Play size={14} aria-hidden="true" className="md:h-[18px] md:w-[18px]" /> : <Pause size={14} aria-hidden="true" className="md:h-[18px] md:w-[18px]" />}
-            </button>
-          )}
           </div>
         </div>
       )}
