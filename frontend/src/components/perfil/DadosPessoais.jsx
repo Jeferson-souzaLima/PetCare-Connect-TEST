@@ -19,7 +19,7 @@ const camposPerfil = [
   }
 ];
 
-/** Lista os dados pessoais com edição campo a campo (e-mail bloqueado). */
+/** Lista os dados pessoais com edição campo a campo (e-mail bloqueado). O título fica com quem a usa. */
 export default function DadosPessoais({
   usuario,
   campoEditando,
@@ -32,14 +32,6 @@ export default function DadosPessoais({
 }) {
   return (
     <div>
-      <div className="flex items-center gap-2 mb-4">
-        <FaUser className="text-[#0E5617]" />
-
-        <h3 className="font-bold text-gray-800">
-          Dados pessoais
-        </h3>
-      </div>
-
       <div className="space-y-2">
 
         {camposPerfil.map((item) => {

@@ -10,7 +10,7 @@ const authController = require('../Controllers/authController');
 // apagavam usuários. Se alguém ligasse uma rota a elas, qualquer um viraria
 // admin ou apagaria contas. Não devem voltar a existir.
 test('usuariosController só age sobre a própria conta (sem CRUD genérico de usuários)', () => {
-    assert.deepEqual(Object.keys(usuariosController).sort(), ['atualizarMeuPerfil', 'excluirMinhaConta', 'exportarMeusDados']);
+    assert.deepEqual(Object.keys(usuariosController).sort(), ['atualizarMeuPerfil', 'atualizarMinhaFoto', 'excluirMinhaConta', 'exportarMeusDados', 'removerMinhaFoto']);
 });
 
 test('usuariosModel não tem create/update genéricos nem listagem completa', () => {

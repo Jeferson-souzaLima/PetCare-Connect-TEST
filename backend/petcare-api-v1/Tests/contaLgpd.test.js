@@ -16,8 +16,9 @@ const HASH = bcrypt.hashSync(SENHA, 4);
 function banco(t, { pedidosAbertos = 0, agendamentosAbertos = 0 } = {}) {
     return simularBanco(t, db, [
         [/SELECT id, tipo, senha_hash FROM usuarios/, (v) => [{ id: v[0], tipo: Number(v[0]) === 20 ? 'lojista' : 'cliente', senha_hash: HASH }]],
-        [/SELECT id, nome, email, telefone, tipo/, (v) => [{ id: v[0], nome: 'Fulano', email: 'fulano@exemplo.com', tipo: 'cliente' }]],
+        [/SELECT id, nome, email, telefone, foto, tipo/, (v) => [{ id: v[0], nome: 'Fulano', email: 'fulano@exemplo.com', tipo: 'cliente' }]],
         [/SELECT imagem FROM pets/, [{ imagem: '/uploads/pet-teste-inexistente.png' }, { imagem: null }]],
+        [/SELECT foto FROM usuarios/, [{ foto: '/uploads/foto-perfil-inexistente.png' }]],
         [/FROM pets WHERE usuario_id/, [{ id: 1, nome: 'Rex' }]],
         [/FROM favoritos WHERE usuario_id/, [{ tipo: 'loja', referencia_id: 2 }]],
         [/COUNT\(\*\) AS total FROM pedidos/, [{ total: pedidosAbertos }]],
@@ -110,6 +111,7 @@ test('excluir conta anonimiza o usuário e remove pets e favoritos numa transaç
     const update = consultas.find((c) => /^UPDATE usuarios/.test(c.sql));
     assert.match(update.sql, /email = CONCAT\('excluido-', id/);
     assert.match(update.sql, /telefone = NULL/);
+    assert.match(update.sql, /foto = NULL/, 'a foto de perfil também sai');
     assert.match(update.sql, /latitude = NULL, longitude = NULL/);
     const novoHash = update.values[0];
     assert.equal(await bcrypt.compare(SENHA, novoHash), false, 'a senha antiga deixa de entrar');

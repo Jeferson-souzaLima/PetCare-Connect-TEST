@@ -7,6 +7,7 @@ exports.getById = (id, callback) => {
             nome,
             email,
             telefone,
+            foto,
             cidade,
             uf,
             cep,
@@ -86,10 +87,20 @@ exports.updatePerfil = (id, dados, callback) => {
 // =====================================================================
 const { consultar } = require('../utils/transacao');
 
+// Foto de perfil: só a do próprio usuário (o id vem do token, nunca do corpo da requisição).
+
+/** URL da foto atual (null sem foto); undefined se o usuário não existe. */
+exports.buscarFoto = async (id) => {
+    const [usuario] = await consultar('SELECT foto FROM usuarios WHERE id = ? LIMIT 1', [id]);
+    return usuario ? usuario.foto ?? null : undefined;
+};
+
+exports.atualizarFoto = (id, foto) => consultar('UPDATE usuarios SET foto = ? WHERE id = ?', [foto, id]);
+
 /** Todos os dados ligados ao usuário, para a exportação (portabilidade). */
 exports.buscarDadosParaExportacao = async (id) => {
     const [usuario] = await consultar(
-        `SELECT id, nome, email, telefone, tipo, cidade, uf, cep, logradouro, numero,
+        `SELECT id, nome, email, telefone, foto, tipo, cidade, uf, cep, logradouro, numero,
                 complemento, bairro, latitude, longitude, data_criacao, email_verificado,
                 termos_aceitos_em, termos_versao, privacidade_versao
          FROM usuarios WHERE id = ? LIMIT 1`,
@@ -149,10 +160,11 @@ exports.contarPendencias = async (id) => {
 /*
  * Remove os dados pessoais e mantém pedidos e agendamentos sem identificação
  * (a loja precisa deles para fins fiscais e relatórios). Deve rodar dentro
- * de uma transação. Devolve as imagens dos pets, para apagar os arquivos.
+ * de uma transação. Devolve as imagens dos pets e a foto de perfil, para apagar os arquivos.
  */
 exports.anonimizarConta = async (id, senhaHashInutilizavel) => {
     const pets = await consultar('SELECT imagem FROM pets WHERE usuario_id = ?', [id]);
+    const [conta] = await consultar('SELECT foto FROM usuarios WHERE id = ? LIMIT 1', [id]);
 
     await consultar('DELETE FROM favoritos WHERE usuario_id = ?', [id]);
     await consultar('DELETE FROM pets WHERE usuario_id = ?', [id]);
@@ -174,7 +186,7 @@ exports.anonimizarConta = async (id, senhaHashInutilizavel) => {
             nome = 'Conta excluída',
             email = CONCAT('excluido-', id, '@conta-removida.invalid'),
             senha_hash = ?,
-            telefone = NULL, cidade = NULL, uf = NULL, cep = NULL, logradouro = NULL,
+            telefone = NULL, foto = NULL, cidade = NULL, uf = NULL, cep = NULL, logradouro = NULL,
             numero = NULL, complemento = NULL, bairro = NULL, latitude = NULL, longitude = NULL,
             email_verificado = 0, email_verificacao_token_hash = NULL, email_verificacao_expira_em = NULL,
             sessao_versao = sessao_versao + 1
@@ -182,5 +194,5 @@ exports.anonimizarConta = async (id, senhaHashInutilizavel) => {
         [senhaHashInutilizavel, id]
     );
 
-    return pets.map((pet) => pet.imagem).filter(Boolean);
+    return [...pets.map((pet) => pet.imagem), conta?.foto].filter(Boolean);
 };

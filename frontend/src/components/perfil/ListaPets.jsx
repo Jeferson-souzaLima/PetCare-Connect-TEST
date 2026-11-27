@@ -1,164 +1,84 @@
+import { Link } from "react-router-dom";
+import { CalendarDays, PawPrint, Pencil, Plus, Trash2 } from "lucide-react";
 import { getMediaUrl } from "@/services/mediaUrl";
-import { imagemPadraoPet } from "@/utils/pets";
-import { FaPaw, FaPen, FaPlus, FaTrash } from "react-icons/fa";
+import { descricaoPet, idadePet, imagemPadraoPet } from "@/utils/pets";
 
-/** Seção "Meus pets": listagem com editar/remover e botão de adicionar. */
-export default function ListaPets({
-  pets,
-  loadingPets,
-  onEditarPet,
-  onRemoverPet,
-  onAdicionarPet,
-}) {
+const BOTAO_ACAO =
+  "flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2";
+
+function CartaoPet({ pet, onEditar, onRemover }) {
+  const descricao = descricaoPet(pet);
   return (
-    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-
-      <div className="p-5 md:p-6 border-b border-gray-100">
-
-        <div className="flex items-center justify-between gap-4">
-
-          <div className="flex items-center gap-3">
-
-            <div className="w-11 h-11 rounded-xl bg-green-50 text-[#0E5617] flex items-center justify-center">
-              <FaPaw />
-            </div>
-
-            <div>
-              <h2 className="text-xl font-bold text-gray-800">
-                Meus pets
-              </h2>
-
-              <p className="text-sm text-gray-500">
-                Cadastre seus pets para facilitar seus atendimentos.
-              </p>
-            </div>
-
-          </div>
-
-          <span className="hidden sm:block text-sm font-semibold text-gray-400">
-            {pets.length}{" "}
-            {pets.length === 1 ? "pet" : "pets"}
-          </span>
-
+    <li className="relative flex gap-4 rounded-2xl bg-gradient-to-br from-pc-verde-100 to-green-50 p-3 sm:p-4">
+      <img
+        src={getMediaUrl(pet.imagem, imagemPadraoPet(pet.especie))}
+        alt={pet.nome}
+        className="h-28 w-28 shrink-0 rounded-xl object-cover sm:h-32 sm:w-32"
+      />
+      <div className="min-w-0 flex-1">
+        {/* Só o nome e os dados abrem espaço para os botões de editar/remover; o botão de agendar não. */}
+        <div className="pr-24">
+          <h3 className="truncate text-xl font-bold text-pc-verde-700">{pet.nome}</h3>
+          {descricao && <p className="mt-1 truncate text-sm text-pc-texto">{descricao}</p>}
+          <p className="text-sm text-pc-texto">Idade: {idadePet(pet.idade)}</p>
         </div>
-
+        <Link
+          to="/servicos"
+          className="mt-3 inline-flex min-h-[40px] items-center gap-2 whitespace-nowrap rounded-pc-pill border border-pc-verde-700/30 bg-white/70 px-4 text-sm font-semibold text-pc-verde-700 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pc-verde-700"
+        >
+          <CalendarDays size={16} aria-hidden="true" />
+          Agendar serviço
+        </Link>
       </div>
+      <div className="absolute right-3 top-3 flex gap-2">
+        <button type="button" onClick={() => onEditar(pet)} aria-label={`Editar ${pet.nome}`} className={`${BOTAO_ACAO} text-pc-verde-700 hover:bg-pc-verde-100 focus-visible:ring-pc-verde-700`}>
+          <Pencil size={18} aria-hidden="true" />
+        </button>
+        <button type="button" onClick={() => onRemover(pet.id)} aria-label={`Remover ${pet.nome}`} className={`${BOTAO_ACAO} text-red-500 hover:bg-red-50 focus-visible:ring-red-500`}>
+          <Trash2 size={18} aria-hidden="true" />
+        </button>
+      </div>
+    </li>
+  );
+}
 
-      <div className="p-5 md:p-6">
+/** Seção "Meus pets": cartões com editar/remover/agendar e botão de adicionar. */
+export default function ListaPets({ pets, loadingPets, onEditarPet, onRemoverPet, onAdicionarPet }) {
+  return (
+    <section id="meus-pets" aria-labelledby="titulo-meus-pets" className="scroll-mt-28 lg:rounded-pc-card lg:bg-white lg:p-5 lg:shadow-pc-card">
+      <h2 id="titulo-meus-pets" className="flex items-center gap-2 text-xl font-bold text-pc-texto">
+        <PawPrint size={22} aria-hidden="true" className="text-pc-verde-700" />
+        Meus pets
+      </h2>
 
+      <div className="mt-3">
         {loadingPets ? (
-          <div className="py-10 text-center">
-            <div className="w-8 h-8 border-4 border-green-100 border-t-[#0E5617] rounded-full animate-spin mx-auto mb-3" />
-
-            <p className="text-sm text-gray-500">
-              Carregando pets...
-            </p>
-          </div>
+          <div aria-busy="true" aria-label="Carregando pets" className="h-36 animate-pulse rounded-2xl bg-pc-verde-100/60" />
         ) : pets.length === 0 ? (
-          <div className="py-8 text-center">
-
-            <div className="w-16 h-16 rounded-full bg-green-50 text-[#0E5617] flex items-center justify-center mx-auto mb-4">
-              <FaPaw className="text-2xl" />
-            </div>
-
-            <h3 className="font-bold text-gray-800">
-              Nenhum pet cadastrado
-            </h3>
-
-            <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
-              Cadastre seu pet para manter os dados dele organizados
-              e facilitar futuros atendimentos.
-            </p>
-
+          <div className="rounded-2xl bg-white p-6 text-center shadow-pc-card lg:shadow-none">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-pc-verde-100 text-pc-verde-700">
+              <PawPrint size={26} aria-hidden="true" />
+            </span>
+            <p className="mt-3 font-bold text-pc-texto">Nenhum pet cadastrado</p>
+            <p className="mt-1 text-sm text-pc-texto-suave">Cadastre seu pet para facilitar os próximos atendimentos.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
+          <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
             {pets.map((pet) => (
-              <div
-                key={pet.id}
-                className="relative bg-gradient-to-br from-green-50 to-green-100 border border-green-100 rounded-2xl p-4 overflow-hidden"
-              >
-
-                <div className="flex gap-4">
-
-                  <img
-                    src={
-                      getMediaUrl(pet.imagem, imagemPadraoPet(pet.especie))
-                    }
-                    alt={pet.nome}
-                    className="w-24 h-24 md:w-28 md:h-28 rounded-xl object-cover shrink-0"
-                  />
-
-                  <div className="flex-1 min-w-0 pr-10">
-
-                    <h3 className="text-lg font-bold text-[#0E5617] truncate">
-                      {pet.nome}
-                    </h3>
-
-                    <div className="space-y-1 mt-2 text-sm text-gray-600">
-                      <p>
-                        <span className="font-medium">
-                          Raça:
-                        </span>{" "}
-                        {pet.raca || "Não informada"}
-                      </p>
-
-                      <p>
-                        <span className="font-medium">
-                          Idade:
-                        </span>{" "}
-                        {pet.idade || "Não informada"}
-                      </p>
-                    </div>
-
-                  </div>
-
-                </div>
-
-                {/* AÇÕES */}
-
-                <div className="absolute top-3 right-3 flex gap-2">
-
-                  <button
-                    type="button"
-                    className="w-9 h-9 bg-white rounded-lg text-[#0E5617] shadow-sm hover:bg-green-50 transition flex items-center justify-center"
-                    onClick={() => onEditarPet(pet)}
-                    aria-label={`Editar ${pet.nome}`}
-                  >
-                    <FaPen className="text-sm" />
-                  </button>
-
-                  <button
-                    type="button"
-                    className="w-9 h-9 bg-white rounded-lg text-red-500 shadow-sm hover:bg-red-50 transition flex items-center justify-center"
-                    onClick={() => onRemoverPet(pet.id)}
-                    aria-label={`Remover ${pet.nome}`}
-                  >
-                    <FaTrash className="text-sm" />
-                  </button>
-
-                </div>
-
-              </div>
+              <CartaoPet key={pet.id} pet={pet} onEditar={onEditarPet} onRemover={onRemoverPet} />
             ))}
-
-          </div>
+          </ul>
         )}
-
-        {/* ADICIONAR PET */}
 
         <button
           type="button"
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-900 text-white rounded hover:bg-green-800"
           onClick={onAdicionarPet}
+          className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-pc-verde-700 text-base font-semibold text-white hover:bg-pc-verde-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pc-verde-900 focus-visible:ring-offset-2"
         >
-          <FaPlus />
-          Adicionar Pet
+          <Plus size={20} aria-hidden="true" />
+          Adicionar pet
         </button>
-
       </div>
-
     </section>
   );
 }

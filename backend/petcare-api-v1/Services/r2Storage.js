@@ -8,7 +8,7 @@ const signatures = [
 ];
 
 // Pastas do bucket aceitas para envio e remoção de imagens.
-const PASTAS = ['produtos', 'pets', 'lojas'];
+const PASTAS = ['produtos', 'pets', 'lojas', 'usuarios'];
 
 function createR2Storage({ env = process.env, client } = {}) {
     const getConfig = () => {
