@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Camera, Check, ChevronDown, Dog, Heart, Info, Layers, LoaderCircle, PawPrint, X } from "lucide-react";
+import { Camera, Check, ChevronDown, Dog, Heart, Info, Layers, LoaderCircle, PawPrint, Trash2, X } from "lucide-react";
 import petService from "../../services/petService";
 import { useOpcoesPet } from "@/hooks/useOpcoesPet";
 import { getMediaUrl } from "@/services/mediaUrl";
@@ -38,8 +38,9 @@ function Selecao({ id, icone: Icone, value, onChange, disabled, children }) {
 /**
  * Cadastro e edição de pet (perfil e agendamento). Espécie, raça e fase de vida vêm do
  * catálogo da API (GET /pets/opcoes), que também valida o que é salvo.
+ * `onExcluir(id)` (opcional): na edição, mostra "Excluir pet", com confirmação no próprio modal.
  */
-export default function PetModal({ token, onClose, onPetSalvo, petExistente = null }) {
+export default function PetModal({ token, onClose, onPetSalvo, petExistente = null, onExcluir }) {
   const { opcoes, erro: erroOpcoes } = useOpcoesPet();
   const id = useId();
   const inputFotoRef = useRef(null);
@@ -47,6 +48,7 @@ export default function PetModal({ token, onClose, onPetSalvo, petExistente = nu
   const [arquivo, setArquivo] = useState(null);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState(null);
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
 
   // Quando o catálogo chega, ajusta espécie/raça salvas como texto livre aos nomes da lista.
   useEffect(() => {
@@ -71,6 +73,20 @@ export default function PetModal({ token, onClose, onPetSalvo, petExistente = nu
 
   const especieAtual = especieDoCatalogo(opcoes?.especies, form.especie);
   const editando = Boolean(petExistente);
+
+  async function excluir() {
+    setSalvando(true);
+    setErro(null);
+    try {
+      await onExcluir(petExistente.id);
+      onClose();
+    } catch (falha) {
+      setErro(falha.response?.data?.mensagem || "Não foi possível excluir o pet.");
+      setConfirmandoExclusao(false);
+    } finally {
+      setSalvando(false);
+    }
+  }
 
   function alterar(campo, valor) {
     setErro(null);
@@ -285,6 +301,44 @@ export default function PetModal({ token, onClose, onPetSalvo, petExistente = nu
               {salvando ? "Salvando..." : editando ? "Salvar alterações" : "Cadastrar pet"}
             </button>
           </div>
+
+          {editando && onExcluir && (
+            <div className="border-t border-black/5 pt-3">
+              {confirmandoExclusao ? (
+                <div role="alert" className="rounded-2xl bg-red-50 p-4">
+                  <p className="text-sm font-semibold text-red-800">Excluir {petExistente.nome}? Esta ação não pode ser desfeita.</p>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmandoExclusao(false)}
+                      disabled={salvando}
+                      className="min-h-[44px] rounded-xl bg-white font-semibold text-pc-texto hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pc-verde-700 disabled:opacity-60"
+                    >
+                      Manter
+                    </button>
+                    <button
+                      type="button"
+                      onClick={excluir}
+                      disabled={salvando}
+                      className="min-h-[44px] rounded-xl bg-red-700 font-semibold text-white hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 focus-visible:ring-offset-2 disabled:opacity-60"
+                    >
+                      Excluir pet
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmandoExclusao(true)}
+                  disabled={salvando}
+                  className="mx-auto flex min-h-[44px] items-center gap-2 rounded-xl px-4 text-sm font-semibold text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 disabled:opacity-60"
+                >
+                  <Trash2 size={18} aria-hidden="true" />
+                  Excluir pet
+                </button>
+              )}
+            </div>
+          )}
         </form>
       </div>
     </div>,
