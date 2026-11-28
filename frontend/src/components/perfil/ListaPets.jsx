@@ -1,35 +1,48 @@
 import { Link } from "react-router-dom";
-import { CalendarDays, PawPrint, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, Layers, PawPrint, Pencil, Plus, Trash2 } from "lucide-react";
 import { getMediaUrl } from "@/services/mediaUrl";
-import { descricaoPet, idadePet, imagemPadraoPet } from "@/utils/pets";
+import { especieDoCatalogo, imagemPadraoPet, rotuloFaseVida } from "@/utils/pets";
 
 const BOTAO_ACAO =
   "flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2";
 
-function CartaoPet({ pet, onEditar, onRemover }) {
-  const descricao = descricaoPet(pet);
+function Dado({ icone: Icone, rotulo, children }) {
+  if (!children) return null;
   return (
-    <li className="relative flex gap-4 rounded-2xl bg-gradient-to-br from-pc-verde-100 to-green-50 p-3 sm:p-4">
-      <img
-        src={getMediaUrl(pet.imagem, imagemPadraoPet(pet.especie))}
-        alt={pet.nome}
-        className="h-28 w-28 shrink-0 rounded-xl object-cover sm:h-32 sm:w-32"
-      />
-      <div className="min-w-0 flex-1">
-        {/* Só o nome e os dados abrem espaço para os botões de editar/remover; o botão de agendar não. */}
-        <div className="pr-24">
+    <p className="flex items-center gap-2 truncate text-sm text-pc-texto">
+      <Icone size={16} aria-hidden="true" className="shrink-0 text-pc-verde-700" />
+      <span className="sr-only">{rotulo}: </span>
+      <span className="truncate">{children}</span>
+    </p>
+  );
+}
+
+function CartaoPet({ pet, opcoes, onEditar, onRemover }) {
+  // Espécies salvas como texto livre (antes do catálogo) aparecem com o nome da lista quando batem.
+  const especie = especieDoCatalogo(opcoes?.especies, pet.especie)?.nome ?? pet.especie;
+  return (
+    <li className="relative rounded-2xl bg-gradient-to-br from-pc-verde-100 to-green-50 p-3 sm:p-4">
+      <div className="flex gap-4">
+        <img
+          src={getMediaUrl(pet.imagem, imagemPadraoPet(pet.especie))}
+          alt={pet.nome}
+          className="h-28 w-28 shrink-0 rounded-xl object-cover sm:h-32 sm:w-32"
+        />
+        {/* O espaço à direita fica para os botões de editar/remover. */}
+        <div className="min-w-0 flex-1 space-y-1 pr-24">
           <h3 className="truncate text-xl font-bold text-pc-verde-700">{pet.nome}</h3>
-          {descricao && <p className="mt-1 truncate text-sm text-pc-texto">{descricao}</p>}
-          <p className="text-sm text-pc-texto">Idade: {idadePet(pet.idade)}</p>
+          <Dado icone={PawPrint} rotulo="Espécie">{especie}</Dado>
+          <Dado icone={Layers} rotulo="Raça">{pet.raca}</Dado>
+          <Dado icone={CalendarDays} rotulo="Fase de vida">{rotuloFaseVida(opcoes?.fases, pet.fase_vida)}</Dado>
         </div>
-        <Link
-          to="/servicos"
-          className="mt-3 inline-flex min-h-[40px] items-center gap-2 whitespace-nowrap rounded-pc-pill border border-pc-verde-700/30 bg-white/70 px-4 text-sm font-semibold text-pc-verde-700 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pc-verde-700"
-        >
-          <CalendarDays size={16} aria-hidden="true" />
-          Agendar serviço
-        </Link>
       </div>
+      <Link
+        to="/servicos"
+        className="mt-3 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-pc-pill border border-pc-verde-700/30 bg-white/80 text-sm font-semibold text-pc-verde-700 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pc-verde-700"
+      >
+        <CalendarDays size={16} aria-hidden="true" />
+        Agendar serviço
+      </Link>
       <div className="absolute right-3 top-3 flex gap-2">
         <button type="button" onClick={() => onEditar(pet)} aria-label={`Editar ${pet.nome}`} className={`${BOTAO_ACAO} text-pc-verde-700 hover:bg-pc-verde-100 focus-visible:ring-pc-verde-700`}>
           <Pencil size={18} aria-hidden="true" />
@@ -43,7 +56,7 @@ function CartaoPet({ pet, onEditar, onRemover }) {
 }
 
 /** Seção "Meus pets": cartões com editar/remover/agendar e botão de adicionar. */
-export default function ListaPets({ pets, loadingPets, onEditarPet, onRemoverPet, onAdicionarPet }) {
+export default function ListaPets({ pets, opcoes, loadingPets, onEditarPet, onRemoverPet, onAdicionarPet }) {
   return (
     <section id="meus-pets" aria-labelledby="titulo-meus-pets" className="scroll-mt-28 lg:rounded-pc-card lg:bg-white lg:p-5 lg:shadow-pc-card">
       <h2 id="titulo-meus-pets" className="flex items-center gap-2 text-xl font-bold text-pc-texto">
@@ -65,7 +78,7 @@ export default function ListaPets({ pets, loadingPets, onEditarPet, onRemoverPet
         ) : (
           <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
             {pets.map((pet) => (
-              <CartaoPet key={pet.id} pet={pet} onEditar={onEditarPet} onRemover={onRemoverPet} />
+              <CartaoPet key={pet.id} pet={pet} opcoes={opcoes} onEditar={onEditarPet} onRemover={onRemoverPet} />
             ))}
           </ul>
         )}

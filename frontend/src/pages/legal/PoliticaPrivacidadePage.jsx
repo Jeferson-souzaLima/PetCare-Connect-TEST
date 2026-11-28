@@ -18,10 +18,10 @@ export default function PoliticaPrivacidadePage() {
 
       <h2>2. Quais dados tratamos</h2>
       <ul>
-        <li><strong>Conta:</strong> nome, e-mail, telefone e senha. A senha é guardada de forma cifrada (hash) e ninguém da equipe consegue lê-la.</li>
+        <li><strong>Conta:</strong> nome, e-mail, telefone, foto de perfil (se você enviar uma) e senha. A senha é guardada de forma cifrada (hash) e ninguém da equipe consegue lê-la.</li>
         <li><strong>Endereço:</strong> CEP, rua, número, complemento, bairro, cidade e UF, e as coordenadas geográficas calculadas a partir dele, usadas para entrega e cálculo de frete.</li>
         <li><strong>Localização do aparelho:</strong> só quando você autoriza no navegador. É usada para mostrar lojas e serviços próximos e para calcular a entrega. Se você escolher usar a localização atual para definir o endereço do seu perfil, as coordenadas ficam gravadas no seu cadastro.</li>
-        <li><strong>Pets:</strong> nome, espécie, raça, idade e foto que você cadastrar.</li>
+        <li><strong>Pets:</strong> nome, espécie, raça, fase de vida (filhote, adulto ou sênior) e foto que você cadastrar.</li>
         <li><strong>Uso da plataforma:</strong> pedidos, agendamentos, favoritos e histórico de buscas (este último fica só no seu navegador). Também registramos os termos pesquisados na busca do site, sem ligá-los a você (sem conta, nome ou IP), para saber o que os clientes mais procuram.</li>
         <li><strong>Pagamentos:</strong> valor e situação do pagamento. Os dados do cartão ou do Pix são informados diretamente no Mercado Pago; o PetCare Connect não recebe nem guarda esses dados.</li>
         <li><strong>Conta Mercado Pago da loja:</strong> quando o lojista conecta a conta, guardamos a identificação da conta e a autorização de acesso concedida pelo Mercado Pago, sempre cifradas. Ela é usada só para criar as cobranças da loja e fazer reembolsos, e é apagada quando a loja desconecta a conta.</li>

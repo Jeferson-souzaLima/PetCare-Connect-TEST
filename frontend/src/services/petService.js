@@ -1,6 +1,9 @@
 import { api } from "./api";
 
 const petService = {
+  /** Espécies (com raças) e fases de vida aceitas no cadastro. */
+  opcoes: () => api.get("/pets/opcoes"),
+
   listar: (token) => {
     return api.get("/pets", {
       headers: { Authorization: `Bearer ${token}` }

@@ -109,7 +109,7 @@ exports.buscarDadosParaExportacao = async (id) => {
     if (!usuario) return null;
 
     const [pets, favoritos, pedidos, itensPedidos, agendamentos, pagamentos, lojas] = await Promise.all([
-        consultar('SELECT id, nome, especie, raca, idade, imagem, criado_em, atualizado_em FROM pets WHERE usuario_id = ?', [id]),
+        consultar('SELECT id, nome, especie, raca, fase_vida, imagem, criado_em, atualizado_em FROM pets WHERE usuario_id = ?', [id]),
         consultar('SELECT tipo, referencia_id FROM favoritos WHERE usuario_id = ?', [id]),
         consultar('SELECT * FROM pedidos WHERE usuario_id = ? ORDER BY id', [id]),
         consultar(

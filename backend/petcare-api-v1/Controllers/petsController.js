@@ -2,38 +2,44 @@ const Pet = require('../Models/petsModel');
 const { enviarImagem, removerImagem } = require('../utils/imagens');
 const { responderErroInterno, responderErroDoServico } = require('../utils/erroInterno');
 
-const LIMITES = { nome: 100, especie: 50, raca: 100 };
+const { ESPECIES, FASES_VIDA, encontrarEspecie, encontrarRaca, faseVidaValida } = require('../Config/catalogoPets');
+
+const LIMITE_NOME = 100;
 
 const textoLimpo = (valor) => (typeof valor === 'string' ? valor.trim() : '');
 
 /*
  * Valida os campos enviados pelo formulário (multipart: tudo chega como texto).
- * Na criação, nome e espécie são obrigatórios; na edição, só o que vier é alterado.
+ * Espécie, raça e fase de vida só aceitam valores do catálogo (Config/catalogoPets.js);
+ * espécie e raça andam juntas, porque a raça precisa ser daquela espécie.
+ * Na criação tudo é obrigatório; na edição, só o que vier é alterado.
  */
 function validarDadosPet(corpo = {}, { criacao }) {
     const dados = {};
 
-    for (const campo of ['nome', 'especie', 'raca']) {
-        if (corpo[campo] === undefined) continue;
-        const texto = textoLimpo(corpo[campo]);
-        if (texto.length > LIMITES[campo]) return { erro: `O campo ${campo} é muito longo.` };
-        dados[campo] = campo === 'raca' ? texto || null : texto;
+    if (corpo.nome !== undefined) {
+        const nome = textoLimpo(corpo.nome);
+        if (!nome) return { erro: 'Informe o nome do pet.' };
+        if (nome.length > LIMITE_NOME) return { erro: 'O nome do pet é muito longo.' };
+        dados.nome = nome;
     }
 
-    if (corpo.idade !== undefined) {
-        const idade = textoLimpo(String(corpo.idade));
-        if (idade === '') {
-            dados.idade = null;
-        } else if (!/^\d{1,2}$/.test(idade)) {
-            return { erro: 'Informe a idade em anos (de 0 a 99).' };
-        } else {
-            dados.idade = Number(idade);
-        }
+    if (corpo.especie !== undefined || corpo.raca !== undefined) {
+        const especie = encontrarEspecie(corpo.especie);
+        if (!especie) return { erro: 'Escolha uma espécie da lista.' };
+        const raca = encontrarRaca(especie, corpo.raca);
+        if (!raca) return { erro: 'Escolha uma raça da lista para essa espécie.' };
+        dados.especie = especie.nome;
+        dados.raca = raca;
     }
 
-    const obrigatorios = criacao ? ['nome', 'especie'] : Object.keys(dados).filter((c) => c !== 'raca' && c !== 'idade');
-    if (obrigatorios.some((campo) => !dados[campo])) {
-        return { erro: 'Nome e espécie do pet são obrigatórios.' };
+    if (corpo.fase_vida !== undefined) {
+        if (!faseVidaValida(corpo.fase_vida)) return { erro: 'Escolha a fase de vida do pet.' };
+        dados.fase_vida = corpo.fase_vida;
+    }
+
+    if (criacao && !(dados.nome && dados.especie && dados.fase_vida)) {
+        return { erro: 'Preencha nome, espécie, raça e fase de vida do pet.' };
     }
 
     return { dados };
@@ -68,6 +74,9 @@ const criarPet = async (req, res) => {
         return responderErroDoServico(res, err, 'petsController.criarPet', 'Erro ao criar pet.');
     }
 };
+
+/** Espécies (com as raças de cada uma) e fases de vida aceitas no cadastro. */
+const listarOpcoes = (_req, res) => res.json({ especies: ESPECIES, fases: FASES_VIDA });
 
 const listarPetsDoUsuario = (req, res) => {
     Pet.listarPorUsuario(req.usuario.id, (err, pets) => {
@@ -127,6 +136,7 @@ const deletarPet = async (req, res) => {
 module.exports = {
     criarPet,
     listarPetsDoUsuario,
+    listarOpcoes,
     atualizarPet,
     uploadImagem,
     deletarPet

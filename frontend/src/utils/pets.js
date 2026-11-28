@@ -10,22 +10,42 @@ export function imagemPadraoPet(especie) {
   return /gat|felin/.test(texto) ? IMAGEM_PADRAO_PET_GATO : IMAGEM_PADRAO_PET;
 }
 
-function capitalizar(texto) {
-  return texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : "";
+// Compara com o catálogo sem diferenciar maiúsculas, acentos e espaços (como a API).
+function chaveCatalogo(texto) {
+  return normalizarTexto(String(texto ?? "")).trim().replace(/s+/g, " ");
 }
 
-/** Linha "Espécie · Raça" do cartão do pet (o que estiver preenchido). */
-export function descricaoPet(pet) {
-  return [pet?.especie, pet?.raca]
-    .map((valor) => capitalizar(String(valor ?? "").trim()))
-    .filter(Boolean)
-    .join(" · ");
+/** Espécie do catálogo (GET /pets/opcoes) correspondente ao texto salvo, ou null. */
+export function especieDoCatalogo(especies, texto) {
+  const alvo = chaveCatalogo(texto);
+  return (especies || []).find((especie) => chaveCatalogo(especie.nome) === alvo) || null;
 }
 
-/** Idade do pet para exibir: número vira "1 ano"/"10 anos"; texto livre fica como veio. */
-export function idadePet(idade) {
-  const texto = String(idade ?? "").trim();
-  if (!texto) return "Não informada";
-  if (!/^\d+$/.test(texto)) return texto;
-  return Number(texto) === 1 ? "1 ano" : `${Number(texto)} anos`;
+/** Raça como está no catálogo, se pertence à espécie, ou null. */
+export function racaDoCatalogo(especie, texto) {
+  const alvo = chaveCatalogo(texto);
+  return especie?.racas.find((raca) => chaveCatalogo(raca) === alvo) || null;
+}
+
+/**
+ * Valores iniciais do formulário do pet. Espécie e raça salvas antes do catálogo (texto livre)
+ * são aproveitadas quando batem com ele; senão ficam em branco para o usuário escolher,
+ * e `racaAnterior` guarda o texto antigo para mostrar como referência.
+ */
+export function valoresIniciaisPet(pet, especies) {
+  const especie = especieDoCatalogo(especies, pet?.especie);
+  const raca = racaDoCatalogo(especie, pet?.raca);
+  const racaSalva = String(pet?.raca ?? "").trim();
+  return {
+    nome: pet?.nome ?? "",
+    especie: especie?.nome ?? "",
+    raca: raca ?? "",
+    fase_vida: pet?.fase_vida ?? "",
+    racaAnterior: !raca && racaSalva ? racaSalva : null,
+  };
+}
+
+/** Nome da fase de vida ("Adulto") pelo id salvo; vazio sem fase ou sem catálogo. */
+export function rotuloFaseVida(fases, id) {
+  return (fases || []).find((fase) => fase.id === id)?.rotulo ?? "";
 }

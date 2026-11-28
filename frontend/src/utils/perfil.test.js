@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { contadoresPerfil, iniciaisNome, numeroCard, primeiroNome, rotuloQuantidade } from "./perfil.js";
-import { descricaoPet, idadePet } from "./pets.js";
 
 test("iniciaisNome e primeiroNome", () => {
   assert.equal(iniciaisNome("Jeferson Souza Lima"), "JL");
@@ -36,14 +35,4 @@ test("numeroCard e rotuloQuantidade", () => {
   assert.equal(numeroCard(null), "–");
   assert.equal(rotuloQuantidade(1, "Pet cadastrado", "Pets cadastrados"), "Pet cadastrado");
   assert.equal(rotuloQuantidade(0, "Pet cadastrado", "Pets cadastrados"), "Pets cadastrados");
-});
-
-test("descricaoPet e idadePet", () => {
-  assert.equal(descricaoPet({ especie: "gato", raca: "Goldin" }), "Gato · Goldin");
-  assert.equal(descricaoPet({ especie: "Cachorro", raca: "" }), "Cachorro");
-  assert.equal(descricaoPet({}), "");
-  assert.equal(idadePet(10), "10 anos");
-  assert.equal(idadePet("1"), "1 ano");
-  assert.equal(idadePet("3 meses"), "3 meses");
-  assert.equal(idadePet(null), "Não informada");
 });

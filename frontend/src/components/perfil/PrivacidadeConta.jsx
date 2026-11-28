@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { FaDownload, FaShieldAlt, FaTrashAlt } from "react-icons/fa";
+import { FaDownload, FaTrashAlt } from "react-icons/fa";
 
 import api from "../../services/api";
 import MensagemStatus from "../ui/MensagemStatus";
@@ -21,6 +21,7 @@ function baixarJson(dados, nomeArquivo) {
  * Direitos do titular (LGPD, art. 18): baixar os próprios dados e excluir a conta.
  * As regras (senha, pendências, o que é apagado) ficam no backend.
  * `onContaExcluida` é chamado depois que a API confirma a exclusão.
+ * Fica dentro do item "Privacidade e dados" das configurações da conta (o título vem de lá).
  */
 export default function PrivacidadeConta({ onContaExcluida }) {
   const [exportando, setExportando] = useState(false);
@@ -70,25 +71,16 @@ export default function PrivacidadeConta({ onContaExcluida }) {
   }
 
   return (
-    <section id="privacidade" className="scroll-mt-28 bg-white rounded-2xl shadow-pc-card p-5 md:p-6 space-y-4">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-green-50 text-[#0E5617] flex items-center justify-center shrink-0">
-          <FaShieldAlt />
-        </div>
-        <div>
-          <h2 className="font-bold text-gray-800">Privacidade e dados</h2>
-          <p className="text-sm text-gray-500">
-            Saiba como tratamos seus dados na{" "}
-            <Link to="/privacidade" className="text-[#0E5617] underline">
-              Política de Privacidade
-            </Link>
-            .
-          </p>
-        </div>
-      </div>
+    <div className="space-y-3">
+      <p className="text-sm text-gray-500">
+        Saiba como tratamos seus dados na{" "}
+        <Link to="/privacidade" className="text-[#0E5617] underline">
+          Política de Privacidade
+        </Link>
+        .
+      </p>
 
-      <div className="flex flex-col sm:flex-row gap-3 lg:shrink-0">
+      <div className="flex flex-col gap-2">
         <button
           type="button"
           onClick={exportarDados}
@@ -109,7 +101,6 @@ export default function PrivacidadeConta({ onContaExcluida }) {
             Excluir minha conta
           </button>
         )}
-      </div>
       </div>
 
       <MensagemStatus mensagem={mensagem} />
@@ -147,6 +138,6 @@ export default function PrivacidadeConta({ onContaExcluida }) {
           </div>
         </form>
       )}
-    </section>
+    </div>
   );
 }

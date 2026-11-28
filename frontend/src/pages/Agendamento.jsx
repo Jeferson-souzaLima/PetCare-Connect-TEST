@@ -492,7 +492,8 @@ export default function Agendamento() {
           onPetSalvo={async (novoPet) => {
             await carregarPets();
 
-            setPetSelecionado(novoPet.id);
+            // Cadastro devolve { petId }; na edição a resposta não traz o id, então vale o do pet editado.
+            setPetSelecionado(novoPet?.petId ?? petParaEditar?.id ?? "");
 
             setShowModalPet(false);
             setPetParaEditar(null);

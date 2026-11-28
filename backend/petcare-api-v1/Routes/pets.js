@@ -10,6 +10,7 @@ router.use(authMiddleware);
 // CRUD
 router.post('/', upload.single('imagem'), petsController.criarPet);
 router.get('/', petsController.listarPetsDoUsuario);
+router.get('/opcoes', petsController.listarOpcoes);
 router.put('/:id', upload.single('imagem'), petsController.atualizarPet);
 router.delete('/:id', petsController.deletarPet);
 
