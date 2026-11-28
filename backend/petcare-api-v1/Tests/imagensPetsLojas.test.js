@@ -54,6 +54,7 @@ async function enviar(base, metodo, rota, usuario, campos = {}, arquivo) {
 }
 
 const fotoPng = { conteudo: PNG, tipo: 'image/png', nome: 'rex.png' };
+const PET_VALIDO = { nome: 'Rex', especie: 'Cachorro', raca: 'Sem raça definida (vira-lata)', fase_vida: 'adulto' };
 
 // Pet 5 é do cliente 10, com uma foto já salva no R2.
 function bancoDePets(t, { falharGravacao = false } = {}) {
@@ -82,7 +83,7 @@ test('cadastrar pet com foto envia a imagem ao R2 (pasta pets) e grava a URL', a
     const consultas = bancoDePets(t);
 
     const r = await comApp('/pets', petsRoutes, (b) =>
-        enviar(b, 'POST', '/pets', USUARIOS.cliente, { nome: 'Rex', especie: 'Cachorro', raca: '', idade: '' }, fotoPng));
+        enviar(b, 'POST', '/pets', USUARIOS.cliente, PET_VALIDO, fotoPng));
 
     assert.equal(r.status, 201);
     assert.deepEqual(enviados, ['pets/novo-0.png']);
@@ -98,7 +99,7 @@ test('arquivo que não é imagem de verdade é recusado (400) sem gravar nada', 
 
     const falso = { conteudo: Buffer.from('não sou uma imagem'), tipo: 'image/png', nome: 'falso.png' };
     const r = await comApp('/pets', petsRoutes, (b) =>
-        enviar(b, 'POST', '/pets', USUARIOS.cliente, { nome: 'Rex', especie: 'Cachorro' }, falso));
+        enviar(b, 'POST', '/pets', USUARIOS.cliente, PET_VALIDO, falso));
 
     assert.equal(r.status, 400);
     assert.match(r.body.mensagem, /JPEG ou PNG/);
@@ -110,7 +111,7 @@ test('tipo de arquivo não aceito responde 400 em JSON (não a página de erro d
     bancoDePets(t);
     const gif = { conteudo: Buffer.from('GIF89a'), tipo: 'image/gif', nome: 'a.gif' };
     const r = await comApp('/pets', petsRoutes, (b) =>
-        enviar(b, 'POST', '/pets', USUARIOS.cliente, { nome: 'Rex', especie: 'Cachorro' }, gif));
+        enviar(b, 'POST', '/pets', USUARIOS.cliente, PET_VALIDO, gif));
     assert.equal(r.status, 400);
     assert.match(r.body.mensagem, /Tipo de arquivo inválido/);
 });

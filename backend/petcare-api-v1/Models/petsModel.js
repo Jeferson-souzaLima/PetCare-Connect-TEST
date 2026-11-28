@@ -4,7 +4,7 @@ const Pet = {
 
     criar: (dados, callback) => {
         const sql = `
-            INSERT INTO pets (usuario_id, nome, especie, raca, idade, imagem)
+            INSERT INTO pets (usuario_id, nome, especie, raca, fase_vida, imagem)
             VALUES (?, ?, ?, ?, ?, ?)
         `;
         return db.query(sql, [
@@ -12,7 +12,7 @@ const Pet = {
             dados.nome,
             dados.especie,
             dados.raca || null,
-            dados.idade || null,
+            dados.fase_vida || null,
             dados.imagem || null
         ], callback);
     },
@@ -48,9 +48,9 @@ const Pet = {
             valores.push(dados.raca);
         }
 
-        if (dados.idade !== undefined) {
-            campos.push("idade = ?");
-            valores.push(dados.idade);
+        if (dados.fase_vida !== undefined) {
+            campos.push("fase_vida = ?");
+            valores.push(dados.fase_vida);
         }
 
         if (dados.imagem !== undefined) {

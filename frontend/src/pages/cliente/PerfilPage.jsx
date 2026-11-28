@@ -9,9 +9,9 @@ import AcessosRapidos from "../../components/perfil/AcessosRapidos";
 import ConfiguracoesConta from "../../components/perfil/ConfiguracoesConta";
 import ListaPets from "../../components/perfil/ListaPets";
 import MenuLateralPerfil from "../../components/perfil/MenuLateralPerfil";
-import PrivacidadeConta from "../../components/perfil/PrivacidadeConta";
 import { useListasPerfil } from "@/hooks/useListasPerfil";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useOpcoesPet } from "@/hooks/useOpcoesPet";
 import { deixarAvisoParaLogin } from "@/utils/sessao";
 import { contadoresPerfil } from "@/utils/perfil";
 import petService from "../../services/petService";
@@ -51,6 +51,7 @@ export default function PerfilPage() {
   const [configAberta, setConfigAberta] = useState(false);
   const [secaoConfig, setSecaoConfig] = useState(null);
   const listas = useListasPerfil();
+  const { opcoes: opcoesPet } = useOpcoesPet();
 
   const [showModalPet, setShowModalPet] = useState(false);
   const [petParaEditar, setPetParaEditar] = useState(null);
@@ -240,7 +241,18 @@ export default function PerfilPage() {
     setConfigAberta(!configAberta);
   }
 
+  // Abre um item das configurações e rola até elas (desktop: cartão ao lado dos pets).
+  function abrirNaConfiguracao(secao) {
+    fecharEdicoes();
+    setSecaoConfig(secao);
+    irPara("configuracoes");
+  }
+
   function irPara(secao) {
+    if (secao === "privacidade") {
+      abrirNaConfiguracao("privacidade");
+      return;
+    }
     if (secao === "topo") {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -250,9 +262,7 @@ export default function PerfilPage() {
 
   // Desktop: "Editar perfil" abre os dados pessoais no cartão de configurações.
   function editarPerfil() {
-    fecharEdicoes();
-    setSecaoConfig("dados");
-    irPara("configuracoes");
+    abrirNaConfiguracao("dados");
   }
 
   function sairDaConta() {
@@ -311,6 +321,7 @@ export default function PerfilPage() {
       }}
       mensagemPerfil={mensagemPerfil}
       onSair={sairDaConta}
+      onContaExcluida={contaExcluida}
     />
   );
 
@@ -342,6 +353,7 @@ export default function PerfilPage() {
           <div className="space-y-6 lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-start lg:gap-6 lg:space-y-0">
             <ListaPets
               pets={pets}
+              opcoes={opcoesPet}
               loadingPets={loadingPets}
               onEditarPet={(pet) => {
                 setPetParaEditar(pet);
@@ -360,8 +372,6 @@ export default function PerfilPage() {
               </section>
             )}
           </div>
-
-          <PrivacidadeConta onContaExcluida={contaExcluida} />
         </div>
       </div>
 

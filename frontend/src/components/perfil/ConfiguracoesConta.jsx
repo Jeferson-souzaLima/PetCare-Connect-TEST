@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { ChevronRight, LockKeyhole, LogOut, MapPin, Settings, UserRound } from "lucide-react";
+import { ChevronRight, LockKeyhole, LogOut, MapPin, Settings, ShieldCheck, UserRound } from "lucide-react";
 import DadosPessoais from "./DadosPessoais";
 import EnderecoPerfil from "./EnderecoPerfil";
 import MensagemStatus from "../ui/MensagemStatus";
+import PrivacidadeConta from "./PrivacidadeConta";
 
 const LINHA =
   "flex w-full min-h-[64px] items-center gap-3 rounded-2xl px-3 text-left transition-colors hover:bg-pc-fundo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pc-verde-700";
@@ -45,9 +46,10 @@ function ItemExpansivel({ id, titulo, descricao, icone, aberto, onAlternar, chil
 
 /**
  * "Configurações da conta": dados pessoais e endereço (editáveis no lugar), senha (redefinição
- * por e-mail, o fluxo que existe) e sair. Os estados de edição vêm da página.
+ * por e-mail, o fluxo que existe), privacidade e dados (baixar dados, excluir conta) e sair.
+ * Os estados de edição vêm da página.
  */
-export default function ConfiguracoesConta({ comTitulo = false, secaoAberta, onAlternarSecao, dadosPessoais, endereco, mensagemPerfil, onSair }) {
+export default function ConfiguracoesConta({ comTitulo = false, secaoAberta, onAlternarSecao, dadosPessoais, endereco, mensagemPerfil, onSair, onContaExcluida }) {
   return (
     <div id="configuracoes-conta">
       {comTitulo && (
@@ -73,6 +75,10 @@ export default function ConfiguracoesConta({ comTitulo = false, secaoAberta, onA
             <ChevronRight size={18} aria-hidden="true" className="shrink-0 text-pc-texto-suave" />
           </Link>
         </li>
+
+        <ItemExpansivel id="privacidade" titulo="Privacidade e dados" descricao="Baixe seus dados ou exclua a conta" icone={ShieldCheck} aberto={secaoAberta === "privacidade"} onAlternar={onAlternarSecao}>
+          <PrivacidadeConta onContaExcluida={onContaExcluida} />
+        </ItemExpansivel>
 
         <li className="rounded-2xl border border-black/5 bg-white">
           <button type="button" onClick={onSair} className={LINHA}>
