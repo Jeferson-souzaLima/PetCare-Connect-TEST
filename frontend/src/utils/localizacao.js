@@ -71,7 +71,7 @@ export function rotuloLocalizacao({ localizacao, usuario }) {
   if (localizacao?.cidade && localizacao?.uf) return `${localizacao.cidade} - ${localizacao.uf}`;
   if (localizacao) return "Perto de você";
   if (usuario?.cidade && usuario?.uf) return `${usuario.cidade} - ${usuario.uf}`;
-  return "Definir localização";
+  return "Definir local";
 }
 
 /** Mensagem clara para cada falha do navegador ao pegar a localização (GeolocationPositionError). */

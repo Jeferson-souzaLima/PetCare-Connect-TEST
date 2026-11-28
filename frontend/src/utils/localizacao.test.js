@@ -37,11 +37,11 @@ test("salvarLocalizacao(null) apaga; falha do armazenamento não quebra", () => 
   assert.doesNotThrow(() => salvarLocalizacao({ origem: "gps", latitude: 1, longitude: 1 }, { setItem: () => { throw new Error("cheio"); } }));
 });
 
-test("rotuloLocalizacao: escolhida > cidade do perfil > Definir localização", () => {
+test("rotuloLocalizacao: escolhida > cidade do perfil > Definir local", () => {
   assert.equal(rotuloLocalizacao({ localizacao: { origem: "busca", cidade: "Cotia", uf: "SP", latitude: 1, longitude: 1 } }), "Cotia - SP");
   assert.equal(rotuloLocalizacao({ localizacao: { origem: "gps", latitude: 1, longitude: 1 } }), "Perto de você");
   assert.equal(rotuloLocalizacao({ localizacao: null, usuario: { cidade: "Carapicuíba", uf: "SP" } }), "Carapicuíba - SP");
-  assert.equal(rotuloLocalizacao({ localizacao: null, usuario: null }), "Definir localização");
+  assert.equal(rotuloLocalizacao({ localizacao: null, usuario: null }), "Definir local");
 });
 
 test("mensagemErroGeolocalizacao cobre permissão negada, indisponível e demora", () => {
