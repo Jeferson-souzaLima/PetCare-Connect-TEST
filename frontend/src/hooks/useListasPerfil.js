@@ -24,8 +24,10 @@ export function useListasPerfil() {
     Promise.allSettled([listarFavoritos(), listarMeusAgendamentos(), listarMeusPedidos()]).then(
       ([favoritos, agendamentos, pedidos]) => {
         if (!ativo) return;
-        const valor = (resultado) => (resultado.status === "fulfilled" && Array.isArray(resultado.value) ? resultado.value : null);
-        setListas({ favoritos: valor(favoritos), agendamentos: valor(agendamentos), pedidos: valor(pedidos) });
+        const lista = (resultado) => (resultado.status === "fulfilled" && Array.isArray(resultado.value) ? resultado.value : null);
+        // Favoritos vêm agrupados ({ produtos, lojas, servicos }): quem conta é contadoresPerfil.
+        const favoritosRecebidos = favoritos.status === "fulfilled" ? favoritos.value : null;
+        setListas({ favoritos: favoritosRecebidos, agendamentos: lista(agendamentos), pedidos: lista(pedidos) });
       }
     );
 

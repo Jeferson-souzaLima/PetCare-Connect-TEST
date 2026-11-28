@@ -184,20 +184,10 @@ export default function PerfilPage() {
   // PET
   // =========================================================
 
-  async function removerPet(id) {
-    if (!confirm("Deseja realmente remover este pet?")) {
-      return;
-    }
-
-    try {
-      await petService.deletar(id, token);
-
-      setPets((prev) =>
-        prev.filter((p) => p.id !== id)
-      );
-    } catch {
-      alert("Erro ao remover pet.");
-    }
+  // Chamado pelo modal de edição, depois da confirmação; um erro volta para o modal mostrar.
+  async function excluirPet(id) {
+    await petService.deletar(id, token);
+    setPets((prev) => prev.filter((p) => p.id !== id));
   }
 
   // =========================================================
@@ -359,7 +349,6 @@ export default function PerfilPage() {
                 setPetParaEditar(pet);
                 setShowModalPet(true);
               }}
-              onRemoverPet={removerPet}
               onAdicionarPet={() => {
                 setPetParaEditar(null);
                 setShowModalPet(true);
@@ -386,6 +375,7 @@ export default function PerfilPage() {
           onPetSalvo={() => {
             carregarPets();
           }}
+          onExcluir={excluirPet}
         />
       )}
 

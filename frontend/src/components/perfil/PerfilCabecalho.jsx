@@ -6,7 +6,7 @@ import FotoPerfil from "./FotoPerfil";
 const ILUSTRACAO_PETS = "/midia/site/lojista/boas-vindas-pets.png";
 
 /**
- * Cartão verde "Minha conta" (foto ou iniciais com o lápis para trocar, saudação e e-mail).
+ * Cartão verde "Minha conta" (foto ou iniciais com o lápis para trocar e saudação; o e-mail fica nas configurações).
  * Celular: a engrenagem abre `children` (as configurações) por baixo do cartão, como uma peça só.
  * Desktop: botão "Editar perfil" e a ilustração dos pets à direita.
  */
@@ -33,7 +33,6 @@ export default function PerfilCabecalho({ usuario, desktop, configAberta, onConf
           <div className="min-w-0 flex-1">
             <p className="text-sm text-white/80">Minha conta</p>
             <h1 className="truncate text-2xl font-bold md:text-3xl">Olá, {nome}!</h1>
-            <p className="mt-0.5 truncate text-sm text-white/80">{usuario.email}</p>
             {erroFoto && (
               <p role="alert" className="mt-1.5 inline-block rounded-lg bg-red-600/90 px-2 py-1 text-xs font-medium text-white">
                 {erroFoto}

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { contadoresPerfil, iniciaisNome, numeroCard, primeiroNome, rotuloQuantidade } from "./perfil.js";
+import { contadoresPerfil, iniciaisNome, numeroCard, primeiroNome, rotuloQuantidade, totalFavoritos } from "./perfil.js";
 
 test("iniciaisNome e primeiroNome", () => {
   assert.equal(iniciaisNome("Jeferson Souza Lima"), "JL");
@@ -35,4 +35,13 @@ test("numeroCard e rotuloQuantidade", () => {
   assert.equal(numeroCard(null), "–");
   assert.equal(rotuloQuantidade(1, "Pet cadastrado", "Pets cadastrados"), "Pet cadastrado");
   assert.equal(rotuloQuantidade(0, "Pet cadastrado", "Pets cadastrados"), "Pets cadastrados");
+});
+
+test("totalFavoritos: soma produtos, lojas e serviços, como a API devolve", () => {
+  assert.equal(totalFavoritos({ produtos: [1, 2], lojas: [3], servicos: [] }), 3);
+  assert.equal(totalFavoritos({ produtos: [1], lojas: null }), 1);
+  assert.equal(totalFavoritos({}), 0);
+  assert.equal(totalFavoritos([1, 2]), 2);
+  assert.equal(totalFavoritos(null), null);
+  assert.equal(contadoresPerfil({ favoritos: { produtos: [1], lojas: [2, 3], servicos: [4] }, agendamentos: [], pedidos: [], pets: [] }).favoritos, 4);
 });

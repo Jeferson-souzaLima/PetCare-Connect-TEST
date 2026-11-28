@@ -14,13 +14,23 @@ export function primeiroNome(nome) {
 }
 
 /**
+ * Total de favoritos. A API (GET /favoritos) devolve { produtos, lojas, servicos };
+ * cada grupo que não for lista conta como vazio. Sem resposta, null.
+ */
+export function totalFavoritos(favoritos) {
+  if (Array.isArray(favoritos)) return favoritos.length;
+  if (!favoritos || typeof favoritos !== "object") return null;
+  return ["produtos", "lojas", "servicos"].reduce((soma, grupo) => soma + (Array.isArray(favoritos[grupo]) ? favoritos[grupo].length : 0), 0);
+}
+
+/**
  * Números do "Acesso rápido". Cada lista pode ser null (falhou ou não se aplica): o número fica null.
  * Agendamentos contam só os próximos (futuros e não encerrados), como em "Próximos serviços".
  */
 export function contadoresPerfil({ favoritos, agendamentos, pedidos, pets }, agora = new Date()) {
   const tamanho = (lista) => (Array.isArray(lista) ? lista.length : null);
   return {
-    favoritos: tamanho(favoritos),
+    favoritos: totalFavoritos(favoritos),
     agendamentos: Array.isArray(agendamentos) ? proximosAgendamentos(agendamentos, agora, Infinity).length : null,
     pedidos: tamanho(pedidos),
     pets: tamanho(pets),
